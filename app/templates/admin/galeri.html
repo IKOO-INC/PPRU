@@ -35,6 +35,8 @@
     <form method="post" action="{{ url_for('admin.galeri_edit', item_id=g.id) }}" class="inline-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input name="judul" value="{{ g.judul }}" maxlength="150" required aria-label="Judul foto">
+      <input type="date" name="tanggal" value="{{ g.tanggal }}" required aria-label="Tanggal foto">
+      <input name="path" value="{{ g.path }}" required aria-label="Path gambar" list="uploads-list">
       <button class="btn btn-sm btn-outline-dark" type="submit">Simpan</button>
     </form>
     <div class="actions">

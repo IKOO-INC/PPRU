@@ -27,8 +27,10 @@ def _reset_login_limiter():
 def app(tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    for name in ("berita.json", "galeri.json", "settings.json"):
+    for name in ("berita.json", "settings.json"):
         shutil.copy(ROOT / "data" / name, data_dir / name)
+    # Galeri mulai kosong agar tes galeri terisolasi dari data dummy.
+    (data_dir / "galeri.json").write_text("[]", encoding="utf-8")
     upload_dir = tmp_path / "uploads"
     (upload_dir / "berita").mkdir(parents=True)
     (upload_dir / "galeri").mkdir(parents=True)

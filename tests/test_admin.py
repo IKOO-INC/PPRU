@@ -206,7 +206,13 @@ def test_galeri_edit_dan_hapus(app):
     c = admin_client(app)
     _post(c, "/admin/galeri/tambah", {"judul": "Lama", "path": "/static/uploads/galeri/a.jpg"})
     item = app.extensions["ppru"]["galeri"].all()[0]
-    _post(c, f"/admin/galeri/{item['id']}/edit", {"judul": "Baru"})
+    _post(c, f"/admin/galeri/{item['id']}/edit", {"judul": "Baru", "tanggal": "2026-10-05",
+                                                    "path": "/static/uploads/galeri/b.jpg"})
+    diubah = app.extensions["ppru"]["galeri"].get(item["id"])
+    assert (diubah["judul"], diubah["tanggal"], diubah["path"]) == ("Baru", "2026-10-05", "/static/uploads/galeri/b.jpg")
+    # Validasi: tanggal rusak dan path di luar /static/ ditolak
+    _post(c, f"/admin/galeri/{item['id']}/edit", {"judul": "X", "tanggal": "bukan-tanggal", "path": "/static/a.jpg"})
+    _post(c, f"/admin/galeri/{item['id']}/edit", {"judul": "X", "tanggal": "2026-10-05", "path": "/etc/passwd"})
     assert app.extensions["ppru"]["galeri"].get(item["id"])["judul"] == "Baru"
     _post(c, f"/admin/galeri/{item['id']}/hapus")
     assert app.extensions["ppru"]["galeri"].all() == []
@@ -300,4 +306,5 @@ def test_header_keamanan_dan_galeri_edit_404(app):
     assert resp.headers["X-Content-Type-Options"] == "nosniff"
     assert resp.headers["X-Frame-Options"] == "SAMEORIGIN"
     admin = admin_client(app)
-    assert admin.post("/admin/galeri/9999/edit", data={"judul": "x", "csrf_token": CSRF}).status_code == 404
+    assert admin.post("/admin/galeri/9999/edit", data={"judul": "x", "tanggal": "2026-10-05",
+                                                 "path": "/static/uploads/galeri/x.jpg", "csrf_token": CSRF}).status_code == 404

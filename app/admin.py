@@ -264,12 +264,27 @@ def galeri_tambah():
 @bp.route("/galeri/<int:item_id>/edit", methods=["POST"])
 def galeri_edit(item_id):
     judul = request.form.get("judul", "").strip()[:150]
+    tanggal = request.form.get("tanggal", "").strip()
+    path = request.form.get("path", "").strip()
     if not judul:
         flash("Judul wajib diisi.", "error")
-    elif _store()["galeri"].update(item_id, {"judul": judul}) is None:
+        return redirect(url_for("admin.galeri_list"))
+    try:
+        date.fromisoformat(tanggal)
+    except ValueError:
+        flash("Format tanggal tidak valid.", "error")
+        return redirect(url_for("admin.galeri_list"))
+    try:
+        path = media.validate_image_path(path)
+    except media.MediaError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("admin.galeri_list"))
+    if not path:
+        flash("Path gambar wajib diisi.", "error")
+        return redirect(url_for("admin.galeri_list"))
+    if _store()["galeri"].update(item_id, {"judul": judul, "tanggal": tanggal, "path": path}) is None:
         abort(404)
-    else:
-        flash("Judul foto diubah.", "ok")
+    flash("Foto diperbarui.", "ok")
     return redirect(url_for("admin.galeri_list"))
 
 

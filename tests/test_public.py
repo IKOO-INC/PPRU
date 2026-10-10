@@ -32,9 +32,11 @@ def test_head_selaras_referensi(client):
 
 
 def test_psb_badge_hanya_saat_dibuka(app, client):
-    assert "Penerimaan Santri Baru" not in client.get("/").get_data(as_text=True)
     settings = app.extensions["ppru"]["settings"]
     value = settings.section("psb")
+    value["status"] = "closed"
+    settings.save_section("psb", value)
+    assert "Dibuka" not in app.test_client().get("/kontak").get_data(as_text=True)
     value["status"] = "open"
     settings.save_section("psb", value)
     html = app.test_client().get("/").get_data(as_text=True)
@@ -53,7 +55,7 @@ def test_artikel_hanya_menampilkan_terbit(app, client):
                    "tempat": "", "penulis": "", "ringkasan": ""})
     html = client.get("/artikel").get_data(as_text=True)
     assert "Rahasia Draf" not in html
-    assert "CONTOH" in html
+    assert "Lorem Ipsum: Kegiatan Santri" in html
     assert client.get("/artikel/detail/rahasia-draf").status_code == 404
 
 
@@ -71,8 +73,8 @@ def test_detail_artikel_dan_escape_html(app, client):
 
 def test_kategori_filter(client):
     html = client.get("/artikel?kategori=karya-santri").get_data(as_text=True)
-    assert "Contoh Karya Santri" in html or "CONTOH] Karya Santri" in html
-    assert "Kegiatan Santri Pekan Ini" not in html
+    assert "Karya Santri: Lorem Ipsum Dolor" in html
+    assert "Lorem Ipsum: Kegiatan Santri" not in html
 
 
 def test_perubahan_admin_tampil_di_situs(app):

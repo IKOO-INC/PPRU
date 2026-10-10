@@ -8,6 +8,8 @@ from flask import Flask, render_template, request
 from .auth import csrf_token, init_admin
 from .config import Config
 from .defaults import DEFAULT_SETTINGS
+from .seed import DUMMY_BERITA, DUMMY_GALERI
+from .storage.json_store import write_json
 from .storage.repositories import (
     AdminRepository,
     BeritaRepository,
@@ -37,6 +39,10 @@ def create_app(test_config=None):
     # Repository disimpan di satu tempat. Ganti isinya saat pindah ke MongoDB.
     settings_repo = SettingsRepository(data_dir / "settings.json", DEFAULT_SETTINGS)
     settings_repo.ensure_file()
+
+    for name, seed in (("berita.json", DUMMY_BERITA), ("galeri.json", DUMMY_GALERI)):
+        if not (data_dir / name).exists():
+            write_json(data_dir / name, seed)
     admin_repo = AdminRepository(data_dir / "admin.json")
     app.extensions["ppru"] = {
         "berita": BeritaRepository(data_dir / "berita.json"),
