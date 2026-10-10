@@ -30,8 +30,13 @@
   }
 
   // ----- Animasi scroll (AOS) -----
+  // Jika script AOS dari CDN gagal dimuat, konten jangan tertinggal transparan.
   if (window.AOS) {
     AOS.init({ duration: 800, once: true, offset: 100, easing: 'ease-out-cubic' });
+  } else {
+    document.querySelectorAll('[data-aos]').forEach(function (el) {
+      el.classList.add('aos-animate');
+    });
   }
 
   // ----- Counter statistik -----
