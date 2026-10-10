@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% block title %}Galeri{% endblock %}
+{% block admin %}
+<h1>Galeri</h1>
+<section class="card pad">
+  <h2>Tambah Foto</h2>
+  <form method="post" action="{{ url_for('admin.galeri_tambah') }}" enctype="multipart/form-data" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row-3">
+      <label>Judul / Keterangan
+        <input name="judul" maxlength="150" placeholder="mis. Pemberangkatan Santri Baru">
+      </label>
+      <label>Tanggal
+        <input type="date" name="tanggal">
+      </label>
+      <label>Unggah foto (boleh lebih dari satu)
+        <input type="file" name="foto" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+      </label>
+    </div>
+    <label>Atau masukkan path gambar yang sudah ada
+      <input name="path" list="uploads-list" placeholder="/static/uploads/galeri/nama-file.jpg">
+    </label>
+    <datalist id="uploads-list">{% for u in uploads %}<option value="{{ u }}">{% endfor %}</datalist>
+    <p class="hint">Penyimpanan sementara di folder lokal <code>app/static/uploads/galeri/</code>. Maks 5 MB per foto.</p>
+    <button class="btn btn-gold" type="submit">Tambahkan ke Galeri</button>
+  </form>
+</section>
+
+<h2>Daftar Foto ({{ items | length }})</h2>
+{% if items %}
+<div class="admin-gallery">
+  {% for g in items %}
+  <div class="card">
+    {% if g.path %}<img src="{{ g.path }}" alt="{{ g.judul }}" loading="lazy">{% endif %}
+    <form method="post" action="{{ url_for('admin.galeri_edit', item_id=g.id) }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="judul" value="{{ g.judul }}" maxlength="150" required aria-label="Judul foto">
+      <button class="btn btn-sm btn-outline-dark" type="submit">Simpan</button>
+    </form>
+    <div class="actions">
+      <small class="muted">{{ g.path }}</small>
+      <form method="post" action="{{ url_for('admin.galeri_hapus', item_id=g.id) }}" onsubmit="return confirm('Hapus foto dari galeri?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-danger" type="submit">Hapus</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<p class="empty">Galeri masih kosong.</p>{% endif %}
+{% endblock %}

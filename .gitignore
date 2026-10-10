@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+# Akun admin (berisi hash password) jangan masuk Git
+data/admin.json
+# File upload runtime (sementara, nanti pindah ke Cloudinary)
+app/static/uploads/*/*
+!app/static/uploads/*/.gitkeep

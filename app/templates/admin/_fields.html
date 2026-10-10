@@ -1,0 +1,19 @@
+{% macro render_input(name, label, kind, value, uploads) -%}
+<label>{{ label }}
+  {%- if kind == 'textarea' %}
+    <textarea name="{{ name }}" rows="4">{{ value }}</textarea>
+  {%- elif kind == 'date' %}
+    <input type="date" name="{{ name }}" value="{{ value }}">
+  {%- elif kind == 'url' %}
+    <input type="url" name="{{ name }}" value="{{ value }}" placeholder="https://">
+  {%- elif kind == 'image' %}
+    <input name="{{ name }}" value="{{ value }}" placeholder="/static/uploads/... atau https://...">
+    {% if uploads %}<select class="pick-image" data-target="{{ name }}" aria-label="Pilih file gambar yang sudah ada">
+      <option value="">— pilih file yang sudah ada —</option>
+      {% for u in uploads %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+    </select>{% endif %}
+  {%- else %}
+    <input name="{{ name }}" value="{{ value }}">
+  {%- endif %}
+</label>
+{%- endmacro %}

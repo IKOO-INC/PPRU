@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Login Admin | PPRU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin login-page">
+<main class="login-card">
+  <h1>Login Admin</h1>
+  <p class="muted">Area ini khusus pengurus pesantren.</p>
+  {% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}
+  <form method="post" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username
+      <input name="username" autocomplete="username" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn btn-gold btn-block" type="submit">Masuk</button>
+  </form>
+  <p class="center"><a href="{{ url_for('public.index') }}">← Kembali ke situs</a></p>
+</main>
+</body>
+</html>

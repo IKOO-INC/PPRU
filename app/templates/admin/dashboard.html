@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block admin %}
+<h1>Selamat datang 👋</h1>
+<div class="stat-cards">
+  <div class="stat-card"><strong>{{ total_berita }}</strong><span>Total Berita</span></div>
+  <div class="stat-card"><strong>{{ berita_terbit }}</strong><span>Terbit</span></div>
+  <div class="stat-card"><strong>{{ berita_draf }}</strong><span>Draf</span></div>
+  <div class="stat-card"><strong>{{ total_galeri }}</strong><span>Foto Galeri</span></div>
+</div>
+<div class="btn-row">
+  <a class="btn btn-gold" href="{{ url_for('admin.berita_baru') }}">+ Tulis Berita</a>
+  <a class="btn btn-outline-dark" href="{{ url_for('admin.galeri_list') }}">Kelola Galeri</a>
+  <a class="btn btn-outline-dark" href="{{ url_for('admin.situs_index') }}">Edit Konten Situs</a>
+</div>
+<h2>Berita Terbaru</h2>
+{% if terbaru %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Judul</th><th>Kategori</th><th>Status</th><th>Tanggal</th></tr></thead>
+  <tbody>
+  {% for b in terbaru %}
+    <tr><td><a href="{{ url_for('admin.berita_edit', item_id=b.id) }}">{{ b.judul }}</a></td>
+      <td>{{ 'Kegiatan' if b.kategori == 'kegiatan' else 'Karya Santri' }}</td>
+      <td><span class="pill {{ b.status }}">{{ 'Terbit' if b.status == 'publish' else 'Draf' }}</span></td>
+      <td>{{ b.tanggal | tanggal(short=true) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="empty">Belum ada berita.</p>{% endif %}
+{% endblock %}

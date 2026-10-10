@@ -1,0 +1,22 @@
+{% macro gambar(src, alt, cls="", icon="🖼") -%}
+  {%- if src -%}
+    <img class="{{ cls }}" src="{{ src }}" alt="{{ alt }}" loading="lazy">
+  {%- else -%}
+    <div class="{{ cls }} ph" role="img" aria-label="{{ alt }}"><span>{{ icon }}</span></div>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro kartu_berita(b) -%}
+<article class="card">
+  <a class="card-img" href="{{ url_for('public.artikel_detail', slug=b.slug) }}">
+    {{ gambar(b.gambar, b.judul, "", "📰") }}
+  </a>
+  <div class="card-body">
+    <span class="badge">{{ 'Kegiatan' if b.kategori == 'kegiatan' else 'Karya Santri' }}</span>
+    <p class="meta">{{ b.tanggal | tanggal(short=true) }}</p>
+    <h3><a href="{{ url_for('public.artikel_detail', slug=b.slug) }}">{{ b.judul }}</a></h3>
+    <p class="muted">{{ b.ringkasan or (b.isi | truncate(140)) }}</p>
+    <a class="more" href="{{ url_for('public.artikel_detail', slug=b.slug) }}">BACA SELENGKAPNYA</a>
+  </div>
+</article>
+{%- endmacro %}

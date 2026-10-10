@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% block title %}Konten Situs{% endblock %}
+{% block admin %}
+<h1>Konten Situs</h1>
+<p class="muted">Ubah seluruh teks, gambar, dan kontak yang tampil di situs. Perubahan langsung terlihat setelah disimpan.</p>
+<div class="grid-3">
+  {% for key, spec in sections.items() %}
+  <a class="card pad link-card" href="{{ url_for('admin.situs_edit', section=key) }}">
+    <h3>{{ spec.label }}</h3>
+    <p class="muted">{{ 'Daftar' if spec.type == 'list' else 'Isian tunggal' }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

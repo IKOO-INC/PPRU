@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import gambar %}
+{% block title %}Profil{% endblock %}
+{% block content %}
+<section class="page-head"><div class="container"><p class="kicker">Profil</p><h1>{{ settings.sejarah.judul }}</h1><p>{{ settings.sejarah.sub }}</p></div></section>
+<section class="section">
+  <div class="container split">
+    <div class="prose">
+      {% for para in settings.sejarah.paragraf | paragraf %}<p>{{ para }}</p>{% endfor %}
+    </div>
+    <div>{{ gambar(settings.sejarah.gambar, settings.sejarah.judul, "img-rounded", "🕌") }}</div>
+  </div>
+</section>
+<section class="section alt">
+  <div class="container split kyai">
+    <div>{{ gambar(settings.kyai.foto, settings.kyai.nama, "img-rounded", "👤") }}</div>
+    <div>
+      <p class="kicker">{{ settings.kyai.judul }}</p>
+      <h2>{{ settings.kyai.nama }}</h2>
+      <p class="muted">{{ settings.kyai.gelar }}</p>
+      <div class="prose">{% for para in settings.kyai.paragraf | paragraf %}<p>{{ para }}</p>{% endfor %}</div>
+      {% if settings.identitas.ketua_yayasan %}<p><strong>Ketua Yayasan:</strong> {{ settings.identitas.ketua_yayasan }}</p>{% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
