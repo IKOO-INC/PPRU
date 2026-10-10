@@ -10,15 +10,40 @@ def test_halaman_publik_tampil(client):
 
 def test_beranda_memuat_bagian_seperti_referensi(client):
     html = client.get("/").get_data(as_text=True)
-    for teks in ["Program Unggulan", "Sejarah", "Pengasuh Pesantren", "Berita &amp; Kegiatan Terkini",
-                 "Karya Santri", "Galeri Kehidupan Santri", "Kegiatan Mendatang", "Pertanyaan Umum (FAQ)",
-                 "Daftar PSB", "Nderes"]:
+    for teks in ["Program Unggulan", "Pendidikan Holistik Berbasis Adab", "خادم المعهد",
+                 "Berita &amp; Kegiatan Terkini", "Karya Santri", "Galeri Kehidupan Santri",
+                 "Kegiatan Mendatang", "Pertanyaan Umum (FAQ)", "Daftar PSB", "Nderes Dulu Yuk",
+                 "Scroll Down"]:
         assert teks in html, teks
 
 
-def test_menu_mobile_ada(client):
+def test_navbar_dan_menu_mobile(client):
     html = client.get("/").get_data(as_text=True)
-    assert 'class="nav-toggle"' in html and 'viewport' in html
+    assert 'id="navbar"' in html and 'id="menuToggle"' in html and 'id="mobileMenu"' in html
+    assert 'name="viewport"' in html and 'lg:hidden' in html
+    assert 'href="/profil#visimisi"' in html
+
+
+def test_head_selaras_referensi(client):
+    html = client.get("/").get_data(as_text=True)
+    for frag in ['og:type', 'twitter:card', 'summary_large_image', 'aos@2.3.1', 'swiper@11',
+                 'lang="id"', 'scroll-smooth', 'css/app.css']:
+        assert frag in html, frag
+
+
+def test_psb_badge_hanya_saat_dibuka(app, client):
+    assert "Penerimaan Santri Baru" not in client.get("/").get_data(as_text=True)
+    settings = app.extensions["ppru"]["settings"]
+    value = settings.section("psb")
+    value["status"] = "open"
+    settings.save_section("psb", value)
+    html = app.test_client().get("/").get_data(as_text=True)
+    assert "Penerimaan Santri Baru" in html and "Dibuka" in html
+
+
+def test_profil_menampilkan_visi_misi(client):
+    html = client.get("/profil").get_data(as_text=True)
+    assert 'id="visimisi"' in html and "Visi" in html and "Misi" in html
 
 
 def test_artikel_hanya_menampilkan_terbit(app, client):

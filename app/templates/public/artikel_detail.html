@@ -1,22 +1,35 @@
 {% extends "base.html" %}
-{% from "_macros.html" import gambar, kartu_berita %}
+{% from "_macros.html" import arrow, gambar, kartu_berita %}
 {% block title %}{{ item.judul }}{% endblock %}
-{% block desc %}{{ item.ringkasan or item.isi | truncate(150) }}{% endblock %}
+{% block desc %}{{ item.ringkasan or (item.isi | truncate(150)) }}{% endblock %}
 {% block content %}
-<article class="container article">
-  <p class="meta"><span class="badge">{{ 'Kegiatan' if item.kategori == 'kegiatan' else 'Karya Santri' }}</span>
-    {{ item.tanggal | tanggal }}{% if item.tempat %} · {{ item.tempat }}{% endif %}</p>
-  <h1>{{ item.judul }}</h1>
-  {% if item.penulis %}<p class="muted">Oleh {{ item.penulis }}</p>{% endif %}
-  {{ gambar(item.gambar, item.judul, "article-img", "📰") }}
-  {% if item.ringkasan %}<p class="lead">{{ item.ringkasan }}</p>{% endif %}
-  <div class="prose">{% for para in item.isi | paragraf %}<p>{{ para }}</p>{% endfor %}</div>
-  <a class="more" href="{{ url_for('public.artikel') }}">← Kembali ke daftar berita</a>
+<article class="pt-40 pb-16 bg-white">
+  <div class="container mx-auto px-6 max-w-3xl" data-aos="fade-up">
+    <a href="{{ url_for('public.artikel', kategori=item.kategori) }}" class="inline-flex items-center gap-2 text-primary-600 font-bold text-sm mb-6">
+      <span class="rotate-180 inline-block">{{ arrow("w-4 h-4") }}</span> Kembali ke daftar berita
+    </a>
+    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-4">
+      <span class="{{ 'bg-accent/90' if item.kategori == 'karya-santri' else 'bg-primary-600' }} text-white text-xs font-bold px-3 py-1 rounded-full uppercase">{{ 'Karya Santri' if item.kategori == 'karya-santri' else 'Kegiatan' }}</span>
+      <span>{{ item.tanggal | tanggal }}</span>
+      {% if item.tempat %}<span>· {{ item.tempat }}</span>{% endif %}
+    </div>
+    <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-4">{{ item.judul }}</h1>
+    {% if item.penulis %}<p class="text-gray-500 mb-8">Oleh <span class="font-semibold text-slate-700">{{ item.penulis }}</span></p>{% endif %}
+    {{ gambar(item.gambar, item.judul, "w-full aspect-video object-cover rounded-3xl shadow-card mb-10", "📰") }}
+    {% if item.ringkasan %}<p class="text-xl text-slate-700 font-medium leading-relaxed mb-8">{{ item.ringkasan }}</p>{% endif %}
+    <div class="space-y-5 text-lg text-gray-600 leading-relaxed">
+      {% for para in item.isi | paragraf %}<p>{{ para }}</p>{% endfor %}
+    </div>
+  </div>
 </article>
 {% if terkait %}
-<section class="section alt"><div class="container">
-  <h2>Berita Terkait</h2>
-  <div class="grid-3">{% for b in terkait %}{{ kartu_berita(b) }}{% endfor %}</div>
-</div></section>
+<section class="py-12 lg:py-20 bg-slate-50">
+  <div class="container mx-auto px-6">
+    <h2 class="text-3xl font-bold text-slate-800 mb-10">Berita Terkait</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for b in terkait %}{{ kartu_berita(b) }}{% endfor %}
+    </div>
+  </div>
+</section>
 {% endif %}
 {% endblock %}

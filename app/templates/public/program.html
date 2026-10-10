@@ -1,14 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Program{% endblock %}
+{% from "_macros.html" import arrow %}
+{% from "public/_page_head.html" import page_head %}
+{% block title %}Program Pilihan{% endblock %}
 {% block content %}
-<section class="page-head"><div class="container"><p class="kicker">Program</p><h1>Program Unggulan</h1><p>Pendidikan holistik berbasis adab.</p></div></section>
-<section class="section">
-  <div class="container grid-3">
+{{ page_head("Program Pilihan", "Program Unggulan", "Pendidikan holistik berbasis adab: ilmu syar'i, tahfidz Al-Qur'an, dan pengetahuan umum.") }}
+<section class="py-12 lg:py-24 bg-slate-50">
+  <div class="container mx-auto px-6 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
     {% for p in settings.program %}
-    <article class="card pad" id="{{ p.link.split('#')[-1] if '#' in p.link else loop.index }}">
-      <h3>{{ p.judul }}</h3>
-      <p class="muted">{{ p.deskripsi }}</p>
-      <a class="btn btn-sm btn-outline-dark" href="{{ url_for('public.kontak') }}#psb">Daftar</a>
+    <article id="{{ p.link.split('#')[-1] if p.link and '#' in p.link else 'program-' ~ loop.index }}" class="group relative bg-white rounded-3xl p-8 shadow-lg border border-gray-100 overflow-hidden hover:-translate-y-2 transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+      <span class="text-sm font-bold text-accent">0{{ loop.index }}</span>
+      <h2 class="text-2xl font-bold text-slate-800 mt-2 mb-4">{{ p.judul }}</h2>
+      <p class="text-gray-500 leading-relaxed mb-6">{{ p.deskripsi }}</p>
+      <a href="{{ url_for('public.kontak') }}#psb" class="inline-flex items-center text-primary-600 font-bold hover:gap-2 transition-all">Daftar Sekarang {{ arrow() }}</a>
     </article>
     {% endfor %}
   </div>

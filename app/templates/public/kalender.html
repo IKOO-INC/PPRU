@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Kalender{% endblock %}
+{% from "_macros.html" import kartu_agenda %}
+{% from "public/_page_head.html" import page_head %}
+{% block title %}Kalender Akademik{% endblock %}
 {% block content %}
-<section class="page-head"><div class="container"><p class="kicker">Agenda</p><h1>Kalender Kegiatan</h1></div></section>
-<section class="section"><div class="container">
-  {% if agenda %}
-  <ul class="agenda">
-    {% for a in agenda %}
-      {% set hari, bulan = a.tanggal | tanggal_harian %}
-      <li>
-        <div class="date-box"><strong>{{ hari }}</strong><span>{{ bulan }}</span></div>
-        <div><span class="badge">{{ a.kategori }}</span><h3>{{ a.judul }}</h3><p class="muted">{{ a.deskripsi }}</p></div>
-      </li>
-    {% endfor %}
-  </ul>
-  {% else %}<p class="empty">Belum ada agenda.</p>{% endif %}
-</div></section>
+{{ page_head("Agenda", "Kalender Kegiatan", "Jadwal kegiatan rutin dan insidental Pondok Pesantren.") }}
+<section class="py-12 lg:py-24 bg-primary-50">
+  <div class="container mx-auto px-6">
+    {% if agenda %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for a in agenda %}{{ kartu_agenda(a, loop.index0 * 50) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 py-20">Belum ada agenda.</p>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}

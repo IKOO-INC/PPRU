@@ -1,15 +1,26 @@
 {% extends "base.html" %}
 {% from "_macros.html" import gambar %}
+{% from "public/_page_head.html" import page_head %}
 {% block title %}Galeri{% endblock %}
 {% block content %}
-<section class="page-head"><div class="container"><p class="kicker">Galeri</p><h1>Galeri Kehidupan Santri</h1><p>Momen-momen berharga dalam perjalanan menuntut ilmu di pesantren kami.</p></div></section>
-<section class="section"><div class="container">
-  {% if items %}
-  <div class="gallery big">
-    {% for g in items %}
-    <figure>{{ gambar(g.path, g.judul, "", "📷") }}<figcaption>{{ g.judul }} <small>{{ g.tanggal | tanggal(short=true) }}</small></figcaption></figure>
-    {% endfor %}
+{{ page_head("Galeri", "Galeri Kehidupan Santri", "Momen-momen berharga dalam perjalanan menuntut ilmu di pesantren kami.") }}
+<section class="py-12 lg:py-24 bg-white">
+  <div class="container mx-auto px-6">
+    {% if items %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {% for g in items %}
+      <figure class="relative group rounded-3xl overflow-hidden m-0 aspect-square" data-aos="fade-up">
+        {{ gambar(g.path, g.judul, "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110", "📷") }}
+        <figcaption class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+          <p class="text-white font-bold text-sm">{{ g.judul }}</p>
+          <p class="text-white/80 text-xs">{{ g.tanggal | tanggal(short=true) }}</p>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 py-20">Belum ada dokumentasi galeri.</p>
+    {% endif %}
   </div>
-  {% else %}<p class="empty">Belum ada foto di galeri.</p>{% endif %}
-</div></section>
+</section>
 {% endblock %}

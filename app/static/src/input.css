@@ -1,0 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Gaya kustom (sama dengan referensi) ===== */
+html { font-size: 14px; }
+@media (min-width: 1024px) { html { font-size: 12.5px; } }
+@media (min-width: 1536px) { html { font-size: 14px; } }
+
+body {
+  font-family: Outfit, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-quran {
+  font-family: Amiri, "Traditional Arabic", serif;
+  line-height: 2.5;
+  font-feature-settings: "liga" on;
+}
+
+.glass-header {
+  background: #ffffff0d;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.scrolled-header {
+  background: #fffffff2;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px #0000000d;
+}
+
+.hero-pattern {
+  background-color: #064e3b;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #047857 !important;
+  width: 24px !important;
+  border-radius: 999px !important;
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #047857; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #064e3b; }
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up .5s ease-out; }
+
+/* Menu mobile (slide-fade) */
+.slide-fade-enter-active { transition: all .3s ease-out; }
+.slide-fade-leave-active { transition: all .2s cubic-bezier(1, .5, .8, 1); }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-20px); opacity: 0; }
+.is-hidden { display: none !important; }
+
+/* Galeri bento: kolom/baris besar untuk foto pertama */
+.bento > :first-child { grid-column: span 2 / span 2; grid-row: span 2 / span 2; }
+
+/* Kelas bantu untuk menu mobile (dipakai JS) */
+.is-hidden { display: none !important; }

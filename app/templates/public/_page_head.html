@@ -1,0 +1,11 @@
+{# Header halaman dalam (gaya hero gelap referensi) #}
+{% macro page_head(kicker, judul, sub="") -%}
+<header class="relative pt-40 pb-20 hero-pattern text-white overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-r from-primary-900/90 to-primary-800/60"></div>
+  <div class="container mx-auto px-6 md:px-12 relative z-10" data-aos="fade-up">
+    <span class="text-accent-light font-bold tracking-widest uppercase text-sm mb-3 block">{{ kicker }}</span>
+    <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">{{ judul }}</h1>
+    {% if sub %}<p class="text-gray-200 text-lg max-w-2xl leading-relaxed">{{ sub }}</p>{% endif %}
+  </div>
+</header>
+{%- endmacro %}

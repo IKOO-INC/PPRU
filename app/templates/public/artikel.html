@@ -1,19 +1,25 @@
 {% extends "base.html" %}
 {% from "_macros.html" import kartu_berita %}
-{% block title %}Berita & Karya{% endblock %}
+{% from "public/_page_head.html" import page_head %}
+{% block title %}Berita & Karya Santri{% endblock %}
 {% block content %}
-<section class="page-head"><div class="container"><p class="kicker">Kabar Pesantren</p><h1>Berita &amp; Karya Santri</h1>
-  <div class="tabs">
-    <a href="{{ url_for('public.artikel') }}" class="{{ 'on' if not kategori }}">Semua</a>
-    <a href="{{ url_for('public.artikel', kategori='kegiatan') }}" class="{{ 'on' if kategori == 'kegiatan' }}">Kegiatan</a>
-    <a href="{{ url_for('public.artikel', kategori='karya-santri') }}" class="{{ 'on' if kategori == 'karya-santri' }}">Karya Santri</a>
-  </div>
-</div></section>
-<section class="section">
-  <div class="container">
+{{ page_head("Kabar Pesantren", "Berita & Karya Santri", "Kegiatan, kabar, dan karya santri PPTQ dari waktu ke waktu.") }}
+<section class="py-12 lg:py-24 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-wrap gap-3 mb-12 justify-center">
+      {% set tabs = [('', 'Semua'), ('kegiatan', 'Kegiatan'), ('karya-santri', 'Karya Santri')] %}
+      {% for val, label in tabs %}
+      <a href="{{ url_for('public.artikel', kategori=val) if val else url_for('public.artikel') }}"
+         class="px-6 py-2.5 rounded-full font-semibold transition-all {{ 'bg-primary-600 text-white shadow-lg shadow-primary-500/30' if kategori == val else 'bg-slate-100 text-slate-700 hover:bg-primary-50 hover:text-primary-700' }}">{{ label }}</a>
+      {% endfor %}
+    </div>
     {% if items %}
-    <div class="grid-3">{% for b in items %}{{ kartu_berita(b) }}{% endfor %}</div>
-    {% else %}<p class="empty">Belum ada berita yang diterbitkan.</p>{% endif %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for b in items %}{{ kartu_berita(b, loop.index0 * 50) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 py-20">Belum ada berita yang diterbitkan.</p>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

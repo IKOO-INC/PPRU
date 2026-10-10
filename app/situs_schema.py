@@ -47,6 +47,22 @@ SECTIONS = {
             ("surat", "Sumber (surat:ayat)", "text"),
         ],
     },
+    "visi_misi": {
+        "label": "Visi & Misi",
+        "type": "object",
+        "fields": [
+            ("visi", "Visi", "textarea"),
+            ("misi", "Misi (satu baris = satu poin)", "textarea"),
+        ],
+    },
+    "psb": {
+        "label": "Penerimaan Santri Baru (PSB)",
+        "type": "object",
+        "fields": [
+            ("status", "Status (open = dibuka, closed = ditutup)", "text"),
+            ("tahun_ajaran", "Tahun Ajaran", "text"),
+        ],
+    },
     "statistik": {
         "label": "Statistik",
         "type": "list",

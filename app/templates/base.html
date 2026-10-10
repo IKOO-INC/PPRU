@@ -1,87 +1,159 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ site.nama }}{% endblock %} | {{ site.nama_lengkap }}</title>
-  <meta name="description" content="{% block desc %}{{ site.tagline }}. {{ site.alamat }}{% endblock %}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="icon" href="{{ site.logo }}">
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ site.nama }}{% endblock %} - {{ site.tagline }}</title>
+  <meta name="description" content="{% block desc %}{{ site.nama_lengkap }} — {{ site.tagline }}.{% endblock %}" />
+
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.url_root }}" />
+  <meta property="og:title" content="{{ self.title() | striptags }}" />
+  <meta property="og:description" content="{{ site.nama_lengkap }} — {{ site.tagline }}." />
+  <meta property="og:image" content="{{ url_for('static', filename='img/og-default.png', _external=True) }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ self.title() | striptags }}" />
+  <meta name="twitter:description" content="{{ site.nama_lengkap }} — {{ site.tagline }}." />
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/og-default.png', _external=True) }}" />
+
+  <!-- Tailwind CSS (dikompilasi dari app/static/src/input.css) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+  <!-- AOS CSS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
-<body>
-<a class="skip" href="#konten">Lewati ke konten</a>
 
-<div class="topbar">
-  <div class="container topbar-in">
-    <span>📍 {{ site.alamat }}</span>
-    <span class="topbar-right">
-      <a href="tel:{{ site.telepon | replace('-', '') }}">☎ {{ site.telepon }}</a>
-      {% if site.instagram %}<a href="{{ site.instagram }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
-    </span>
-  </div>
-</div>
+<body class="bg-white text-slate-700 antialiased">
+  <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg">Lewati ke konten</a>
 
-<header class="header">
-  <div class="container header-in">
-    <a class="brand" href="{{ url_for('public.index') }}">
-      <img class="logo" src="{{ site.logo }}" alt="Logo {{ site.nama }}" onerror="this.style.display='none'">
-      <span class="brand-text">
-        <strong>{{ site.nama }}</strong>
-        <small>{{ site.nama_lengkap | replace(site.nama, '') | trim }}</small>
-      </span>
-    </a>
-    <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="menu">☰</button>
-    <nav id="menu" class="nav" aria-label="Menu utama">
-      {% set menu = [
-        ('public.index', 'Beranda', ''),
-        ('public.profil', 'Profil', ''),
-        ('public.program', 'Program', ''),
-        ('public.artikel', 'Berita & Karya', ''),
-        ('public.galeri', 'Galeri', ''),
-        ('public.kalender', 'Kalender', ''),
-        ('public.kontak', 'Kontak', ''),
-      ] %}
-      {% for endpoint, label, _ in menu %}
-        <a href="{{ url_for(endpoint) }}" class="{{ 'active' if request.endpoint == endpoint }}">{{ label }}</a>
-      {% endfor %}
-      <a class="btn btn-gold btn-sm" href="{{ url_for('public.kontak') }}#psb">Daftar PSB</a>
-    </nav>
-  </div>
-</header>
+  <!-- ===== NAVBAR ===== -->
+  {% set active = request.endpoint %}
+  <nav id="navbar" class="fixed w-full z-50 transition-all duration-500 top-0 glass-header text-white">
+    <div class="container mx-auto px-8 md:px-8 h-24 flex items-center justify-between">
+      <a href="{{ url_for('public.index') }}" class="flex items-center group">
+        <img src="{{ site.logo }}" alt="Logo {{ site.nama }}" class="h-14 w-auto object-contain transition-all duration-500 drop-shadow-lg" onerror="this.style.display='none'">
+        <span class="ml-3 hidden sm:flex flex-col leading-tight">
+          <strong class="text-base font-extrabold">{{ site.nama }}</strong>
+          <small class="text-xs opacity-80">Karangtanjung · Alian · Kebumen</small>
+        </span>
+      </a>
 
-<main id="konten">
-  {% block content %}{% endblock %}
-</main>
+      <!-- Menu desktop -->
+      <div class="hidden lg:flex items-center space-x-1">
+        <a href="{{ url_for('public.index') }}" class="px-5 py-2 rounded-full transition-all font-medium [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50 [.scrolled-header_&]:text-primary-700' if active == 'public.index' }}">Home</a>
 
-<footer class="footer">
-  <div class="container footer-grid">
-    <div>
-      <h4>{{ site.nama_lengkap }}</h4>
-      <p>{{ site.tagline }}</p>
+        <div class="relative group">
+          <button type="button" class="px-5 py-2 rounded-full transition-all font-medium flex items-center gap-1 [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50' if active in ['public.profil', 'public.program'] }}" aria-haspopup="true">
+            Profil
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="absolute top-full left-0 w-48 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden py-2 text-slate-800 border border-slate-100">
+              <a href="{{ url_for('public.profil') }}" class="block px-4 py-2 hover:bg-primary-50 hover:text-primary-700 transition-colors">Tentang Kami</a>
+              <a href="{{ url_for('public.profil') }}#visimisi" class="block px-4 py-2 hover:bg-primary-50 hover:text-primary-700 transition-colors">Visi &amp; Misi</a>
+              <a href="{{ url_for('public.program') }}" class="block px-4 py-2 hover:bg-primary-50 hover:text-primary-700 transition-colors">Program Pilihan</a>
+            </div>
+          </div>
+        </div>
+
+        <a href="{{ url_for('public.kalender') }}" class="px-5 py-2 rounded-full transition-all font-medium [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50 [.scrolled-header_&]:text-primary-700' if active == 'public.kalender' }}">Akademik</a>
+        <a href="{{ url_for('public.artikel') }}" class="px-5 py-2 rounded-full transition-all font-medium [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50 [.scrolled-header_&]:text-primary-700' if active in ['public.artikel', 'public.artikel_detail'] }}">Berita</a>
+        <a href="{{ url_for('public.galeri') }}" class="px-5 py-2 rounded-full transition-all font-medium [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50 [.scrolled-header_&]:text-primary-700' if active == 'public.galeri' }}">Galeri</a>
+        <a href="{{ url_for('public.kontak') }}" class="px-5 py-2 rounded-full transition-all font-medium [.scrolled-header_&]:text-slate-800 hover:bg-white/10 [.scrolled-header_&]:hover:bg-primary-50 [.scrolled-header_&]:hover:text-primary-700 {{ 'bg-white/20 [.scrolled-header_&]:bg-primary-50 [.scrolled-header_&]:text-primary-700' if active == 'public.kontak' }}">Kontak</a>
+      </div>
+
+      <div class="hidden lg:flex items-center gap-3">
+        <a href="{{ url_for('admin.login') }}" class="px-6 py-2.5 rounded-full border border-white/30 text-white hover:bg-white/10 [.scrolled-header_&]:border-primary-200 [.scrolled-header_&]:text-primary-700 [.scrolled-header_&]:hover:bg-primary-50 font-semibold transition-all">Login Sistem</a>
+        <a href="{{ url_for('public.kontak') }}#psb" class="px-6 py-2.5 rounded-full bg-accent hover:bg-accent-dark text-white font-semibold shadow-lg shadow-accent/30 hover:shadow-accent/50 transition-all transform hover:-translate-y-0.5">Daftar PSB</a>
+      </div>
+
+      <button id="menuToggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="mobileMenu" class="lg:hidden p-2 rounded-lg focus:outline-none transition-colors hover:bg-white/10 [.scrolled-header_&]:text-slate-800 [.scrolled-header_&]:hover:bg-primary-50">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
     </div>
-    <div>
-      <h4>Kontak</h4>
-      <p>{{ site.alamat }}</p>
-      <p>☎ {{ site.telepon }}{% if site.telepon_2 %} · {{ site.telepon_2 }}{% endif %}</p>
-      {% if site.email %}<p>✉ {{ site.email }}</p>{% endif %}
-    </div>
-    <div>
-      <h4>Tautan</h4>
-      <ul class="plain">
-        <li><a href="{{ url_for('public.profil') }}">Profil Pesantren</a></li>
-        <li><a href="{{ url_for('public.artikel') }}">Berita & Kegiatan</a></li>
-        <li><a href="{{ url_for('public.galeri') }}">Galeri</a></li>
-        {% if site.instagram %}<li><a href="{{ site.instagram }}" target="_blank" rel="noopener">Instagram</a></li>{% endif %}
-        {% if site.website %}<li><a href="{{ site.website }}" target="_blank" rel="noopener">Website Yayasan</a></li>{% endif %}
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div class="container">© {{ year }} {{ site.nama_lengkap }}. Hak cipta dilindungi.
-      <a href="{{ url_for('admin.login') }}" class="admin-link">Admin</a></div>
-  </div>
-</footer>
 
-<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <!-- Menu mobile -->
+    <div id="mobileMenu" class="is-hidden absolute top-24 left-0 w-full bg-white shadow-2xl p-6 border-t border-gray-100 text-slate-800 z-40 max-h-[80vh] overflow-y-auto">
+      <div class="flex flex-col space-y-4">
+        <a href="{{ url_for('public.index') }}" class="font-medium text-lg {{ 'text-primary-700' if active == 'public.index' else 'hover:text-primary-600' }}">Home</a>
+        <span class="font-medium text-lg">Profil</span>
+        <a href="{{ url_for('public.profil') }}" class="block font-medium pl-5 py-1.5 text-base text-slate-500 hover:text-primary-600">- Tentang Kami</a>
+        <a href="{{ url_for('public.profil') }}#visimisi" class="block font-medium pl-5 py-1.5 text-base text-slate-500 hover:text-primary-600">- Visi &amp; Misi</a>
+        <a href="{{ url_for('public.program') }}" class="block font-medium pl-5 py-1.5 text-base text-slate-500 hover:text-primary-600">- Program Pilihan</a>
+        <a href="{{ url_for('public.kalender') }}" class="font-medium text-lg hover:text-primary-600">Akademik</a>
+        <a href="{{ url_for('public.artikel') }}" class="font-medium text-lg hover:text-primary-600">Berita</a>
+        <a href="{{ url_for('public.galeri') }}" class="font-medium text-lg hover:text-primary-600">Galeri</a>
+        <a href="{{ url_for('public.kontak') }}" class="font-medium text-lg hover:text-primary-600">Kontak</a>
+        <div class="h-px bg-gray-100 my-2"></div>
+        <a href="{{ url_for('admin.login') }}" class="block text-center py-3 rounded-xl bg-gray-100 font-bold hover:bg-gray-200 transition-colors">Login Sistem</a>
+        <a href="{{ url_for('public.kontak') }}#psb" class="block text-center py-3 rounded-xl bg-accent text-white font-bold hover:bg-accent-dark transition-colors">Daftar Santri Baru</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="konten">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 text-white relative overflow-hidden">
+    <div class="container mx-auto px-8 md:px-12 py-16 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div class="space-y-4 text-gray-400">
+          <img src="{{ site.logo }}" alt="Logo {{ site.nama }}" class="h-16 w-auto object-contain" onerror="this.style.display='none'">
+          <p>{{ site.tagline }}.</p>
+          <div class="flex gap-4 pt-2 text-sm">
+            {% if site.instagram %}<a href="{{ site.instagram }}" target="_blank" rel="noopener" class="hover:text-accent transition-colors">Instagram</a>{% endif %}
+            {% if site.website %}<a href="{{ site.website }}" target="_blank" rel="noopener" class="hover:text-accent transition-colors">Website Yayasan</a>{% endif %}
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-6 text-white border-b-2 border-accent inline-block pb-2">Jelajahi</h3>
+          <ul class="space-y-4 text-gray-400">
+            <li><a href="{{ url_for('public.profil') }}" class="hover:text-accent transition-colors flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Profil Kami</a></li>
+            <li><a href="{{ url_for('public.kalender') }}" class="hover:text-accent transition-colors flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Kalender Akademik</a></li>
+            <li><a href="{{ url_for('public.kontak') }}#psb" class="hover:text-accent transition-colors flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Pendaftaran (PSB)</a></li>
+            <li><a href="{{ url_for('public.artikel') }}" class="hover:text-accent transition-colors flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Berita Terbaru</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-6 text-white border-b-2 border-accent inline-block pb-2">Hubungi Kami</h3>
+          <ul class="space-y-4 text-gray-400">
+            <li>{{ site.alamat }}</li>
+            <li>{{ site.telepon }}{% if site.telepon_2 %} · {{ site.telepon_2 }}{% endif %}</li>
+            {% if site.email %}<li>{{ site.email }}</li>{% endif %}
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold mb-6 text-white border-b-2 border-accent inline-block pb-2">Buletin</h3>
+          <p class="text-gray-400 mb-4">Dapatkan info kajian dan berita terbaru.</p>
+          <a href="{{ url_for('public.artikel') }}" class="inline-flex items-center px-5 py-3 rounded-xl bg-accent hover:bg-accent-dark text-white font-semibold transition-colors">Baca Berita</a>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-8 mt-12 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+        <p>© {{ year }} {{ site.nama_lengkap }}. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="{{ url_for('admin.login') }}" class="hover:text-white">Admin</a>
+          <a href="#" class="hover:text-white">Privacy Policy</a>
+          <a href="#" class="hover:text-white">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AOS JS -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </body>
+
 </html>

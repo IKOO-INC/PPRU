@@ -8,3 +8,4 @@ data/admin.json
 # File upload runtime (sementara, nanti pindah ke Cloudinary)
 app/static/uploads/*/*
 !app/static/uploads/*/.gitkeep
+node_modules/

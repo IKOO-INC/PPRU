@@ -1,153 +1,239 @@
 {% extends "base.html" %}
-{% from "_macros.html" import gambar, kartu_berita %}
+{% from "_macros.html" import arrow, gambar, kartu_berita, kartu_agenda %}
 {% block content %}
-<section class="hero">
-  <div class="container hero-in">
-    <p class="kicker">{{ site.nama_lengkap }}</p>
-    <h1>{{ settings.hero.judul }}</h1>
-    <p class="lead">{{ settings.hero.subjudul }}</p>
-    <div class="btn-row">
-      <a class="btn btn-gold" href="{{ settings.hero.tombol_utama_link }}">{{ settings.hero.tombol_utama_teks }}</a>
-      <a class="btn btn-outline" href="{{ settings.hero.tombol_kedua_link }}">{{ settings.hero.tombol_kedua_teks }}</a>
+
+<!-- ===== HERO ===== -->
+<header class="relative min-h-screen flex items-center overflow-hidden hero-pattern">
+  {% if settings.hero.gambar %}
+  <div class="absolute inset-0 opacity-20 bg-center bg-cover mix-blend-overlay" style="background-image:url('{{ settings.hero.gambar }}')"></div>
+  {% endif %}
+  <div class="absolute inset-0 bg-gradient-to-r from-primary-900/95 via-primary-900/85 to-primary-800/60"></div>
+  <div class="container mx-auto px-6 md:px-12 relative z-10 pt-32 pb-24">
+    <div class="max-w-3xl text-white" data-aos="fade-up">
+      {% if settings.psb.status == 'open' %}
+      <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2 text-sm font-medium mb-6">
+        <span class="w-2 h-2 rounded-full bg-accent-light animate-ping"></span>
+        Penerimaan Santri Baru {{ settings.psb.tahun_ajaran }} Dibuka
+      </div>
+      {% endif %}
+      <h1 class="text-5xl lg:text-6xl xl:text-[4rem] font-extrabold leading-tight mb-5">
+        {{ settings.hero.judul }}
+      </h1>
+      <p class="text-base lg:text-lg text-gray-200 mb-8 leading-relaxed font-light max-w-2xl">{{ settings.hero.subjudul }}</p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="{{ settings.hero.tombol_utama_link }}" class="group px-8 py-4 bg-accent hover:bg-accent-dark text-white rounded-full font-bold text-lg transition-all shadow-lg shadow-accent/40 flex items-center justify-center gap-2">
+          {{ settings.hero.tombol_utama_teks }}
+          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </a>
+        <a href="{{ settings.hero.tombol_kedua_link }}" class="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full font-bold text-lg transition-all flex items-center justify-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-white text-primary-700 flex items-center justify-center">
+            <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </span>
+          {{ settings.hero.tombol_kedua_teks }}
+        </a>
+      </div>
     </div>
   </div>
-</section>
+  <div class="hidden md:flex absolute bottom-24 left-1/2 -translate-x-1/2 flex-col items-center gap-2 z-20 opacity-70 animate-bounce">
+    <span class="text-xs text-white uppercase tracking-widest font-light">Scroll Down</span>
+    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+  </div>
+</header>
 
-<section class="stats">
-  <div class="container stats-grid">
+<!-- ===== STATISTIK ===== -->
+<section class="relative z-20 -mt-16 container mx-auto px-6">
+  <div class="bg-white rounded-3xl shadow-card border border-gray-100 grid grid-cols-2 lg:grid-cols-4 gap-8 p-8 md:p-12 text-center" data-aos="fade-up">
     {% for s in settings.statistik %}
-      <div class="stat"><strong>{{ s.angka }}</strong><span>{{ s.label }}</span></div>
+    <div>
+      <p class="text-4xl lg:text-5xl font-extrabold {{ 'text-accent' if loop.index is even else 'text-primary-600' }} mb-1 counter" data-target="{{ s.angka | replace('.', '') | replace(',', '') | int(0) }}">{{ s.angka }}</p>
+      <p class="text-gray-500 font-medium text-sm lg:text-base">{{ s.label }}</p>
+    </div>
     {% endfor %}
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <p class="kicker center">Program Unggulan</p>
-    <h2 class="center">Pendidikan Holistik Berbasis Adab</h2>
-    <p class="center muted narrow">Kami menyusun kurikulum yang menyeimbangkan antara ilmu syar'i, tahfidz Al-Qur'an, dan pengetahuan umum.</p>
-    <div class="grid-3">
+<!-- ===== PROGRAM UNGGULAN ===== -->
+<section class="py-12 lg:py-24 relative overflow-hidden bg-slate-50">
+  <div class="container mx-auto px-6">
+    <div class="text-center max-w-3xl mx-auto mb-16" data-aos="fade-up">
+      <span class="text-accent font-bold tracking-widest uppercase text-sm mb-2 block">Program Unggulan</span>
+      <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Pendidikan Holistik Berbasis Adab</h2>
+      <p class="text-gray-500 text-lg">Kami menyusun kurikulum yang menyeimbangkan antara ilmu syar'i, tahfidz Al-Qur'an, dan pengetahuan umum.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% set warna = [
+        ('bg-primary-50', 'group-hover:bg-primary-100', 'text-primary-600'),
+        ('bg-accent/10', 'group-hover:bg-accent/20', 'text-accent'),
+        ('bg-blue-50', 'group-hover:bg-blue-100', 'text-blue-600'),
+      ] %}
       {% for p in settings.program %}
-      <article class="card pad">
-        <h3>{{ p.judul }}</h3>
-        <p class="muted">{{ p.deskripsi }}</p>
-        {% if p.link %}<a class="more" href="{{ p.link }}">PELAJARI LEBIH LANJUT</a>{% endif %}
-      </article>
+      {% set w = warna[loop.index0 % 3] %}
+      <div class="group relative bg-white rounded-3xl p-8 shadow-lg border border-gray-100 overflow-hidden hover:-translate-y-2 transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+        <div class="absolute -right-10 -top-10 w-40 h-40 {{ w[0] }} rounded-full {{ w[1] }} transition-colors -z-0"></div>
+        <div class="relative z-10">
+          <h3 class="text-2xl font-bold text-slate-800 mb-4">{{ p.judul }}</h3>
+          <p class="text-gray-500 leading-relaxed mb-6">{{ p.deskripsi }}</p>
+          {% if p.link %}
+          <a href="{{ p.link }}" class="inline-flex items-center {{ w[2] }} font-bold hover:gap-2 transition-all">Pelajari Lebih Lanjut {{ arrow() }}</a>
+          {% endif %}
+        </div>
+      </div>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<section class="section alt">
-  <div class="container nderes">
-    <p class="kicker">Nderes Dulu Yuk Sebelum Masuk</p>
-    <p class="arab">{{ settings.ayat.arab }}</p>
-    <p>{{ settings.ayat.terjemah }}</p>
-    <p class="meta">{{ settings.ayat.surat }}</p>
+<!-- ===== NDERES (AYAT HARIAN) ===== -->
+<section class="py-12 bg-white">
+  <div class="container mx-auto px-6 max-w-3xl text-center" data-aos="fade-up">
+    <span class="text-accent font-bold tracking-widest uppercase text-sm mb-4 block">Nderes Dulu Yuk Sebelum Masuk</span>
+    <p class="font-arabic text-3xl md:text-4xl text-primary-800 leading-[2.2] mb-4" dir="rtl">{{ settings.ayat.arab }}</p>
+    <p class="text-gray-600 italic">{{ settings.ayat.terjemah }}</p>
+    <p class="text-sm text-gray-400 mt-2">{{ settings.ayat.surat }}</p>
   </div>
 </section>
 
-<section class="section">
-  <div class="container split">
-    <div>
-      <p class="kicker">Sejarah</p>
-      <h2>{{ settings.sejarah.judul }}</h2>
-      <p class="muted"><strong>{{ settings.sejarah.sub }}</strong></p>
-      {% for para in settings.sejarah.paragraf | paragraf | list %}
-        {% if loop.index <= 2 %}<p>{{ para }}</p>{% endif %}
-      {% endfor %}
-      <a class="more" href="{{ url_for('public.profil') }}">BACA SELENGKAPNYA</a>
+<!-- ===== SEJARAH & PENGASUH ===== -->
+<section class="relative py-12 lg:py-24 hero-pattern text-white overflow-hidden">
+  <div class="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+    <div class="space-y-6" data-aos="fade-right">
+      {{ gambar(settings.kyai.foto, settings.kyai.nama, "w-full h-[380px] object-cover rounded-3xl shadow-2xl", "👳") }}
+      <div class="text-center">
+        <p class="font-arabic text-accent-light text-2xl">خادم المعهد</p>
+        <p class="font-semibold mt-2">{{ settings.kyai.nama }}</p>
+        <p class="text-sm text-gray-300">{{ settings.kyai.gelar }}</p>
+      </div>
     </div>
-    <div>{{ gambar(settings.sejarah.gambar, settings.sejarah.judul, "img-rounded", "🕌") }}</div>
-  </div>
-</section>
-
-<section class="section alt">
-  <div class="container split kyai">
-    <div>{{ gambar(settings.kyai.foto, settings.kyai.nama, "img-rounded", "👤") }}</div>
-    <div>
-      <p class="arab">خادم المعهد</p>
-      <p class="kicker">{{ settings.kyai.judul }}</p>
-      <h2>{{ settings.kyai.nama }}</h2>
-      <p class="muted">{{ settings.kyai.gelar }}</p>
+    <div data-aos="fade-left">
+      <h2 class="text-3xl md:text-5xl font-bold mb-6 font-serif leading-tight">"{{ settings.sejarah.judul }}"</h2>
+      <span class="text-accent-light font-bold tracking-widest uppercase mb-4 block">{{ settings.sejarah.sub }}</span>
+      <div class="text-gray-200 text-lg md:text-xl font-serif space-y-4 mb-8 leading-relaxed text-justify opacity-90">
+        {% for para in settings.sejarah.paragraf | paragraf %}{% if loop.index <= 3 %}<p>{{ para }}</p>{% endif %}{% endfor %}
+      </div>
+      <a href="{{ url_for('public.profil') }}" class="inline-flex items-center px-8 py-4 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent-dark transition-all hover:-translate-y-1">
+        Baca Selengkapnya {{ arrow("w-5 h-5 ml-2") }}
+      </a>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <div class="head-row">
-      <div><p class="kicker">Kabar Pesantren</p><h2>Berita &amp; Kegiatan Terkini</h2></div>
-      <a class="more" href="{{ url_for('public.artikel', kategori='kegiatan') }}">LIHAT SEMUA</a>
+<!-- ===== BERITA & KEGIATAN TERKINI ===== -->
+<section class="py-12 lg:py-24 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-col md:flex-row justify-between items-center md:items-end mb-12" data-aos="fade-up">
+      <div class="w-full text-center md:w-auto md:text-left">
+        <span class="text-accent font-bold tracking-widest uppercase text-sm mb-2 block">Kabar Pesantren</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Berita &amp; Kegiatan Terkini</h2>
+      </div>
+      <a href="{{ url_for('public.artikel', kategori='kegiatan') }}" class="hidden md:inline-flex items-center gap-2 text-accent font-bold hover:gap-3 transition-all">Lihat Semua Berita {{ arrow("w-5 h-5") }}</a>
     </div>
     {% if berita_terbaru %}
-    <div class="grid-3">{% for b in berita_terbaru %}{{ kartu_berita(b) }}{% endfor %}</div>
-    {% else %}<p class="empty">Belum ada berita.</p>{% endif %}
-  </div>
-</section>
-
-<section class="section alt">
-  <div class="container">
-    <div class="head-row">
-      <div><p class="kicker">Kreativitas Santri</p><h2>Karya Santri</h2></div>
-      <a class="more" href="{{ url_for('public.artikel', kategori='karya-santri') }}">LIHAT SEMUA KARYA</a>
+    <div class="relative">
+      <div class="swiper mySwiper !pb-12">
+        <div class="swiper-wrapper">
+          {% for b in berita_terbaru %}
+          <div class="swiper-slide h-auto">{{ kartu_berita(b) }}</div>
+          {% endfor %}
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
     </div>
-    {% if karya_terbaru %}
-    <div class="grid-3">{% for b in karya_terbaru %}{{ kartu_berita(b) }}{% endfor %}</div>
-    {% else %}<p class="empty">Belum ada karya santri.</p>{% endif %}
+    {% else %}
+    <p class="text-center text-gray-500 py-16">Belum ada berita yang diterbitkan.</p>
+    {% endif %}
+    <div class="mt-8 text-center md:hidden">
+      <a href="{{ url_for('public.artikel', kategori='kegiatan') }}" class="inline-flex items-center gap-2 text-accent font-bold bg-white px-6 py-3 rounded-full shadow-md border border-accent/20">Lihat Semua Berita {{ arrow("w-5 h-5") }}</a>
+    </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <div class="head-row">
-      <div><p class="kicker">Galeri Kehidupan Santri</p><h2>Momen Berharga</h2></div>
-      <a class="more" href="{{ url_for('public.galeri') }}">LIHAT SELENGKAPNYA</a>
+<!-- ===== KARYA SANTRI ===== -->
+{% if karya_terbaru %}
+<section class="py-12 lg:py-24 bg-slate-50">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-col md:flex-row justify-between items-center md:items-end mb-12" data-aos="fade-up">
+      <div class="w-full text-center md:w-auto md:text-left">
+        <span class="text-accent font-bold tracking-widest uppercase text-sm mb-2 block">Kreativitas Santri</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Karya Santri</h2>
+      </div>
+      <a href="{{ url_for('public.artikel', kategori='karya-santri') }}" class="hidden md:inline-flex items-center gap-2 text-accent font-bold hover:gap-3 transition-all">Lihat Semua Karya {{ arrow("w-5 h-5") }}</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for b in karya_terbaru %}{{ kartu_berita(b, loop.index0 * 100) }}{% endfor %}
+    </div>
+    <div class="mt-12 text-center">
+      <a href="{{ url_for('public.artikel', kategori='karya-santri') }}" class="inline-flex items-center gap-2 text-accent font-bold bg-white px-6 py-3 rounded-full shadow-md border border-accent/20">Lihat Semua Karya {{ arrow("w-5 h-5") }}</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ===== GALERI ===== -->
+<section class="py-12 lg:py-24 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16" data-aos="fade-up">
+      <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Galeri Kehidupan Santri</h2>
+      <p class="text-gray-500 max-w-2xl mx-auto">Momen-momen berharga dalam perjalanan menuntut ilmu di pesantren kami.</p>
     </div>
     {% if galeri_terbaru %}
-    <div class="gallery">
+    <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-[200px] md:auto-rows-[240px] gap-4 bento">
       {% for g in galeri_terbaru %}
-      <figure>{{ gambar(g.path, g.judul, "", "📷") }}<figcaption>{{ g.judul }}</figcaption></figure>
+      <figure class="relative group rounded-3xl overflow-hidden cursor-pointer m-0">
+        {{ gambar(g.path, g.judul, "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110", "📷") }}
+        <figcaption class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+          <p class="text-white font-bold text-sm">{{ g.judul }}</p>
+        </figcaption>
+      </figure>
       {% endfor %}
     </div>
-    {% else %}<p class="empty">Belum ada foto di galeri.</p>{% endif %}
+    {% else %}
+    <div class="text-center py-20"><p class="text-gray-500">Belum ada dokumentasi galeri terbaru.</p></div>
+    {% endif %}
+    <div class="mt-12 text-center">
+      <a href="{{ url_for('public.galeri') }}" class="inline-flex items-center gap-2 text-primary-700 font-bold bg-white border border-primary-200 hover:bg-primary-50 px-6 py-3 rounded-full shadow-sm transition-all">Lihat Selengkapnya {{ arrow("w-5 h-5") }}</a>
+    </div>
   </div>
 </section>
 
-<section class="section alt">
-  <div class="container">
-    <div class="head-row">
-      <div><p class="kicker">Agenda Pondok</p><h2>Kegiatan Mendatang</h2></div>
-      <a class="more" href="{{ url_for('public.kalender') }}">LIHAT KALENDER LENGKAP</a>
+<!-- ===== AGENDA ===== -->
+<section id="agenda" class="py-12 lg:py-24 bg-primary-50">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-col md:flex-row justify-between items-center md:items-end mb-12" data-aos="fade-up">
+      <div class="w-full text-center md:w-auto md:text-left">
+        <span class="text-primary-600 font-bold tracking-widest uppercase text-sm mb-2 block">Agenda Pondok</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Kegiatan Mendatang</h2>
+      </div>
+      <a href="{{ url_for('public.kalender') }}" class="hidden md:inline-flex items-center gap-2 text-primary-700 font-bold hover:gap-3 transition-all">Lihat Kalender Lengkap {{ arrow("w-5 h-5") }}</a>
     </div>
     {% if agenda %}
-    <ul class="agenda">
-      {% for a in agenda %}
-        {% set hari, bulan = a.tanggal | tanggal_harian %}
-        <li>
-          <div class="date-box"><strong>{{ hari }}</strong><span>{{ bulan }}</span></div>
-          <div>
-            <span class="badge">{{ a.kategori }}</span>
-            <h3>{{ a.judul }}</h3>
-            <p class="muted">{{ a.deskripsi }}</p>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-    {% else %}<p class="empty">Belum ada agenda.</p>{% endif %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for a in agenda %}{{ kartu_agenda(a, loop.index0 * 100) }}{% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-500 py-12">Belum ada agenda.</p>
+    {% endif %}
+    <div class="mt-8 text-center md:hidden">
+      <a href="{{ url_for('public.kalender') }}" class="inline-flex items-center gap-2 text-primary-700 font-bold bg-white px-6 py-3 rounded-full shadow-md">Lihat Kalender Lengkap {{ arrow("w-5 h-5") }}</a>
+    </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container narrow">
-    <p class="kicker center">Bantuan</p>
-    <h2 class="center">Pertanyaan Umum (FAQ)</h2>
-    {% for f in settings.faq %}
-    <details class="faq">
-      <summary>{{ f.pertanyaan }}</summary>
-      <p>{{ f.jawaban }}</p>
-    </details>
-    {% endfor %}
+<!-- ===== FAQ ===== -->
+<section class="py-12 lg:py-24 bg-white">
+  <div class="container mx-auto px-6 max-w-4xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Pertanyaan Umum (FAQ)</h2>
+    <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
+      {% for f in settings.faq %}
+      <details class="group border border-gray-200 rounded-2xl overflow-hidden">
+        <summary class="w-full px-6 py-5 text-left bg-white hover:bg-gray-50 flex items-center justify-between font-semibold text-slate-800 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <span>{{ f.pertanyaan }}</span>
+          <svg class="w-5 h-5 text-primary-600 transition-transform duration-300 group-open:rotate-180 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="px-6 py-4 bg-gray-50 text-gray-600 leading-relaxed">{{ f.jawaban }}</div>
+      </details>
+      {% endfor %}
+    </div>
   </div>
 </section>
+
 {% endblock %}

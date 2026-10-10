@@ -82,4 +82,12 @@ DEFAULT_SETTINGS = {
         },
     ],
     "agenda": [],
+    "visi_misi": {
+        "visi": "Membentuk santri yang berilmu, berakhlak, dan berdaya guna bagi masyarakat.",
+        "misi": "Menyelenggarakan pengkajian kitab kuning dan ilmu alat secara sorogan dan bandongan.\nMembina hafalan Al-Qur'an dengan sanad dan murajaah rutin.\nMenyelenggarakan pendidikan formal yang bersinergi dengan pendidikan pesantren.\nMenanamkan akhlakul karimah dalam kehidupan sehari-hari santri.",
+    },
+    "psb": {
+        "status": "closed",
+        "tahun_ajaran": "2027/2028",
+    },
 }

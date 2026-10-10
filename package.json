@@ -1,0 +1,12 @@
+{
+  "name": "ppru-web",
+  "private": true,
+  "description": "Build CSS untuk situs PPRU (Tailwind v3, selaras dengan build referensi)",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i app/static/src/input.css -o app/static/css/app.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.js -i app/static/src/input.css -o app/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.18"
+  }
+}
