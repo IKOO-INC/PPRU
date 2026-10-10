@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Program{% endblock %}
+{% block content %}
+<section class="page-head"><div class="container"><p class="kicker">Program</p><h1>Program Unggulan</h1><p>Pendidikan holistik berbasis adab.</p></div></section>
+<section class="section">
+  <div class="container grid-3">
+    {% for p in settings.program %}
+    <article class="card pad" id="{{ p.link.split('#')[-1] if '#' in p.link else loop.index }}">
+      <h3>{{ p.judul }}</h3>
+      <p class="muted">{{ p.deskripsi }}</p>
+      <a class="btn btn-sm btn-outline-dark" href="{{ url_for('public.kontak') }}#psb">Daftar</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

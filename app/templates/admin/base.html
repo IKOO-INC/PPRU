@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{% block title %}Admin{% endblock %} | Dashboard PPRU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin">
+<header class="admin-top">
+  <button class="nav-toggle admin-toggle" type="button" aria-label="Buka menu admin" aria-expanded="false" aria-controls="admin-side">☰</button>
+  <strong>Dashboard Admin · {{ site.nama }}</strong>
+  <a class="admin-view" href="{{ url_for('public.index') }}" target="_blank" rel="noopener">Lihat Situs ↗</a>
+</header>
+<div class="admin-layout">
+  <aside class="admin-side" id="admin-side">
+    <nav aria-label="Menu admin">
+      <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if request.endpoint == 'admin.dashboard' }}">🏠 Dashboard</a>
+      <a href="{{ url_for('admin.berita_list') }}" class="{{ 'on' if request.endpoint and request.endpoint.startswith('admin.berita') }}">📰 Berita</a>
+      <a href="{{ url_for('admin.berita_baru') }}" class="sub">+ Tulis Berita</a>
+      <a href="{{ url_for('admin.galeri_list') }}" class="{{ 'on' if request.endpoint and request.endpoint.startswith('admin.galeri') }}">🖼 Galeri</a>
+      <a href="{{ url_for('admin.situs_index') }}" class="{{ 'on' if request.endpoint and request.endpoint.startswith('admin.situs') }}">⚙ Konten Situs</a>
+      <a href="{{ url_for('admin.akun') }}" class="{{ 'on' if request.endpoint == 'admin.akun' }}">🔑 Akun</a>
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="linkbtn" type="submit">⏻ Keluar</button>
+      </form>
+    </nav>
+  </aside>
+  <section class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="alert {{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    {% block admin %}{% endblock %}
+  </section>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

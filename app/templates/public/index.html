@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% from "_macros.html" import gambar, kartu_berita %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-in">
+    <p class="kicker">{{ site.nama_lengkap }}</p>
+    <h1>{{ settings.hero.judul }}</h1>
+    <p class="lead">{{ settings.hero.subjudul }}</p>
+    <div class="btn-row">
+      <a class="btn btn-gold" href="{{ settings.hero.tombol_utama_link }}">{{ settings.hero.tombol_utama_teks }}</a>
+      <a class="btn btn-outline" href="{{ settings.hero.tombol_kedua_link }}">{{ settings.hero.tombol_kedua_teks }}</a>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="container stats-grid">
+    {% for s in settings.statistik %}
+      <div class="stat"><strong>{{ s.angka }}</strong><span>{{ s.label }}</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <p class="kicker center">Program Unggulan</p>
+    <h2 class="center">Pendidikan Holistik Berbasis Adab</h2>
+    <p class="center muted narrow">Kami menyusun kurikulum yang menyeimbangkan antara ilmu syar'i, tahfidz Al-Qur'an, dan pengetahuan umum.</p>
+    <div class="grid-3">
+      {% for p in settings.program %}
+      <article class="card pad">
+        <h3>{{ p.judul }}</h3>
+        <p class="muted">{{ p.deskripsi }}</p>
+        {% if p.link %}<a class="more" href="{{ p.link }}">PELAJARI LEBIH LANJUT</a>{% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container nderes">
+    <p class="kicker">Nderes Dulu Yuk Sebelum Masuk</p>
+    <p class="arab">{{ settings.ayat.arab }}</p>
+    <p>{{ settings.ayat.terjemah }}</p>
+    <p class="meta">{{ settings.ayat.surat }}</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container split">
+    <div>
+      <p class="kicker">Sejarah</p>
+      <h2>{{ settings.sejarah.judul }}</h2>
+      <p class="muted"><strong>{{ settings.sejarah.sub }}</strong></p>
+      {% for para in settings.sejarah.paragraf | paragraf | list %}
+        {% if loop.index <= 2 %}<p>{{ para }}</p>{% endif %}
+      {% endfor %}
+      <a class="more" href="{{ url_for('public.profil') }}">BACA SELENGKAPNYA</a>
+    </div>
+    <div>{{ gambar(settings.sejarah.gambar, settings.sejarah.judul, "img-rounded", "🕌") }}</div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container split kyai">
+    <div>{{ gambar(settings.kyai.foto, settings.kyai.nama, "img-rounded", "👤") }}</div>
+    <div>
+      <p class="arab">خادم المعهد</p>
+      <p class="kicker">{{ settings.kyai.judul }}</p>
+      <h2>{{ settings.kyai.nama }}</h2>
+      <p class="muted">{{ settings.kyai.gelar }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="head-row">
+      <div><p class="kicker">Kabar Pesantren</p><h2>Berita &amp; Kegiatan Terkini</h2></div>
+      <a class="more" href="{{ url_for('public.artikel', kategori='kegiatan') }}">LIHAT SEMUA</a>
+    </div>
+    {% if berita_terbaru %}
+    <div class="grid-3">{% for b in berita_terbaru %}{{ kartu_berita(b) }}{% endfor %}</div>
+    {% else %}<p class="empty">Belum ada berita.</p>{% endif %}
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <div class="head-row">
+      <div><p class="kicker">Kreativitas Santri</p><h2>Karya Santri</h2></div>
+      <a class="more" href="{{ url_for('public.artikel', kategori='karya-santri') }}">LIHAT SEMUA KARYA</a>
+    </div>
+    {% if karya_terbaru %}
+    <div class="grid-3">{% for b in karya_terbaru %}{{ kartu_berita(b) }}{% endfor %}</div>
+    {% else %}<p class="empty">Belum ada karya santri.</p>{% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="head-row">
+      <div><p class="kicker">Galeri Kehidupan Santri</p><h2>Momen Berharga</h2></div>
+      <a class="more" href="{{ url_for('public.galeri') }}">LIHAT SELENGKAPNYA</a>
+    </div>
+    {% if galeri_terbaru %}
+    <div class="gallery">
+      {% for g in galeri_terbaru %}
+      <figure>{{ gambar(g.path, g.judul, "", "📷") }}<figcaption>{{ g.judul }}</figcaption></figure>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty">Belum ada foto di galeri.</p>{% endif %}
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <div class="head-row">
+      <div><p class="kicker">Agenda Pondok</p><h2>Kegiatan Mendatang</h2></div>
+      <a class="more" href="{{ url_for('public.kalender') }}">LIHAT KALENDER LENGKAP</a>
+    </div>
+    {% if agenda %}
+    <ul class="agenda">
+      {% for a in agenda %}
+        {% set hari, bulan = a.tanggal | tanggal_harian %}
+        <li>
+          <div class="date-box"><strong>{{ hari }}</strong><span>{{ bulan }}</span></div>
+          <div>
+            <span class="badge">{{ a.kategori }}</span>
+            <h3>{{ a.judul }}</h3>
+            <p class="muted">{{ a.deskripsi }}</p>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="empty">Belum ada agenda.</p>{% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container narrow">
+    <p class="kicker center">Bantuan</p>
+    <h2 class="center">Pertanyaan Umum (FAQ)</h2>
+    {% for f in settings.faq %}
+    <details class="faq">
+      <summary>{{ f.pertanyaan }}</summary>
+      <p>{{ f.jawaban }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

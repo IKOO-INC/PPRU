@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "judul": "[CONTOH] Kegiatan Santri Pekan Ini",
+    "slug": "contoh-kegiatan-santri-pekan-ini",
+    "kategori": "kegiatan",
+    "tempat": "KARANGTANJUNG",
+    "penulis": "Tim Humas",
+    "tanggal": "2026-10-01",
+    "gambar": "",
+    "status": "publish",
+    "ringkasan": "Ini adalah contoh berita. Hapus atau ubah lewat Dashboard Admin.",
+    "isi": "Ini adalah contoh isi berita kegiatan.\n\nSilakan ubah atau hapus berita ini dari menu Berita di Dashboard Admin, lalu tulis berita sesungguhnya.",
+    "dibuat": "2026-10-01T08:00:00",
+    "diubah": "2026-10-01T08:00:00"
+  },
+  {
+    "id": 2,
+    "judul": "[CONTOH] Karya Santri",
+    "slug": "contoh-karya-santri",
+    "kategori": "karya-santri",
+    "tempat": "KARANGTANJUNG",
+    "penulis": "Santri",
+    "tanggal": "2026-09-20",
+    "gambar": "",
+    "status": "publish",
+    "ringkasan": "Contoh tulisan karya santri. Ganti dengan karya asli.",
+    "isi": "Ini contoh karya santri.\n\nUnggah gambar karya dan tulis ringkasannya di Dashboard Admin.",
+    "dibuat": "2026-09-20T08:00:00",
+    "diubah": "2026-09-20T08:00:00"
+  }
+]

@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block title %}Akun{% endblock %}
+{% block admin %}
+<h1>Akun Admin</h1>
+<p class="muted">Login sebagai <strong>{{ username }}</strong>.</p>
+{% if errors %}<div class="alert error" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post" class="form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <h2>Ganti Password</h2>
+  <label>Password lama<input type="password" name="password_lama" autocomplete="current-password" required></label>
+  <label>Password baru (min. 8 karakter)<input type="password" name="password_baru" autocomplete="new-password" minlength="8" required></label>
+  <label>Ulangi password baru<input type="password" name="konfirmasi" autocomplete="new-password" minlength="8" required></label>
+  <button class="btn btn-gold" type="submit">Simpan Password</button>
+</form>
+{% endblock %}

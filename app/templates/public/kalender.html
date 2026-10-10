@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Kalender{% endblock %}
+{% block content %}
+<section class="page-head"><div class="container"><p class="kicker">Agenda</p><h1>Kalender Kegiatan</h1></div></section>
+<section class="section"><div class="container">
+  {% if agenda %}
+  <ul class="agenda">
+    {% for a in agenda %}
+      {% set hari, bulan = a.tanggal | tanggal_harian %}
+      <li>
+        <div class="date-box"><strong>{{ hari }}</strong><span>{{ bulan }}</span></div>
+        <div><span class="badge">{{ a.kategori }}</span><h3>{{ a.judul }}</h3><p class="muted">{{ a.deskripsi }}</p></div>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">Belum ada agenda.</p>{% endif %}
+</div></section>
+{% endblock %}

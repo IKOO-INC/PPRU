@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}
+<section class="section"><div class="container center">
+  <h1>{{ code }}</h1><p>{{ message }}</p>
+  <a class="btn btn-gold" href="{{ url_for('public.index') }}">Kembali ke Beranda</a>
+</div></section>
+{% endblock %}

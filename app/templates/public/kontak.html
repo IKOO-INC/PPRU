@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Kontak & PSB{% endblock %}
+{% block content %}
+<section class="page-head"><div class="container"><p class="kicker">Kontak</p><h1>Hubungi Kami</h1></div></section>
+<section class="section"><div class="container split">
+  <div class="card pad" id="psb">
+    <h2>Penerimaan Santri Baru</h2>
+    <p>Pendaftaran dapat dilakukan dengan menghubungi pengurus atau datang langsung ke sekretariat pesantren pada jam kerja.</p>
+    <ul class="check">
+      <li>Ijazah atau surat keterangan pendidikan terakhir</li>
+      <li>Kartu Keluarga dan akta kelahiran</li>
+      <li>Pas foto</li>
+      <li>Lulus tes membaca Al-Qur'an dan wawancara</li>
+    </ul>
+  </div>
+  <div class="card pad">
+    <h2>Informasi Kontak</h2>
+    <p><strong>Alamat</strong><br>{{ site.alamat }}</p>
+    <p><strong>Telepon</strong><br><a href="tel:{{ site.telepon | replace('-', '') }}">{{ site.telepon }}</a>{% if site.telepon_2 %}<br><a href="tel:{{ site.telepon_2 | replace('-', '') }}">{{ site.telepon_2 }}</a>{% endif %}</p>
+    {% if site.email %}<p><strong>Email</strong><br>{{ site.email }}</p>{% endif %}
+    {% if site.instagram %}<p><a class="more" href="{{ site.instagram }}" target="_blank" rel="noopener">Instagram Resmi →</a></p>{% endif %}
+    {% if site.maps %}<p><a class="more" href="{{ site.maps }}" target="_blank" rel="noopener">Buka di Google Maps →</a></p>{% endif %}
+  </div>
+</div></section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import gambar %}
+{% block title %}Galeri{% endblock %}
+{% block content %}
+<section class="page-head"><div class="container"><p class="kicker">Galeri</p><h1>Galeri Kehidupan Santri</h1><p>Momen-momen berharga dalam perjalanan menuntut ilmu di pesantren kami.</p></div></section>
+<section class="section"><div class="container">
+  {% if items %}
+  <div class="gallery big">
+    {% for g in items %}
+    <figure>{{ gambar(g.path, g.judul, "", "📷") }}<figcaption>{{ g.judul }} <small>{{ g.tanggal | tanggal(short=true) }}</small></figcaption></figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Belum ada foto di galeri.</p>{% endif %}
+</div></section>
+{% endblock %}

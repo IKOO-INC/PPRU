@@ -1,0 +1,64 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Tulis Berita' if mode == 'baru' else 'Edit Berita' }}{% endblock %}
+{% block admin %}
+<h1>{{ 'Tulis Berita Baru' if mode == 'baru' else 'Edit Berita' }}</h1>
+{% if errors %}<div class="alert error" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="form form-wide">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>Judul *
+    <input name="judul" value="{{ item.judul or '' }}" maxlength="200" required>
+  </label>
+  <div class="row-2">
+    <label>Kategori
+      <select name="kategori">
+        {% for k, v in kategori.items() %}<option value="{{ k }}" {{ 'selected' if item.kategori == k }}>{{ v }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select name="status">
+        {% for k, v in status.items() %}<option value="{{ k }}" {{ 'selected' if item.status == k }}>{{ v }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  <div class="row-3">
+    <label>Tempat (dateline)
+      <input name="tempat" value="{{ item.tempat or '' }}" maxlength="100" placeholder="mis. KARANGTANJUNG">
+    </label>
+    <label>Pembuat / Penulis
+      <input name="penulis" value="{{ item.penulis or '' }}" maxlength="100" placeholder="mis. Tim Humas">
+    </label>
+    <label>Tanggal
+      <input type="date" name="tanggal" value="{{ item.tanggal or '' }}" required>
+    </label>
+  </div>
+  <fieldset class="imgbox">
+    <legend>Gambar Berita</legend>
+    <label>Path gambar
+      <input name="gambar" id="gambar" value="{{ item.gambar or '' }}" placeholder="/static/uploads/berita/nama-file.jpg">
+    </label>
+    {% if uploads %}
+    <label>Atau pilih dari file yang sudah ada
+      <select id="pilih-gambar">
+        <option value="">— pilih —</option>
+        {% for u in uploads %}<option value="{{ u }}" {{ 'selected' if u == item.gambar }}>{{ u }}</option>{% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    <label>Atau unggah gambar baru (sementara disimpan lokal)
+      <input type="file" name="gambar_file" accept="image/jpeg,image/png,image/webp,image/gif">
+    </label>
+    {% if item.gambar %}<img class="preview" src="{{ item.gambar }}" alt="Pratinjau gambar">{% endif %}
+    <p class="hint">Jika mengunggah file baru, file itu yang dipakai. Format: JPG, PNG, WEBP, GIF. Maks 5 MB.</p>
+  </fieldset>
+  <label>Ringkasan (ditampilkan di daftar, maks 300 karakter)
+    <textarea name="ringkasan" rows="2" maxlength="300">{{ item.ringkasan or '' }}</textarea>
+  </label>
+  <label>Isi Berita * <span class="hint">(setiap baris kosong = paragraf baru)</span>
+    <textarea name="isi" rows="14" required>{{ item.isi or '' }}</textarea>
+  </label>
+  <div class="btn-row">
+    <button class="btn btn-gold" type="submit">Simpan</button>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin.berita_list') }}">Batal</a>
+  </div>
+</form>
+{% endblock %}

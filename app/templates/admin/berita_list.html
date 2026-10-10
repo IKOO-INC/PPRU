@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% block title %}Berita{% endblock %}
+{% block admin %}
+<div class="head-row">
+  <h1>Berita</h1>
+  <a class="btn btn-gold" href="{{ url_for('admin.berita_baru') }}">+ Tulis Berita</a>
+</div>
+{% if items %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Judul</th><th>Kategori</th><th>Tempat / Penulis</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead>
+  <tbody>
+  {% for b in items %}
+    <tr>
+      <td data-label="Judul"><a href="{{ url_for('admin.berita_edit', item_id=b.id) }}">{{ b.judul }}</a>
+        {% if b.status == 'publish' %}<br><a class="small" href="{{ url_for('public.artikel_detail', slug=b.slug) }}" target="_blank">lihat ↗</a>{% endif %}</td>
+      <td data-label="Kategori">{{ kategori_label.get(b.kategori, b.kategori) }}</td>
+      <td data-label="Tempat / Penulis">{{ b.tempat or '-' }}<br><small>{{ b.penulis or '' }}</small></td>
+      <td data-label="Tanggal">{{ b.tanggal | tanggal(short=true) }}</td>
+      <td data-label="Status"><span class="pill {{ b.status }}">{{ status_label.get(b.status) }}</span></td>
+      <td data-label="Aksi" class="actions">
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin.berita_edit', item_id=b.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin.berita_status', item_id=b.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-dark" type="submit">{{ 'Jadikan Draf' if b.status == 'publish' else 'Terbitkan' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.berita_hapus', item_id=b.id) }}" onsubmit="return confirm('Hapus berita ini?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Hapus</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="empty">Belum ada berita. Klik “Tulis Berita”.</p>{% endif %}
+{% endblock %}
