@@ -1,0 +1,7 @@
+<figure class="gallery-card gallery-card--{{ item.shape|default('small') }}" data-gallery-card data-category="{{ item.category|default('Kegiatan') }}">
+  <div class="gallery-card-image">
+    <img src="{{ item.image or site.placeholder_image }}" alt="{{ item.image_alt|default(item.title) }}" loading="lazy" style="object-position: {{ item.position|default('center') }}">
+    <span class="gallery-card-hover" aria-hidden="true">↗</span>
+  </div>
+  <figcaption><strong>{{ item.title }}</strong><small>{{ item.caption }}</small></figcaption>
+</figure>

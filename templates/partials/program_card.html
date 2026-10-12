@@ -1,0 +1,11 @@
+<article class="program-card">
+  <div class="program-icon program-icon--{{ program.color|default('green') }}" aria-hidden="true">
+    {% if program.icon == 'quran' %}<svg viewBox="0 0 24 24"><path d="M5 5.5c2.7-1.3 5.1-.7 7 1.3v12c-1.9-2-4.3-2.6-7-1.3zM19 5.5c-2.7-1.3-5.1-.7-7 1.3v12c1.9-2 4.3-2.6 7-1.3z"/><path d="M8 9h2M14 9h2"/></svg>
+    {% elif program.icon == 'school' %}<svg viewBox="0 0 24 24"><path d="m3 9 9-5 9 5-9 5zM6 11v6c3.7 2.8 8.3 2.8 12 0v-6M21 9v7"/><circle cx="21" cy="18" r="1"/></svg>
+    {% else %}<svg viewBox="0 0 24 24"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5"/></svg>{% endif %}
+  </div>
+  <span class="program-category">{{ program.category }}</span>
+  <h3>{{ program.title }}</h3>
+  <p>{{ program.description }}</p>
+  <a class="card-link" href="/akademik">Pelajari lebih lanjut <span aria-hidden="true">↗</span></a>
+</article>

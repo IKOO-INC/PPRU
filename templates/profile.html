@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Sejarah & Profil · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-banner page-banner--profile">
+  <div class="container page-banner-content"><span class="light-eyebrow">Tentang Kami</span><h1>{{ data.profile.title }}</h1><p>{{ data.profile.subtitle }}</p></div>
+</section>
+<section class="profile-content-section">
+  <div class="container profile-content-wrap">
+    <div class="profile-video">
+      <img src="{{ data.profile.image }}" alt="{{ data.profile.video_label }}" fetchpriority="high">
+      <div class="video-overlay"><span class="video-logo">{{ site.short_name }}</span><strong>{{ data.profile.video_label }}</strong><small>Profil Pondok Pesantren Roudlotul Ulum</small><button type="button" class="play-button" aria-label="Video profil segera tersedia">▶</button></div>
+    </div>
+    <article class="history-article">
+      <span class="section-eyebrow">Tentang PPRU</span><h2>{{ data.profile.history_title }}</h2><span class="heading-underline"></span>
+      {% for paragraph in data.profile.history_paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+      <p class="article-signoff"><em>Semoga ikhtiar pendidikan ini terus menjadi jalan tumbuhnya generasi Qur’ani yang berilmu dan berakhlak mulia. Aamiin.</em></p>
+      <div class="article-credits"><span>Profil Pondok Pesantren Roudlotul Ulum</span><span>Karangtanjung, Alian, Kebumen</span></div>
+    </article>
+  </div>
+</section>
+<section class="vision-mission-section">
+  <div class="container">
+    <div class="section-title section-title--center"><span class="section-eyebrow">Cita-cita luhur</span><h2>{{ data.profile.vision_title }}</h2></div>
+    <div class="vision-mission-grid">
+      <article class="vision-card"><span class="vm-icon vm-icon--green" aria-hidden="true">◎</span><h3>Visi</h3><p>“{{ data.profile.vision }}”</p></article>
+      <article class="mission-card"><span class="vm-icon vm-icon--orange" aria-hidden="true">▤</span><h3>Misi</h3><ol>{% for mission in data.profile.mission %}<li>{{ mission }}</li>{% endfor %}</ol></article>
+    </div>
+  </div>
+</section>
+{% endblock %}

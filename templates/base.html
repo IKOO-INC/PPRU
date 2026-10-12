@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#075c45">
+  <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
+  <title>{% block title %}{{ site.name }}{% endblock %}</title>
+  <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+  {% block extra_head %}{% endblock %}
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten utama</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="{{ site.name }} — Home">
+        <img class="brand-mark" src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="42" height="42">
+        <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span></button>
+      <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
+        <div class="nav-links">
+          {% for item in site.navigation %}
+            <a class="nav-link{% if active_page == item.id %} is-active{% endif %}" href="{{ item.url }}"{% if active_page == item.id %} aria-current="page"{% endif %}>{{ item.label }}{% if item.id == 'profile' %}<span class="nav-caret" aria-hidden="true">⌄</span>{% endif %}</a>
+          {% endfor %}
+        </div>
+        <div class="header-actions">
+          <a class="login-link" href="{{ site.login_url }}">{{ site.login_label }}</a>
+          <a class="button button--orange button--small" href="{{ site.admission_url }}">{{ site.admission_label }} <span aria-hidden="true">↗</span></a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">{% block content %}{% endblock %}</main>
+
+  <footer class="site-footer">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <a class="brand brand--footer" href="/">
+          <img class="brand-mark" src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48">
+          <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
+        </a>
+        <p>{{ site.footer_note }}</p>
+        <div class="social-links" aria-label="Media sosial">
+          <a href="#footer" aria-label="Facebook">f</a><a href="#footer" aria-label="Instagram">◎</a><a href="#footer" aria-label="YouTube">▶</a><a href="#footer" aria-label="TikTok">♪</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h2 class="footer-title">Jelajahi</h2>
+        {% for item in site.navigation %}<a href="{{ item.url }}">{{ item.label }}</a>{% endfor %}
+      </div>
+      <div class="footer-contact">
+        <h2 class="footer-title">Hubungi Kami</h2>
+        <p><span class="footer-icon" aria-hidden="true">⌖</span>{{ data.contact.address }}</p>
+        <p><span class="footer-icon" aria-hidden="true">◉</span>{{ data.contact.phone }}</p>
+        <p><span class="footer-icon" aria-hidden="true">✉</span>{{ data.contact.email }}</p>
+      </div>
+      <div class="footer-newsletter">
+        <h2 class="footer-title">Buletin</h2>
+        <p>Dapatkan info kegiatan dan kabar terbaru.</p>
+        <form class="newsletter-form" data-demo-form>
+          <label class="visually-hidden" for="newsletter-email">Email Anda</label>
+          <input id="newsletter-email" type="email" placeholder="Email Anda" required>
+          <button type="submit" aria-label="Daftar buletin">→</button>
+        </form>
+        <p class="form-status" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="container footer-bottom" id="footer">
+      <span>© {{ site.short_name }} · Pondok Pesantren Roudlotul Ulum</span>
+      <div><a href="/kontak">Kontak</a><a href="/psb">Penerimaan Santri Baru</a></div>
+    </div>
+  </footer>
+</body>
+</html>

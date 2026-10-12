@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Galeri Kegiatan · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">Dokumentasi kegiatan</span><h1>Galeri Kegiatan</h1><p>Potret aktivitas santri dalam menimba ilmu dan menjalani kehidupan sehari-hari.</p></div></section>
+<section class="gallery-page-section"><div class="container"><div class="gallery-filters" role="group" aria-label="Filter galeri"><button type="button" class="is-active" data-gallery-filter="all">Semua</button><button type="button" data-gallery-filter="Kegiatan">Kegiatan</button><button type="button" data-gallery-filter="Santri">Santri</button><button type="button" data-gallery-filter="Pesantren">Pesantren</button></div><div class="gallery-mosaic gallery-mosaic--page">{% for item in data.gallery %}{% include "partials/gallery_card.html" %}{% endfor %}</div></div></section>
+{% endblock %}

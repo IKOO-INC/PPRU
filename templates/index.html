@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Home · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="home-hero">
+  <img class="home-hero-bg" src="{{ data.hero.image }}" alt="" fetchpriority="high">
+  <div class="home-hero-shade"></div>
+  <div class="container home-hero-inner">
+    <div class="home-hero-copy">
+      <span class="hero-eyebrow"><i></i>{{ data.hero.eyebrow }}</span>
+      <h1>Membangun Generasi<br><em>Qur’ani &amp; Beradab</em></h1>
+      <p>{{ data.hero.description }}</p>
+      <div class="hero-buttons">
+        <a class="button button--orange" href="{{ data.hero.primary_url }}">{{ data.hero.primary_label }} <span aria-hidden="true">↗</span></a>
+        <a class="button button--glass" href="{{ data.hero.secondary_url }}"><span class="play-dot" aria-hidden="true">▶</span>{{ data.hero.secondary_label }}</a>
+      </div>
+    </div>
+    <div class="hero-promo">
+      <img src="{{ data.hero.image }}" alt="{{ data.hero.image_alt }}" fetchpriority="high">
+      <span class="promo-glow" aria-hidden="true"></span>
+      <div class="promo-badge"><span class="promo-icon" aria-hidden="true">✳</span><span><strong>{{ data.hero.image_note }}</strong><small>Belajar · Tumbuh · Menginspirasi</small></span></div>
+    </div>
+    <span class="hero-scroll" aria-hidden="true">GULIR UNTUK MENJELAJAHI <span>↓</span></span>
+  </div>
+</section>
+
+<section class="stats-band" aria-label="Pondok dalam angka">
+  <div class="container stats-card">
+    {% for stat in data.stats %}<div class="stat-item"><strong>{{ stat.value }}</strong><span>{{ stat.label }}</span></div>{% endfor %}
+  </div>
+</section>
+
+<section class="section programs-section" id="akademik">
+  <div class="container">
+    <div class="section-title section-title--center">
+      <span class="section-eyebrow">{{ data.program_intro.eyebrow }}</span>
+      <h2>{{ data.program_intro.title }}</h2>
+      <p>{{ data.program_intro.description }}</p>
+    </div>
+    <div class="program-grid">
+      {% for program in data.programs %}{% include "partials/program_card.html" %}{% endfor %}
+    </div>
+    <div class="section-link-wrap"><a class="text-link" href="/akademik">Pelajari seluruh program <span aria-hidden="true">→</span></a></div>
+  </div>
+</section>
+
+<section class="history-section">
+  <div class="container history-grid">
+    <div class="history-photo">
+      <img src="{{ data.history.image }}" alt="{{ data.history.image_alt }}" loading="lazy">
+      <span class="history-photo-caption">{{ site.short_name }} · {{ site.address }}</span>
+      <span class="history-photo-number">01 <i>/ 03</i></span>
+    </div>
+    <div class="history-copy">
+      <span class="light-eyebrow">{{ data.history.eyebrow }}</span>
+      <h2>“{{ data.history.title }}”</h2>
+      <p class="history-lead">{{ data.history.intro }}</p>
+      <p>{{ data.history.body }}</p>
+      <blockquote>{{ data.history.quote }}</blockquote>
+      <a class="button button--orange button--small" href="/profil">Baca selengkapnya <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="section latest-section">
+  <div class="container">
+    <div class="section-heading-row">
+      <div><span class="section-eyebrow">Kabar Pesantren</span><h2>Berita &amp; Kegiatan Terkini</h2></div>
+      <div class="carousel-arrows" aria-hidden="true"><span>‹</span><span>›</span></div>
+    </div>
+    <div class="news-grid news-grid--home">
+      {% for post in data.news[:3] %}{% include "partials/news_card.html" %}{% endfor %}
+    </div>
+    <div class="section-link-wrap"><a class="text-link" href="/berita">Baca semua berita <span aria-hidden="true">→</span></a></div>
+  </div>
+</section>
+
+<section class="works-section">
+  <div class="container">
+    <div class="section-heading-row">
+      <div><span class="section-eyebrow">Kreativitas &amp; Inspirasi</span><h2>Karya Santri</h2></div>
+      <a class="text-link text-link--gold" href="/berita">Lihat karya lainnya <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="works-grid">
+      {% for work in data.works %}
+      <article class="work-card">
+        <a class="work-image" href="/berita/{{ data.news[4].slug }}"><img src="{{ work.image }}" alt="{{ work.image_alt }}" loading="lazy"><span class="work-badge">{{ work.category }}</span></a>
+        <div class="work-copy"><span class="work-kicker">{{ work.subtitle }}</span><h3>{{ work.title }}</h3><p>{{ work.excerpt }}</p><a class="card-link card-link--gold" href="/berita/{{ data.news[4].slug }}">{{ work.label }} <span aria-hidden="true">→</span></a></div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section gallery-section-home">
+  <div class="container">
+    <div class="section-title section-title--center">
+      <span class="section-eyebrow">Momen &amp; Kebersamaan</span><h2>Galeri Kehidupan Santri</h2>
+      <p>Potret suasana, kegiatan, dan kebersamaan dalam perjalanan belajar di pesantren.</p>
+    </div>
+    <div class="gallery-mosaic gallery-mosaic--home">
+      {% for item in data.gallery[:6] %}{% include "partials/gallery_card.html" %}{% endfor %}
+    </div>
+    <div class="section-link-wrap"><a class="text-link" href="/galeri">Lihat selengkapnya <span aria-hidden="true">→</span></a></div>
+  </div>
+</section>
+
+<section class="events-section">
+  <div class="container">
+    <div class="section-heading-row">
+      <div><span class="section-eyebrow">Catat tanggalnya</span><h2>Kegiatan Mendatang</h2></div>
+      <a class="text-link" href="/kontak">Lihat kalender lengkap <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="event-grid">
+      {% for event in data.events %}
+      <article class="event-card"><div class="event-date"><strong>{{ event.day }}</strong><span>{{ event.month }}</span></div><div class="event-copy"><span>{{ event.category }}</span><h3>{{ event.title }}</h3><p>{{ event.description }}</p></div><span class="event-arrow" aria-hidden="true">↗</span></article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="faq-section">
+  <div class="container faq-container">
+    <div class="section-title section-title--center"><span class="section-eyebrow">Pusat informasi</span><h2>Pertanyaan Umum (FAQ)</h2></div>
+    <div class="faq-list">
+      {% for item in data.faq %}<details class="faq-item"><summary>{{ item.question }}<span aria-hidden="true">+</span></summary><p>{{ item.answer }}</p></details>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
