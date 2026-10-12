@@ -1,0 +1,15 @@
+{% macro text_field(label, name, value, placeholder='') -%}
+<label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}"></label>
+{%- endmacro %}
+
+{% macro textarea_field(label, name, value, rows=3) -%}
+<label class="admin-field admin-field--wide"><span>{{ label }}</span><textarea name="{{ name }}" rows="{{ rows }}">{{ value }}</textarea></label>
+{%- endmacro %}
+
+{% macro asset_field(label, name, value, alt='Pratinjau gambar') -%}
+<div class="admin-asset-field">
+  <label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="/static/images/nama-file.jpg" data-image-input></label>
+  <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview>
+  <small>Isi path lokal, misalnya <code>/static/images/foto.jpg</code>. Letakkan file gambar di folder <code>static/</code>.</small>
+</div>
+{%- endmacro %}

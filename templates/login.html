@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Masuk · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="login-section"><div class="login-card"><a class="login-brand" href="/"><img src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48"><span>{{ site.name }}</span></a><span class="section-eyebrow">Portal santri</span><h1>Masuk</h1><p>Area akun akan tersedia setelah backend autentikasi disiapkan.</p><form data-demo-form><label class="field-label" for="login-email">Email atau nama pengguna</label><input class="field-input" id="login-email" type="text" placeholder="Masukkan email / nama pengguna" required><label class="field-label" for="login-password">Kata sandi</label><input class="field-input" id="login-password" type="password" placeholder="Masukkan kata sandi" required><button class="button button--green button--form" type="submit">Masuk</button><p class="form-status" aria-live="polite"></p></form><a class="login-back" href="/">← Kembali ke beranda</a></div></section>
+{% endblock %}

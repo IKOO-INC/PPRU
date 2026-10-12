@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Akademik · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">Akademik</span><h1>{{ data.program_intro.title }}</h1><p>{{ data.program_intro.description }}</p></div></section>
+<section class="section academic-page-section"><div class="container"><div class="program-grid program-grid--page">{% for program in data.programs %}{% include "partials/program_card.html" %}{% endfor %}</div></div></section>
+<section class="academic-note"><div class="container"><p>Kenali juga perjalanan pendidikan kami dan kegiatan santri.</p><a class="button button--green" href="/profil">Tentang pesantren <span aria-hidden="true">↗</span></a></div></section>
+{% endblock %}

@@ -1,0 +1,12 @@
+<article class="news-card" data-news-card data-category="{{ post.category|lower }}" data-search="{{ (post.title ~ ' ' ~ post.excerpt ~ ' ' ~ post.category)|lower }}">
+  <a class="news-card-image" href="/berita/{{ post.slug }}" aria-label="Baca {{ post.title }}">
+    <img src="{{ post.image or site.placeholder_image }}" alt="{{ post.image_alt|default(post.title) }}" loading="lazy" style="object-position: {{ post.position|default('center') }}">
+    <span class="image-category">{{ post.category }}</span>
+  </a>
+  <div class="news-card-body">
+    <div class="news-meta"><span>{{ post.category }}</span><span>{{ post.date }}</span></div>
+    <h3><a href="/berita/{{ post.slug }}">{{ post.title }}</a></h3>
+    <p>{{ post.excerpt }}</p>
+    <a class="card-link" href="/berita/{{ post.slug }}">Baca selengkapnya <span aria-hidden="true">→</span></a>
+  </div>
+</article>
