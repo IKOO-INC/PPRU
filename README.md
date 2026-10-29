@@ -18,7 +18,7 @@ SDK Cloudinary tercantum di `requirements.txt`. Isi tiga variabel berikut melalu
 - `CLOUDINARY_API_KEY`
 - `CLOUDINARY_API_SECRET`
 
-`.env.example` hanya berisi nama variabel dan placeholder; aplikasi tidak memuat file `.env` secara otomatis. Untuk shell lokal, ekspor nilai konfigurasi di proses/shell sebelum menjalankan aplikasi. Endpoint `POST /admin/upload-image` mewajibkan sesi admin dan token CSRF, memvalidasi file, lalu mengembalikan URL Cloudinary. Tanpa konfigurasi lengkap, unggahan ditolak dengan pesan konfigurasi yang jelas.
+`.env.example` hanya berisi placeholder dan nilai default, bukan kredensial; aplikasi tidak memuat file `.env` secara otomatis. Untuk shell lokal, ekspor nilai konfigurasi di proses/shell sebelum menjalankan aplikasi. Endpoint `POST /admin/upload-image` mewajibkan sesi admin dan token CSRF, memvalidasi file, lalu mengembalikan URL Cloudinary. Tanpa konfigurasi lengkap, unggahan ditolak dengan pesan konfigurasi yang jelas.
 
 Setelah konfigurasi tersedia, jalankan migrasi satu kali untuk mengganti referensi lama `/static/...` yang dipakai sebagai gambar pada JSON runtime dan seed:
 
@@ -32,7 +32,7 @@ Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PA
 
 ### Penyimpanan data di Vercel dengan MongoDB Atlas
 
-Filesystem deployment Vercel tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk CRUD admin, buat cluster dan database user di **MongoDB Atlas**, lalu atur connection string sebagai environment variable rahasia `MONGODB_URI` pada project Vercel. Opsional: atur `MONGODB_DATABASE` (default `ppru`) dan `MONGODB_COLLECTION` (default `portal_data`). Aplikasi menyimpan preferensi, berita, dan galeri dalam satu dokumen per environment (`preview` atau `production`) agar perubahan dokumen tersimpan secara atomik.
+Filesystem deployment Vercel tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk CRUD admin, buat cluster dan database user di **MongoDB Atlas**, lalu atur connection string sebagai environment variable rahasia `MONGODB_URI` pada project Vercel. Opsional: atur `MONGODB_DATABASE` (default `ppru`), `MONGODB_COLLECTION` (default `portal_data`), dan `MONGODB_NAMESPACE` (default `ppru`). Aplikasi menyimpan preferensi, berita, dan galeri dalam satu dokumen per environment (`preview` atau `production`) agar perubahan dokumen tersimpan secara atomik.
 
 Atur `MONGODB_URI` pada environment **Preview** dan **Production**, pastikan aturan Network Access Atlas mengizinkan koneksi dari Vercel, lalu deploy ulang. Jangan commit atau mengirim connection string melalui chat. Tanpa URI di Vercel, halaman publik tetap membaca file seed, sedangkan perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal tanpa `MONGODB_URI`, penyimpanan JSON/file tetap digunakan seperti biasa.
 
