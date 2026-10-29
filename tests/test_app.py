@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from app import _safe_image_url, create_app
 from cloudinary_service import upload_image
-from content_store import UpstashJsonPortalStore, UpstashRestClient
+from content_store import MongoPortalStore
 from werkzeug.datastructures import FileStorage
 
 
@@ -185,8 +185,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         app = create_app({
             "TESTING": True,
             "VERCEL": True,
-            "KV_REST_API_URL": "",
-            "KV_REST_API_TOKEN": "",
+            "MONGODB_URI": "",
             "CONTENT_FILE": self.content_file,
             "NEWS_FILE": self.news_file,
             "GALLERY_FILE": self.gallery_file,
@@ -207,73 +206,57 @@ class PortalRoutesTestCase(unittest.TestCase):
         news_slug = self.content["news"][0]["slug"]
         news_delete = client.post(f"/admin/berita/{news_slug}/hapus", data={"csrf_token": token})
         self.assertEqual(news_delete.status_code, 503)
-        self.assertIn("KV_REST_API_URL", news_delete.get_data(as_text=True))
+        self.assertIn("MONGODB_URI", news_delete.get_data(as_text=True))
         self.assertTrue(any(item["slug"] == news_slug for item in json.loads(self.news_file.read_text(encoding="utf-8"))))
 
         gallery_id = self.content["gallery"][0]["id"]
         gallery_delete = client.post(f"/admin/galeri/{gallery_id}/hapus", data={"csrf_token": token})
         self.assertEqual(gallery_delete.status_code, 503)
-        self.assertIn("KV_REST_API_URL", gallery_delete.get_data(as_text=True))
+        self.assertIn("MONGODB_URI", gallery_delete.get_data(as_text=True))
         self.assertTrue(any(item["id"] == gallery_id for item in json.loads(self.gallery_file.read_text(encoding="utf-8"))))
 
-    def test_upstash_json_store_bootstraps_and_persists_portal_sections(self):
-        class MemoryRedis:
+    def test_mongodb_store_seeds_and_atomically_persists_portal_sections(self):
+        class MemoryCollection:
             def __init__(self):
-                self.values = {}
+                self.document = None
+                self.replace_count = 0
 
-            def command(self, *parts):
-                if parts[0] == "GET":
-                    return self.values.get(parts[1])
-                if parts[0] == "MSET":
-                    for index in range(1, len(parts), 2):
-                        self.values[parts[index]] = parts[index + 1]
-                    return "OK"
-                raise AssertionError(f"Unexpected Redis command: {parts[0]}")
+            def find_one(self, _query):
+                return self.document
 
-        store = UpstashJsonPortalStore(
+            def replace_one(self, _query, replacement, upsert=False):
+                self.document = dict(replacement)
+                self.replace_count += 1
+                return type("WriteResult", (), {"acknowledged": True})()
+
+        store = MongoPortalStore(
             preferences_file=self.content_file,
             news_file=self.news_file,
             gallery_file=self.gallery_file,
             seed_preferences_file=ROOT / "data" / "site.json",
             seed_news_file=ROOT / "data" / "berita.json",
             seed_gallery_file=ROOT / "data" / "gallery.json",
-            rest_url="https://redis.example.test",
-            rest_token="fake-test-token",
-            key_prefix="ppru:test",
+            mongo_uri="mongodb+srv://test.invalid",
+            database_name="test_db",
+            collection_name="portal_state",
+            document_id="ppru:test",
         )
-        redis = MemoryRedis()
-        store.client = redis
+        collection = MemoryCollection()
+        store._collection = collection
 
         content = store.load()
         self.assertTrue(content["news"])
         self.assertTrue(content["gallery"])
-        content["news"] = [{"slug": "persisted-from-kv"}]
+        self.assertEqual(collection.replace_count, 1)
+        content["news"] = [{"slug": "persisted-from-mongodb"}]
         store.save(content)
 
-        self.assertEqual(store.load()["news"], [{"slug": "persisted-from-kv"}])
-        self.assertIn("ppru:test:preferensi", redis.values)
-        self.assertIn("ppru:test:berita", redis.values)
-        self.assertIn("ppru:test:galeri", redis.values)
-
-    def test_upstash_client_posts_redis_command_as_json(self):
-        class FakeResponse:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_args):
-                return False
-
-            def read(self):
-                return b'{"result":"OK"}'
-
-        client = UpstashRestClient("https://redis.example.test", "fake-test-token")
-        with patch("content_store.urllib.request.urlopen", return_value=FakeResponse()) as urlopen_mock:
-            self.assertEqual(client.command("SET", "ppru:test:key", "value"), "OK")
-
-        request = urlopen_mock.call_args.args[0]
-        self.assertEqual(request.get_method(), "POST")
-        self.assertEqual(json.loads(request.data), ["SET", "ppru:test:key", "value"])
-        self.assertEqual(request.get_header("Authorization"), "Bearer fake-test-token")
+        self.assertEqual(store.load()["news"], [{"slug": "persisted-from-mongodb"}])
+        self.assertEqual(collection.replace_count, 2)
+        self.assertEqual(collection.document["_id"], "ppru:test")
+        self.assertIn("preferensi", collection.document)
+        self.assertIn("berita", collection.document)
+        self.assertIn("gallery", collection.document)
 
     def test_home_renders_two_news_posts_without_hard_coded_indexes(self):
         two_news = self.content["news"][:2]

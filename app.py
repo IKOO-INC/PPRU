@@ -13,8 +13,8 @@ from cloudinary_service import CloudinaryConfigurationError, InvalidImageUpload,
 from content_store import (
     JsonPortalStore,
     PersistentStorageError,
+    MongoPortalStore,
     ReadOnlyPortalStore,
-    UpstashJsonPortalStore,
 )
 from nadzom_service import build_book_catalog, load_book
 from news_service import (
@@ -322,9 +322,10 @@ def create_app(test_config=None):
         CLOUDINARY_API_SECRET=os.environ.get("CLOUDINARY_API_SECRET", ""),
         VERCEL=bool(os.environ.get("VERCEL")),
         VERCEL_ENV=os.environ.get("VERCEL_ENV", "development"),
-        KV_REST_API_URL=os.environ.get("KV_REST_API_URL") or os.environ.get("UPSTASH_REDIS_REST_URL", ""),
-        KV_REST_API_TOKEN=os.environ.get("KV_REST_API_TOKEN") or os.environ.get("UPSTASH_REDIS_REST_TOKEN", ""),
-        PPRU_STORAGE_PREFIX=os.environ.get("PPRU_STORAGE_PREFIX", ""),
+        MONGODB_URI=os.environ.get("MONGODB_URI", ""),
+        MONGODB_DATABASE=os.environ.get("MONGODB_DATABASE", "ppru"),
+        MONGODB_COLLECTION=os.environ.get("MONGODB_COLLECTION", "portal_data"),
+        MONGODB_NAMESPACE=os.environ.get("MONGODB_NAMESPACE", "ppru"),
         # Allow multipart framing overhead while cloudinary_service enforces the 10 MiB file limit.
         MAX_CONTENT_LENGTH=11 * 1024 * 1024,
         # Change this through the ADMIN_PASSWORD environment variable before deployment.
@@ -344,18 +345,18 @@ def create_app(test_config=None):
         "seed_news_file": app.config["NEWS_SEED_FILE"],
         "seed_gallery_file": app.config["GALLERY_SEED_FILE"],
     }
-    kv_url = str(app.config.get("KV_REST_API_URL") or "").strip()
-    kv_token = str(app.config.get("KV_REST_API_TOKEN") or "").strip()
-    if kv_url and kv_token:
+    mongo_uri = str(app.config.get("MONGODB_URI") or "").strip()
+    if mongo_uri:
         storage_environment = str(app.config.get("VERCEL_ENV") or "production").strip()
-        storage_prefix = str(app.config.get("PPRU_STORAGE_PREFIX") or f"ppru:{storage_environment}").strip()
-        store = UpstashJsonPortalStore(
+        storage_namespace = str(app.config.get("MONGODB_NAMESPACE") or "ppru").strip()
+        store = MongoPortalStore(
             **store_options,
-            rest_url=kv_url,
-            rest_token=kv_token,
-            key_prefix=storage_prefix,
+            mongo_uri=mongo_uri,
+            database_name=app.config.get("MONGODB_DATABASE", "ppru"),
+            collection_name=app.config.get("MONGODB_COLLECTION", "portal_data"),
+            document_id=f"{storage_namespace}:{storage_environment}",
         )
-    elif app.config.get("VERCEL") or kv_url or kv_token:
+    elif app.config.get("VERCEL"):
         store = ReadOnlyPortalStore(JsonPortalStore(**store_options))
     else:
         store = JsonPortalStore(**store_options)

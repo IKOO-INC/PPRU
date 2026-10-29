@@ -2,10 +2,11 @@
 import json
 import os
 import tempfile
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 
 def _atomic_write_json(file_path: Path, value: Any) -> None:
@@ -151,18 +152,17 @@ class PersistentStorageNotConfigured(PersistentStorageError):
 
     user_message = (
         "Perubahan admin belum dapat disimpan karena Vercel tidak menyediakan penyimpanan "
-        "file persisten. Hubungkan Upstash Redis ke project Vercel agar "
-        "KV_REST_API_URL dan KV_REST_API_TOKEN tersedia, lalu deploy ulang. "
-        "Data belum diubah."
+        "file persisten. Hubungkan MongoDB Atlas ke project Vercel dan atur "
+        "MONGODB_URI, lalu deploy ulang. Data belum diubah."
     )
 
 
 class PersistentStorageUnavailable(PersistentStorageError):
-    """Raised when the configured remote key-value service cannot be used."""
+    """Raised when the configured MongoDB Atlas service cannot be used."""
 
     user_message = (
-        "Penyimpanan data sedang tidak dapat dihubungi. Perubahan belum tersimpan; "
-        "periksa koneksi Upstash Redis dan coba kembali."
+        "Penyimpanan MongoDB Atlas sedang tidak dapat dihubungi. Perubahan belum tersimpan; "
+        "periksa MONGODB_URI dan aturan Network Access Atlas, lalu coba kembali."
     )
 
 
@@ -184,40 +184,8 @@ class ReadOnlyPortalStore:
         raise PersistentStorageNotConfigured()
 
 
-class UpstashRestClient:
-    """Small Redis REST client using only the Python standard library."""
-
-    def __init__(self, url: str, token: str, timeout: float = 8.0):
-        self.url = url.rstrip("/")
-        self.token = token
-        self.timeout = timeout
-
-    def command(self, *parts: str) -> Any:
-        if not self.url.startswith("https://"):
-            raise PersistentStorageUnavailable()
-        body = json.dumps(list(parts), ensure_ascii=False).encode("utf-8")
-        request = urllib.request.Request(
-            self.url,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self.token}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self.timeout) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, OSError, UnicodeDecodeError, json.JSONDecodeError):
-            # Never surface the request headers/token or provider response to users/logs.
-            raise PersistentStorageUnavailable() from None
-        if not isinstance(payload, dict) or payload.get("error"):
-            raise PersistentStorageUnavailable()
-        return payload.get("result")
-
-
-class UpstashJsonPortalStore(JsonPortalStore):
-    """Persist the portal's three JSON sections in Upstash Redis via REST commands."""
+class MongoPortalStore(JsonPortalStore):
+    """Persist portal JSON sections in one atomic MongoDB Atlas document."""
 
     def __init__(
         self,
@@ -227,9 +195,10 @@ class UpstashJsonPortalStore(JsonPortalStore):
         seed_preferences_file: str | Path,
         seed_news_file: str | Path,
         seed_gallery_file: str | Path,
-        rest_url: str,
-        rest_token: str,
-        key_prefix: str,
+        mongo_uri: str,
+        database_name: str = "ppru",
+        collection_name: str = "portal_data",
+        document_id: str = "ppru:production",
     ):
         super().__init__(
             preferences_file=preferences_file,
@@ -239,72 +208,100 @@ class UpstashJsonPortalStore(JsonPortalStore):
             seed_news_file=seed_news_file,
             seed_gallery_file=seed_gallery_file,
         )
-        self.client = UpstashRestClient(rest_url, rest_token)
-        self.key_prefix = key_prefix.strip(":") or "ppru:production"
+        self.mongo_uri = str(mongo_uri or "").strip()
+        self.database_name = str(database_name or "ppru").strip()
+        self.collection_name = str(collection_name or "portal_data").strip()
+        self.document_id = str(document_id or "ppru:production").strip()
+        self.client = None
+        self._collection = None
 
-    def _key(self, section: str) -> str:
-        return f"{self.key_prefix}:{section}"
-
-    def _get_json(self, section: str) -> Any:
-        value = self.client.command("GET", self._key(section))
-        if value is None:
-            return None
+    def _get_collection(self):
+        if self._collection is not None:
+            return self._collection
+        if not self.mongo_uri:
+            raise PersistentStorageNotConfigured()
+        if not self.mongo_uri.startswith(("mongodb://", "mongodb+srv://")):
+            raise PersistentStorageUnavailable()
         try:
-            return json.loads(value)
-        except (TypeError, json.JSONDecodeError):
+            self.client = MongoClient(
+                self.mongo_uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                appname="PPRU portal",
+            )
+            self._collection = self.client[self.database_name][self.collection_name]
+        except (PyMongoError, ValueError):
             raise PersistentStorageUnavailable() from None
+        return self._collection
 
-    def _seed_list(self, seed: JsonListStore) -> list[Any]:
+    def _seed_content(self) -> dict[str, Any]:
+        preferences = self.seed_preferences.load()
+        if not isinstance(preferences, dict):
+            raise PersistentStorageUnavailable()
+        legacy_news = preferences.pop("news", None)
+        legacy_gallery = preferences.pop("gallery", None)
+        news = legacy_news if isinstance(legacy_news, list) else self._seed_list(self.seed_news)
+        gallery = legacy_gallery if isinstance(legacy_gallery, list) else self._seed_list(self.seed_gallery)
+        return {**preferences, "news": news, "gallery": gallery}
+
+    @staticmethod
+    def _seed_list(seed: JsonListStore) -> list[Any]:
         try:
             return seed.load()
         except FileNotFoundError:
             return []
 
     def load(self) -> dict[str, Any]:
-        preferences = self._get_json("preferensi")
-        preferences_missing = preferences is None
-        if preferences_missing:
+        try:
+            document = self._get_collection().find_one({"_id": self.document_id})
+        except PyMongoError:
+            raise PersistentStorageUnavailable() from None
+
+        if document is None:
+            content = self._seed_content()
+            self.save(content)
+            return content
+
+        preferences = document.get("preferensi")
+        if preferences is None:
             preferences = self.seed_preferences.load()
-        if not isinstance(preferences, dict):
-            raise ValueError("The preferences data in persistent storage must be an object.")
+            needs_save = True
+        elif not isinstance(preferences, dict):
+            raise PersistentStorageUnavailable()
+        else:
+            needs_save = False
 
         has_legacy_news = "news" in preferences
         has_legacy_gallery = "gallery" in preferences
         legacy_news = preferences.pop("news", None)
         legacy_gallery = preferences.pop("gallery", None)
 
-        remote_news = None if has_legacy_news else self._get_json("berita")
-        news_missing = remote_news is None
         if has_legacy_news:
             news = legacy_news if isinstance(legacy_news, list) else []
-        elif news_missing:
-            news = self._seed_list(self.seed_news)
+            needs_save = True
         else:
-            news = remote_news
-        if not isinstance(news, list):
-            raise ValueError("The news data in persistent storage must be an array.")
+            news = document.get("berita")
+            if news is None:
+                news = self._seed_list(self.seed_news)
+                needs_save = True
+            elif not isinstance(news, list):
+                raise PersistentStorageUnavailable()
 
-        remote_gallery = None if has_legacy_gallery else self._get_json("galeri")
-        gallery_missing = remote_gallery is None
         if has_legacy_gallery:
             gallery = legacy_gallery if isinstance(legacy_gallery, list) else []
-        elif gallery_missing:
-            gallery = self._seed_list(self.seed_gallery)
+            needs_save = True
         else:
-            gallery = remote_gallery
-        if not isinstance(gallery, list):
-            raise ValueError("The gallery data in persistent storage must be an array.")
+            gallery = document.get("gallery")
+            if gallery is None:
+                gallery = self._seed_list(self.seed_gallery)
+                needs_save = True
+            elif not isinstance(gallery, list):
+                raise PersistentStorageUnavailable()
 
-        if (
-            preferences_missing
-            or has_legacy_news
-            or has_legacy_gallery
-            or news_missing
-            or gallery_missing
-        ):
-            self.save({**preferences, "news": news, "gallery": gallery})
-
-        return {**preferences, "news": news, "gallery": gallery}
+        content = {**preferences, "news": news, "gallery": gallery}
+        if needs_save:
+            self.save(content)
+        return content
 
     def save(self, content: dict[str, Any]) -> None:
         if not isinstance(content, dict):
@@ -314,12 +311,19 @@ class UpstashJsonPortalStore(JsonPortalStore):
         if not isinstance(news, list) or not isinstance(gallery, list):
             raise ValueError("The portal news and gallery data must be arrays.")
         preferences = {key: value for key, value in content.items() if key not in {"news", "gallery"}}
-        command = ["MSET"]
-        for section, value in (
-            ("preferensi", preferences),
-            ("berita", news),
-            ("galeri", gallery),
-        ):
-            command.extend((self._key(section), json.dumps(value, ensure_ascii=False, separators=(",", ":"))))
-        if self.client.command(*command) != "OK":
+        document = {
+            "_id": self.document_id,
+            "preferensi": preferences,
+            "berita": news,
+            "gallery": gallery,
+        }
+        try:
+            result = self._get_collection().replace_one(
+                {"_id": self.document_id},
+                document,
+                upsert=True,
+            )
+        except PyMongoError:
+            raise PersistentStorageUnavailable() from None
+        if not result.acknowledged:
             raise PersistentStorageUnavailable()

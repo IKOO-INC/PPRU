@@ -30,11 +30,11 @@ Skrip mengunggah aset raster dan SVG lokal yang dirujuk data (SVG hanya untuk mi
 
 Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PASSWORD` dan `SECRET_KEY` dengan nilai rahasia yang kuat. Panel memakai sesi login dan token CSRF; jangan mengekspos konfigurasi development ke internet.
 
-### Penyimpanan data di Vercel
+### Penyimpanan data di Vercel dengan MongoDB Atlas
 
-Vercel menjalankan aplikasi Flask sebagai serverless function dengan filesystem deployment yang tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk mengaktifkan penyimpanan berita, galeri, dan preferensi admin, hubungkan database **Upstash Redis** ke project Vercel dan sediakan variabel environment `KV_REST_API_URL` serta `KV_REST_API_TOKEN` (alternatif: `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`). Aplikasi menyimpan tiga bagian JSON sebagai key terpisah dengan prefix environment, misalnya `ppru:production`, dan menulisnya dalam satu perintah `MSET`.
+Filesystem deployment Vercel tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk CRUD admin, buat cluster dan database user di **MongoDB Atlas**, lalu atur connection string sebagai environment variable rahasia `MONGODB_URI` pada project Vercel. Opsional: atur `MONGODB_DATABASE` (default `ppru`) dan `MONGODB_COLLECTION` (default `portal_data`). Aplikasi menyimpan preferensi, berita, dan galeri dalam satu dokumen per environment (`preview` atau `production`) agar perubahan dokumen tersimpan secara atomik.
 
-Tanpa konfigurasi KV di Vercel, halaman publik tetap dapat membaca file seed, tetapi perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal, penyimpanan JSON/file tetap digunakan seperti biasa.
+Atur `MONGODB_URI` pada environment **Preview** dan **Production**, pastikan aturan Network Access Atlas mengizinkan koneksi dari Vercel, lalu deploy ulang. Jangan commit atau mengirim connection string melalui chat. Tanpa URI di Vercel, halaman publik tetap membaca file seed, sedangkan perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal tanpa `MONGODB_URI`, penyimpanan JSON/file tetap digunakan seperti biasa.
 
 ### Berita
 
