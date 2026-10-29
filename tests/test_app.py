@@ -1,3 +1,4 @@
+import copy
 import html
 import json
 import re
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from app import _safe_image_url, create_app
 from cloudinary_service import upload_image
 from content_store import MongoPortalStore
+from pymongo.errors import PyMongoError
 from werkzeug.datastructures import FileStorage
 
 
@@ -257,6 +259,60 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("preferensi", collection.document)
         self.assertIn("berita", collection.document)
         self.assertIn("gallery", collection.document)
+
+    def test_vercel_mongodb_write_failure_returns_error_without_claiming_success(self):
+        class FailingCollection:
+            def __init__(self, document):
+                self.document = document
+                self.write_attempts = 0
+
+            def find_one(self, _query):
+                return copy.deepcopy(self.document)
+
+            def replace_one(self, _query, _replacement, upsert=False):
+                self.write_attempts += 1
+                raise PyMongoError("simulated Atlas outage")
+
+        initial_document = {
+            "_id": "ppru:production",
+            "preferensi": json.loads((ROOT / "data" / "site.json").read_text(encoding="utf-8")),
+            "berita": json.loads((ROOT / "data" / "berita.json").read_text(encoding="utf-8")),
+            "gallery": json.loads((ROOT / "data" / "gallery.json").read_text(encoding="utf-8")),
+        }
+        collection = FailingCollection(initial_document)
+        app = create_app({
+            "TESTING": True,
+            "VERCEL": True,
+            "VERCEL_ENV": "production",
+            "MONGODB_URI": "mongodb://atlas.example.invalid",
+            "CONTENT_FILE": self.content_file,
+            "NEWS_FILE": self.news_file,
+            "GALLERY_FILE": self.gallery_file,
+            "SECRET_KEY": "test-secret-key",
+        })
+        client = app.test_client()
+        with client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "test-csrf-token"
+
+        with patch.object(MongoPortalStore, "_get_collection", return_value=collection):
+            response = client.post(
+                "/admin/save",
+                data={
+                    "csrf_token": "test-csrf-token",
+                    "component": "stats",
+                    "stat_value_0": "1200",
+                    "stat_label_0": "Santri Aktif",
+                },
+            )
+
+        response_text = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
+        self.assertIn("Perubahan belum tersimpan", response_text)
+        self.assertNotIn("Perubahan berhasil disimpan", response_text)
+        self.assertEqual(collection.write_attempts, 1)
+        self.assertEqual(collection.document, initial_document)
 
     def test_home_renders_two_news_posts_without_hard_coded_indexes(self):
         two_news = self.content["news"][:2]
