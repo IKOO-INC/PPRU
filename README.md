@@ -26,7 +26,7 @@ Setelah konfigurasi tersedia, jalankan migrasi satu kali untuk mengganti referen
 python migrate_images_to_cloudinary.py
 ```
 
-Skrip mengunggah aset raster dan SVG lokal yang dirujuk data (SVG hanya untuk migrasi aset lama), lalu mengganti referensinya dengan URL Cloudinary. Pastikan semua aset lokal yang direferensikan masih tersedia di `static/` dan cadangkan file JSON sebelum migrasi. Skrip tidak menghapus file lokal. Tinjau diff JSON setelah migrasi dan jangan masukkan kredensial ke Git.
+Skrip mengunggah aset raster dan SVG lokal yang dirujuk data (SVG hanya untuk migrasi aset lama), lalu mengganti referensinya dengan URL Cloudinary. Pastikan semua aset lokal yang direferensikan masih tersedia di `static/` dan cadangkan file JSON sebelum migrasi. Skrip tidak menghapus file lokal. Tinjau diff JSON setelah migrasi dan jangan masukkan kredensial ke Git. Untuk memasukkan URL Cloudinary ke MongoDB tanpa mengubah file JSON lokal, gunakan migrator Atlas pada bagian berikutnya sebagai gantinya.
 
 Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PASSWORD` dan `SECRET_KEY` dengan nilai rahasia yang kuat. Panel memakai sesi login dan token CSRF; jangan mengekspos konfigurasi development ke internet.
 
@@ -35,6 +35,18 @@ Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PA
 Filesystem deployment Vercel tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk CRUD admin, buat cluster dan database user di **MongoDB Atlas**, lalu atur connection string sebagai environment variable rahasia `MONGODB_URI` pada project Vercel. Opsional: atur `MONGODB_DATABASE` (default `ppru`), `MONGODB_COLLECTION` (default `portal_data`), dan `MONGODB_NAMESPACE` (default `ppru`). Aplikasi menyimpan preferensi, berita, dan galeri dalam satu dokumen per environment (`preview` atau `production`) agar perubahan dokumen tersimpan secara atomik.
 
 Atur `MONGODB_URI` pada environment **Preview** dan **Production**, pastikan aturan Network Access Atlas mengizinkan koneksi dari Vercel, lalu deploy ulang. Jangan commit atau mengirim connection string melalui chat. Tanpa URI di Vercel, halaman publik tetap membaca file seed, sedangkan perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal tanpa `MONGODB_URI`, penyimpanan JSON/file tetap digunakan seperti biasa.
+
+#### Migrasi data JSON aktif ke MongoDB
+
+Sebelum mengaktifkan `MONGODB_URI` di Vercel, atur `MONGODB_URI` dan tiga kredensial Cloudinary di environment shell yang aman, lalu jalankan:
+
+```bash
+python migrate_portal_data_to_mongodb.py --environment production
+```
+
+Skrip membaca `preferensi.json`, `berita.json`, dan `gallery.json` aktif (bukan hanya file seed), mengunggah aset foto lokal `/static/...` ke Cloudinary, lalu menyimpan preferensi, berita, metadata galeri, dan **URL preview Cloudinary yang dioptimalkan** dalam satu dokumen MongoDB. File gambar/binary tidak disimpan di MongoDB, dan file JSON lokal tidak diubah. Upload memakai ID Cloudinary stabil berdasarkan isi file agar percobaan ulang tidak membuat salinan media baru.
+
+Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dokumen sudah berisi data, tinjau dulu lalu gunakan `--replace-existing` hanya bila memang ingin menggantinya. Jalankan sekali lagi dengan `--environment preview` jika ingin menyalin data yang sama ke dokumen Preview yang terpisah. Setelah migrasi berhasil, tambahkan URI yang sama sebagai secret Vercel Preview/Production dan deploy ulang.
 
 ### Berita
 

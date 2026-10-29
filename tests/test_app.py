@@ -10,8 +10,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app import _safe_image_url, create_app
-from cloudinary_service import upload_image
+from cloudinary_service import upload_image, upload_local_image
 from content_store import MongoPortalStore
+from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
 from pymongo.errors import PyMongoError
 from werkzeug.datastructures import FileStorage
 
@@ -104,6 +105,97 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(upload_options["transformation"]["crop"], "limit")
         self.assertEqual(upload_options["transformation"]["quality"], "auto:good")
         self.assertEqual(url_mock.call_args.kwargs["transformation"]["fetch_format"], "auto")
+
+    def test_migration_upload_uses_content_hash_for_stable_cloudinary_public_id(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            image_path = Path(temporary_directory) / "campus.jpg"
+            image_path.write_bytes(b"\xff\xd8\xffsample-jpeg")
+            expected_url = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/site/portal-hash"
+            credentials = {"cloud_name": "demo", "api_key": "test-key", "api_secret": "test-secret"}
+
+            with (
+                patch("cloudinary_service.cloudinary.config"),
+                patch("cloudinary_service.uploader.upload", return_value={
+                    "public_id": "ppru/site/portal-hash",
+                    "version": 123,
+                    "secure_url": "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/portal-hash.jpg",
+                }) as upload_mock,
+                patch("cloudinary_service.utils.cloudinary_url", return_value=(expected_url, {})),
+            ):
+                result = upload_local_image(
+                    image_path,
+                    credentials,
+                    folder="site",
+                    public_id="portal-hash",
+                )
+
+        self.assertEqual(result["url"], expected_url)
+        self.assertEqual(upload_mock.call_args.kwargs["public_id"], "portal-hash")
+        self.assertTrue(upload_mock.call_args.kwargs["overwrite"])
+        self.assertFalse(upload_mock.call_args.kwargs["unique_filename"])
+
+    def test_portal_migration_prefers_current_json_and_rewrites_images_to_cloudinary(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            (root / "data").mkdir()
+            (root / "static" / "images").mkdir(parents=True)
+            (root / "static" / "images" / "campus.jpg").write_bytes(b"jpeg-campus")
+            (root / "static" / "images" / "mark.svg").write_text("<svg/>", encoding="utf-8")
+            (root / "preferensi.json").write_text(
+                json.dumps({"site": {"title": "Runtime title", "placeholder_image": "/static/images/campus.jpg"}}),
+                encoding="utf-8",
+            )
+            (root / "berita.json").write_text(
+                json.dumps([{"slug": "runtime-news", "image": "/static/images/campus.jpg"}]),
+                encoding="utf-8",
+            )
+            (root / "gallery.json").write_text(
+                json.dumps([
+                    {"id": "runtime-gallery", "image": "/static/images/mark.svg"},
+                    {"id": "existing-cloudinary", "image": "https://res.cloudinary.com/demo/image/upload/v12/ppru/gallery/photo.jpg"},
+                ]),
+                encoding="utf-8",
+            )
+            (root / "data" / "site.json").write_text(json.dumps({"site": {"title": "Seed title"}}), encoding="utf-8")
+            (root / "data" / "berita.json").write_text(json.dumps([{"slug": "seed-news"}]), encoding="utf-8")
+            (root / "data" / "gallery.json").write_text(json.dumps([]), encoding="utf-8")
+
+            content = load_portal_content(root)
+            self.assertEqual(content["site"]["title"], "Runtime title")
+            self.assertEqual(content["news"][0]["slug"], "runtime-news")
+            self.assertEqual(len(content["gallery"]), 2)
+            source_content = copy.deepcopy(content)
+            upload_calls = []
+
+            def fake_upload(path, _credentials, folder, public_id):
+                upload_calls.append((path.name, folder, public_id))
+                return {
+                    "url": (
+                        "https://res.cloudinary.com/demo/image/upload/"
+                        f"c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/{folder}/{public_id}"
+                    )
+                }
+
+            migrated, counts = prepare_portal_content(
+                content,
+                root=root,
+                cloudinary_credentials={"cloud_name": "demo", "api_key": "key", "api_secret": "secret"},
+                upload_fn=fake_upload,
+            )
+
+        self.assertEqual(content, source_content)
+        self.assertEqual(counts, {
+            "local_image_urls": 2,
+            "cloudinary_assets": 2,
+            "news_items": 1,
+            "gallery_items": 2,
+        })
+        self.assertEqual(len(upload_calls), 2)
+        self.assertEqual(migrated["site"]["placeholder_image"], migrated["news"][0]["image"])
+        self.assertIn("w_1600", migrated["site"]["placeholder_image"])
+        self.assertIn("f_auto", migrated["gallery"][0]["image"])
+        self.assertIn("w_1600", migrated["gallery"][1]["image"])
+        self.assertNotIn("/static/", json.dumps(migrated))
 
     def test_legacy_quran_challenge_preferences_migrate_to_nadzom(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

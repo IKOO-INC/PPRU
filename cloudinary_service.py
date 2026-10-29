@@ -114,14 +114,28 @@ def upload_image(file_storage, credentials: dict, folder: str) -> dict:
     return _optimized_result(result, cloud_name)
 
 
-def upload_local_image(file_path: str | Path, credentials: dict, folder: str = "site") -> dict:
-    """Upload a trusted existing local raster/SVG asset during one-time migration."""
+def upload_local_image(
+    file_path: str | Path,
+    credentials: dict,
+    folder: str = "site",
+    public_id: str | None = None,
+) -> dict:
+    """Upload a trusted local image, optionally using a stable ID for repeatable migration."""
     path = Path(file_path)
     extension = path.suffix.lower()
     if not path.is_file() or (extension not in ALLOWED_IMAGE_EXTENSIONS and extension != ".svg"):
         raise InvalidImageUpload(f"File lokal bukan format gambar yang didukung: {path.name}")
     if folder not in FOLDER_NAMES:
         raise ValueError("Folder Cloudinary tidak dikenal.")
+
+    stable_options = {}
+    if public_id:
+        stable_options = {
+            "public_id": public_id,
+            "unique_filename": False,
+            "overwrite": True,
+        }
+
     if extension == ".svg":
         cloud_name, _, _ = _credentials_values(credentials)
         result = uploader.upload(
@@ -130,11 +144,24 @@ def upload_local_image(file_path: str | Path, credentials: dict, folder: str = "
             folder=f"ppru/{folder}",
             allowed_formats=["svg"],
             use_filename=False,
-            unique_filename=True,
-            overwrite=False,
+            unique_filename=not bool(public_id),
+            overwrite=bool(public_id),
+            **({"public_id": public_id} if public_id else {}),
         )
     else:
         with path.open("rb") as stream:
             file_storage = FileStorage(stream=stream, filename=path.name)
-            return upload_image(file_storage, credentials, folder)
+            if not public_id:
+                return upload_image(file_storage, credentials, folder)
+            _validate_image_file(file_storage)
+            cloud_name, _, _ = _credentials_values(credentials)
+            result = uploader.upload(
+                file_storage.stream,
+                resource_type="image",
+                folder=f"ppru/{folder}",
+                allowed_formats=["jpg", "jpeg", "png", "gif", "webp"],
+                transformation=UPLOAD_TRANSFORMATION,
+                use_filename=False,
+                **stable_options,
+            )
     return _optimized_result(result, cloud_name)
