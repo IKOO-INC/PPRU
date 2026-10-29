@@ -136,8 +136,21 @@ def _validate_cloudinary_image_fields(value, path="") -> None:
             item_path = f"{path}.{key}" if path else key
             if _is_image_field(str(key)) and isinstance(item, str) and item.strip():
                 parsed = urlsplit(item.strip())
-                if parsed.scheme != "https" or parsed.hostname != "res.cloudinary.com":
-                    raise ValueError(f"Image field {item_path} is not a Cloudinary HTTPS URL.")
+                try:
+                    port = parsed.port
+                except ValueError:
+                    raise ValueError(f"Image field {item_path} is not a valid Cloudinary URL.") from None
+                path_parts = [part for part in parsed.path.split("/") if part]
+                if (
+                    parsed.scheme != "https"
+                    or parsed.hostname != "res.cloudinary.com"
+                    or parsed.username
+                    or parsed.password
+                    or port not in (None, 443)
+                    or len(path_parts) < 4
+                    or path_parts[1:3] != ["image", "upload"]
+                ):
+                    raise ValueError(f"Image field {item_path} is not a valid Cloudinary HTTPS URL.")
                 if not all(transform in parsed.path for transform in REQUIRED_PREVIEW_TRANSFORMS):
                     raise ValueError(f"Image field {item_path} is missing the optimized Cloudinary preview URL.")
             else:
