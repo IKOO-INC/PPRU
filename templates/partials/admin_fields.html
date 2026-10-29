@@ -6,10 +6,18 @@
 <label class="admin-field admin-field--wide"><span>{{ label }}</span><textarea name="{{ name }}" rows="{{ rows }}">{{ value }}</textarea></label>
 {%- endmacro %}
 
-{% macro asset_field(label, name, value, alt='Pratinjau gambar') -%}
-<div class="admin-asset-field">
-  <label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="/static/images/nama-file.jpg" data-image-input></label>
-  <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview>
-  <small>Isi path lokal, misalnya <code>/static/images/foto.jpg</code>. Letakkan file gambar di folder <code>static/</code>.</small>
+{% macro image_url_field(label, name, value, alt='Pratinjau gambar', folder='site') -%}
+<div class="admin-asset-field" data-cloudinary-field data-cloudinary-folder="{{ folder }}">
+  <div class="admin-asset-control">
+    <label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="https://res.cloudinary.com/..." data-image-input autocomplete="off"></label>
+    <div class="admin-asset-actions">
+      <input type="hidden" data-cloudinary-csrf value="{{ csrf_token() }}">
+      <input class="admin-asset-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-cloudinary-file>
+      <button class="admin-upload-button" type="button" data-cloudinary-upload-button>Upload foto</button>
+    </div>
+  </div>
+  <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview{% if not value %} hidden{% endif %}>
+  <small>Masukkan URL Cloudinary atau unggah JPG, PNG, GIF, atau WebP maksimal 10 MB. Cloudinary akan membatasi dimensi dan mengoptimalkan kualitas/format gambar.</small>
+  <span class="admin-upload-status" data-cloudinary-status role="status" aria-live="polite"></span>
 </div>
 {%- endmacro %}

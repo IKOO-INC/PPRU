@@ -1,15 +1,117 @@
 {% extends "base.html" %}
-{% block title %}Sambung Ayat Challenge · {{ site.name }}{% endblock %}
+{% block title %}{{ data.hafalan.title }} · {{ site.name }}{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/hafalan.js') }}?v=1"></script>{% endblock %}
 {% block content %}
-<section class="hafalan-banner"><div class="container"><span class="light-eyebrow">{{ data.hafalan.eyebrow }}</span><h1>{{ data.hafalan.title }}</h1><p>{{ data.hafalan.description }}</p></div></section>
-<section class="hafalan-section"><div class="container hafalan-layout">
-  <form class="hafalan-form" id="hafalan-form">
-    <div class="form-emblem" aria-hidden="true">▤</div>
-    <label class="field-label" for="participant-name">Nama Lengkap</label><input class="field-input" id="participant-name" name="name" type="text" placeholder="Masukkan nama peserta" required>
-    <div class="form-row"><div><label class="field-label" for="start-juz">Mulai Juz</label><select class="field-input" id="start-juz" name="start_juz">{% for juz in range(1,31) %}<option value="{{ juz }}">Juz {{ juz }}</option>{% endfor %}</select></div><div><label class="field-label" for="end-juz">Sampai Juz</label><select class="field-input" id="end-juz" name="end_juz">{% for juz in range(1,31) %}<option value="{{ juz }}"{% if juz == 30 %} selected{% endif %}>Juz {{ juz }}</option>{% endfor %}</select></div></div>
-    <fieldset class="question-count"><legend class="field-label">Jumlah Soal</legend><label><input type="radio" name="question_count" value="5" checked><span>5</span></label><label><input type="radio" name="question_count" value="10"><span>10</span></label><label><input type="radio" name="question_count" value="20"><span>20</span></label></fieldset>
-    <button class="button button--orange button--form" type="submit">Mulai Ujian</button><p class="form-status" id="hafalan-status" aria-live="polite"></p>
-  </form>
-  <aside class="frequent-card"><h2>{{ data.hafalan.frequent_title }}</h2><p>{{ data.hafalan.frequent_description }}</p><div class="frequent-list">{% for item in data.hafalan.frequent_items %}<article><div><strong>{{ item.surah }}:</strong><small>{{ item.note }}</small></div><span>{{ item.count }}</span></article>{% endfor %}</div></aside>
-</div></section>
+<section class="hafalan-banner">
+  <div class="container">
+    <span class="light-eyebrow">{{ data.hafalan.eyebrow }}</span>
+    <h1>{{ data.hafalan.title }}</h1>
+    <p>{{ data.hafalan.description }}</p>
+  </div>
+</section>
+<section class="hafalan-section">
+  <div class="container hafalan-layout">
+    <div class="hafalan-main">
+      <form class="hafalan-card hafalan-setup" id="hafalan-setup" autocomplete="off">
+        <div class="hafalan-card-heading">
+          <span class="hafalan-step-icon" aria-hidden="true">01</span>
+          <div><span class="section-eyebrow">Atur tantangan</span><h2>Siap menyambung nadzom?</h2><p>Pilih kitab, bab awal hingga bab akhir, lalu tentukan jumlah soal.</p></div>
+        </div>
+        <label class="field-label" for="hafalan-book">Pilih kitab</label>
+        <select class="field-input" id="hafalan-book" name="book" required>
+          {% for book in book_catalog %}<option value="{{ book.id }}">{{ book.title }} · {{ book.count }} bait</option>{% endfor %}
+        </select>
+
+        <div class="hafalan-chapter-grid">
+          <div><label class="field-label" for="chapter-start">Bab awal</label><select class="field-input" id="chapter-start" name="chapter_start" required></select></div>
+          <div><label class="field-label" for="chapter-end">Sampai bab</label><select class="field-input" id="chapter-end" name="chapter_end" required></select></div>
+        </div>
+
+        <div class="hafalan-count-row">
+          <div><label class="field-label" for="question-count">Jumlah soal</label><input class="field-input" id="question-count" name="question_count" type="number" min="1" value="5" required></div>
+          <p class="hafalan-range-hint" id="range-hint" aria-live="polite"></p>
+        </div>
+        <label class="field-label" for="participant-name">Nama peserta untuk sertifikat</label>
+        <input class="field-input" id="participant-name" name="name" type="text" maxlength="80" placeholder="Masukkan nama lengkap" required>
+        <button class="button button--orange button--form" id="hafalan-start" type="submit">Mulai Tantangan <span aria-hidden="true">→</span></button>
+        <p class="form-status" id="hafalan-status" role="status" aria-live="polite"></p>
+        <script type="application/json" id="hafalan-book-catalog">{{ book_catalog|tojson }}</script>
+      </form>
+
+      <section class="hafalan-card hafalan-quiz" id="hafalan-quiz" hidden aria-labelledby="quiz-heading">
+        <div class="hafalan-quiz-topline">
+          <div><span class="section-eyebrow">Tantangan berlangsung</span><strong id="quiz-book-label"></strong></div>
+          <span class="hafalan-question-counter" id="quiz-counter" aria-live="polite"></span>
+        </div>
+        <div class="hafalan-progress" aria-hidden="true"><span id="quiz-progress-bar"></span></div>
+        <p class="hafalan-chapter-label" id="quiz-chapter"></p>
+        <h2 id="quiz-heading">Sambungkan bait berikut</h2>
+        <p class="hafalan-prompt-caption">Pilih syathr kedua yang tepat untuk melanjutkan nadzom:</p>
+        <div class="hafalan-nadzom-prompt" id="nadzom-prompt" dir="rtl" lang="ar"></div>
+        <div class="hafalan-answer-list" id="answer-options" role="group" aria-label="Pilihan sambungan nadzom"></div>
+        <div class="hafalan-quiz-controls">
+          <span id="quiz-answer-status" role="status" aria-live="polite"></span>
+          <button class="button button--orange" id="quiz-next" type="button" disabled>Soal berikutnya</button>
+        </div>
+        <p class="hafalan-no-feedback">Benar atau salahnya jawaban baru ditampilkan setelah semua soal selesai.</p>
+      </section>
+
+      <section class="hafalan-card hafalan-results" id="hafalan-results" hidden aria-labelledby="results-heading">
+        <div class="hafalan-result-mark" aria-hidden="true">✓</div>
+        <span class="section-eyebrow">Tantangan selesai</span>
+        <h2 id="results-heading">Hasil Sambung Nadzom</h2>
+        <div class="hafalan-score-card"><strong id="score-value">0%</strong><span id="score-summary"></span></div>
+        <div class="hafalan-result-meta"><span id="result-book"></span><span id="result-range"></span></div>
+        <div class="hafalan-result-actions">
+          <button class="button button--green" id="review-toggle" type="button" aria-expanded="false">Lihat Kesalahan &amp; Motivasi</button>
+          <button class="button button--orange" id="certificate-print" type="button">Cetak Sertifikat</button>
+        </div>
+        <section class="hafalan-review" id="review-panel" hidden>
+          <h3>Evaluasi dan motivasi</h3>
+          <p class="hafalan-motivation" id="motivation-message"></p>
+          <div class="hafalan-mistakes" id="mistakes-list"></div>
+        </section>
+      </section>
+    </div>
+
+    <aside class="hafalan-guide">
+      <div class="hafalan-guide-icon" aria-hidden="true">✦</div>
+      <span class="section-eyebrow">Bank nadzom</span>
+      <h2>Kitab yang tersedia</h2>
+      <div class="hafalan-book-list">
+        {% for book in book_catalog %}
+        <article><strong>{{ book.title }}</strong><span>{{ book.chapters|length }} bab · {{ book.count }} bait</span></article>
+        {% endfor %}
+      </div>
+      <div class="hafalan-guide-divider"></div>
+      <h3>Cara bermain</h3>
+      <ol>
+        <li>Pilih kitab dan rentang bab yang ingin diujikan.</li>
+        <li>Baca syathr pertama, lalu pilih sambungan baitnya.</li>
+        <li>Jawaban tidak diberi tanda benar atau salah selama ujian.</li>
+        <li>Skor, koreksi, dan motivasi muncul setelah seluruh soal selesai.</li>
+      </ol>
+      <p class="hafalan-guide-note">Semoga latihan ini membantu menjaga hafalan dan menambah semangat belajar ilmu nahwu.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="hafalan-certificate" id="hafalan-certificate" aria-hidden="true">
+  <div class="hafalan-certificate-frame">
+    <div class="hafalan-certificate-inner">
+      <span class="certificate-kicker">Pondok Pesantren Roudlotul Ulum</span>
+      <div class="certificate-ornament" aria-hidden="true">✦</div>
+      <h1>Sertifikat Penyelesaian</h1>
+      <p class="certificate-subtitle">Tantangan Sambung Nadzom · Ilmu Nahwu</p>
+      <p class="certificate-awarded">Diberikan kepada</p>
+      <h2 id="certificate-name"></h2>
+      <p class="certificate-description">Atas keberhasilan menyelesaikan tantangan hafalan nadzom kitab:</p>
+      <strong class="certificate-book" id="certificate-book"></strong>
+      <p class="certificate-range" id="certificate-range"></p>
+      <div class="certificate-score"><span>Nilai</span><strong id="certificate-score"></strong></div>
+      <p class="certificate-encouragement">Terus belajar, murajaah, dan mengamalkan ilmu. Semoga Allah memberkahi setiap langkah dalam menuntut ilmu.</p>
+      <div class="certificate-footer"><span>Karangtanjung · Kebumen</span><span id="certificate-date"></span></div>
+    </div>
+  </div>
+</section>
 {% endblock %}

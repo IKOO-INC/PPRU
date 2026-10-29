@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit berita' if is_edit else 'Tulis berita' }} · Admin{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=7">{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/news_editor.js') }}?v=4"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
+{% block content %}
+<section class="admin-news-form container">
+  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin · Berita</span><h1>{{ 'Edit berita' if is_edit else 'Tulis berita baru' }}</h1><p>Tulis konten sederhana, simpan sebagai draft, atau langsung terbitkan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin', tab='news') }}">← Kembali ke panel berita</a></header>
+  <form class="admin-news-form-card" method="post" action="{{ url_for('admin_news_save') }}" id="news-editor-form">
+    {% include "partials/news_editor_fields.html" %}
+  </form>
+</section>
+{% endblock %}

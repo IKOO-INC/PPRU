@@ -40,10 +40,17 @@
 .admin-field input:focus, .admin-field textarea:focus { border-color: #59ad85; box-shadow: 0 0 0 3px rgba(22,147,106,.1); }
 .admin-field--wide { grid-column: 1 / -1; }
 .admin-asset-field { display: grid; grid-template-columns: minmax(0,1fr) 150px; align-items: center; gap: 8px 16px; margin: 12px 0 17px; padding: 12px; background: #f9fbf9; border: 1px solid #edf1ee; border-radius: 8px; }
-.admin-asset-field .admin-field { margin: 0; }
-.admin-asset-field > small { grid-column: 1; color: #829087; font-size: 7px; line-height: 1.5; }
+.admin-asset-control { display: flex; min-width: 0; align-items: flex-end; gap: 8px; grid-column: 1; }
+.admin-asset-field .admin-field { flex: 1; margin: 0; }
+.admin-asset-actions { flex: 0 0 auto; padding-bottom: 11px; }
+.admin-asset-file-input { display: none !important; }
+.admin-upload-button { min-height: 34px; padding: 0 11px; color: #176c4e; background: #fff; border: 1px solid #cfe4d6; border-radius: 6px; font-size: 8px; font-weight: 800; cursor: pointer; }
+.admin-upload-button:hover { color: #fff; background: #08704f; border-color: #08704f; }
+.admin-upload-button:disabled { cursor: wait; opacity: .65; }
+.admin-asset-field > small, .admin-upload-status { grid-column: 1; color: #829087; font-size: 7px; line-height: 1.5; }
+.admin-upload-status { min-height: 0; color: #176c4e; }
 .admin-asset-field code { color: #217554; }
-.admin-image-preview { grid-column: 2; grid-row: 1 / span 2; width: 150px; height: 96px; object-fit: cover; background: #edf3ee; border: 1px solid #dfe9e2; border-radius: 6px; }
+.admin-image-preview { grid-column: 2; grid-row: 1 / span 3; width: 150px; height: 96px; object-fit: cover; background: #edf3ee; border: 1px solid #dfe9e2; border-radius: 6px; }
 .admin-repeat-list { display: grid; gap: 11px; }
 .admin-repeat-card { position: relative; padding: 13px 14px 6px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
 .admin-repeat-index { display: block; margin: 0 0 10px; color: #168259; font-size: 8px; font-weight: 800; }
@@ -89,4 +96,104 @@
   .admin-panel { padding: 15px; }
   .admin-form-actions { align-items: flex-start; flex-direction: column; }
   .admin-save-button { align-self: stretch; }
+}
+
+/* News manager and simple rich-text editor */
+.admin-news-heading { align-items: center; }
+.admin-news-heading .admin-save-button { flex: 0 0 auto; text-decoration: none; }
+.admin-news-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 17px; }
+.admin-news-summary > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #f4faf6; border: 1px solid #e8f2eb; border-radius: 8px; }
+.admin-news-summary strong { color: #086249; font-size: 16px; line-height: 1.2; }
+.admin-news-summary span { color: #77867d; font-size: 7px; }
+.admin-news-list { display: grid; gap: 9px; }
+.admin-news-row { display: grid; grid-template-columns: 100px minmax(0,1fr) minmax(100px,auto) auto; align-items: center; gap: 13px; padding: 10px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
+.admin-news-thumb { overflow: hidden; width: 100px; height: 72px; background: #e7efe9; border-radius: 6px; }
+.admin-news-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.admin-news-copy { min-width: 0; }
+.admin-news-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; color: #829087; font-size: 7px; }
+.admin-status { padding: 3px 6px; border-radius: 99px; font-size: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.admin-status--published { color: #11744f; background: #e0f5e9; }
+.admin-status--draft { color: #a16b12; background: #fff1d9; }
+.admin-news-copy h3 { overflow: hidden; margin: 4px 0 3px; color: #28382f; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-news-copy p { overflow: hidden; margin: 0 0 3px; color: #78867d; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-news-copy small { color: #92a097; font-size: 6px; }
+.admin-news-actions { display: flex; align-items: center; gap: 7px; }
+.admin-news-actions a, .admin-news-actions button { padding: 6px 8px; color: #176c4e; background: #eef8f1; border: 1px solid #e0efe5; border-radius: 5px; font-size: 7px; font-weight: 750; cursor: pointer; }
+.admin-news-actions form { margin: 0; }
+.admin-news-actions button { color: #a2473b; background: #fff5f3; border-color: #f2e5e2; }
+.admin-news-empty { padding: 24px; color: #78867d; background: #fbfcfb; border: 1px dashed #dce6df; border-radius: 8px; font-size: 9px; text-align: center; }
+.admin-news-form { max-width: 960px; margin: 30px auto 65px; }
+.admin-news-form-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 17px; }
+.admin-news-form-header h1 { margin: 3px 0 4px; color: #1b2a22; font-size: 24px; letter-spacing: -.04em; }
+.admin-news-form-header p { margin: 0; color: #75837a; font-size: 8px; }
+.admin-news-form-card { padding: 22px; background: #fff; border: 1px solid #e9efeb; border-radius: 11px; box-shadow: 0 5px 16px rgba(21,54,37,.035); }
+.admin-editor-label { display: block; margin: 0 0 6px; color: #43534a; font-size: 8px; font-weight: 750; }
+.admin-editor-toolbar { display: flex; flex-wrap: wrap; gap: 5px; padding: 7px; background: #f6f9f7; border: 1px solid #dfe8e2; border-bottom: 0; border-radius: 7px 7px 0 0; }
+.admin-editor-toolbar button { min-width: 29px; height: 27px; padding: 0 8px; color: #40534a; background: #fff; border: 1px solid #e3ebe6; border-radius: 4px; font-size: 8px; font-weight: 650; cursor: pointer; }
+.admin-editor-toolbar button:hover, .admin-editor-toolbar button.is-active { color: #fff; background: #117353; border-color: #117353; }
+.admin-editor-toolbar .toolbar-separator { width: 1px; height: 20px; align-self: center; margin: 0 3px; background: #dce5df; }
+.admin-rich-editor { min-height: 250px; padding: 15px; color: #38493f; background: #fff; border: 1px solid #dfe8e2; border-radius: 0 0 7px 7px; outline: none; font-family: "Poppins", Arial, sans-serif; font-size: 9px; line-height: 1.8; }
+.admin-rich-editor:focus { border-color: #59ad85; box-shadow: 0 0 0 3px rgba(22,147,106,.08); }
+.admin-rich-editor:empty::before { content: attr(data-placeholder); color: #9aa79e; }
+.admin-rich-editor h2, .admin-rich-editor h3 { margin: 15px 0 7px; color: #24352b; font-size: 15px; }
+.admin-rich-editor h3 { font-size: 12px; }
+.admin-rich-editor p { margin: 0 0 10px; }
+.admin-rich-editor blockquote { margin: 10px 0; padding: 8px 12px; color: #537061; background: #f2f8f4; border-left: 3px solid #14805b; }
+.admin-rich-editor ul, .admin-rich-editor ol { padding-left: 22px; }
+.admin-editor-hint { display: block; margin: 6px 0 13px; color: #86938a; font-size: 7px; }
+.admin-news-form-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; padding-top: 15px; border-top: 1px solid #edf1ee; }
+.admin-news-form-actions > div { display: flex; gap: 7px; }
+.admin-news-form-actions .admin-save-button { min-width: 125px; }
+.admin-cancel-button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; padding: 0 14px; color: #66756c; background: #fff; border: 1px solid #dfe8e2; border-radius: 6px; font-size: 8px; font-weight: 700; }
+.admin-news-views { display: inline-flex; align-items: center; gap: 5px; color: #708078; font-size: 8px; }
+
+@media (max-width: 650px) {
+  .admin-news-row { grid-template-columns: 72px minmax(0,1fr); align-items: start; gap: 9px; }
+  .admin-news-thumb { width: 72px; height: 61px; }
+  .admin-news-views { grid-column: 1; justify-content: center; }
+  .admin-news-actions { grid-column: 2; }
+  .admin-news-copy h3, .admin-news-copy p { white-space: normal; }
+  .admin-news-form { margin-top: 20px; }
+  .admin-news-form-header { flex-direction: column; }
+  .admin-news-form-card { padding: 14px; }
+  .admin-rich-editor { min-height: 200px; }
+  .admin-news-form-actions { align-items: stretch; flex-direction: column; }
+  .admin-news-form-actions > div { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+/* Gallery manager and upload form */
+.admin-gallery-heading { align-items: center; }
+.admin-gallery-heading .admin-save-button { flex: 0 0 auto; text-decoration: none; }
+.admin-gallery-list { display: grid; gap: 10px; }
+.admin-gallery-row { display: grid; grid-template-columns: 132px minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 10px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
+.admin-gallery-thumb { overflow: hidden; width: 132px; height: 90px; background: #e7efe9; border-radius: 6px; }
+.admin-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.admin-gallery-info { min-width: 0; }
+.admin-gallery-info h3 { margin: 0 0 4px; color: #28382f; font-size: 10px; font-weight: 800; }
+.admin-gallery-info small { display: block; overflow: hidden; color: #78867d; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-gallery-actions { display: flex; align-items: center; gap: 7px; }
+.admin-gallery-actions form { margin: 0; }
+.admin-gallery-actions a, .admin-gallery-actions button { padding: 7px 9px; color: #176c4e; background: #eef8f1; border: 1px solid #e0efe5; border-radius: 5px; font-size: 7px; font-weight: 750; cursor: pointer; }
+.admin-gallery-actions button { color: #a2473b; background: #fff5f3; border-color: #f2e5e2; }
+.admin-gallery-empty { padding: 24px; color: #78867d; background: #fbfcfb; border: 1px dashed #dce6df; border-radius: 8px; font-size: 9px; text-align: center; }
+.admin-gallery-form { max-width: 860px; margin: 30px auto 65px; }
+.admin-gallery-form-card { padding: 22px; background: #fff; border: 1px solid #e9efeb; border-radius: 11px; box-shadow: 0 5px 16px rgba(21,54,37,.035); }
+.admin-gallery-form-card .admin-field { margin-bottom: 11px; }
+.admin-gallery-upload { margin: 15px 0 0; padding: 14px; background: #f9fbf9; border: 1px dashed #d4e2d9; border-radius: 8px; }
+.admin-gallery-upload input { padding: 8px; background: #fff; }
+.admin-gallery-upload small { color: #829087; font-size: 7px; font-weight: 450; }
+.admin-gallery-current-image { display: flex; align-items: center; gap: 14px; margin: 8px 0 15px; color: #43534a; font-size: 8px; font-weight: 750; }
+.admin-gallery-current-image img { width: 150px; height: 100px; object-fit: cover; border: 1px solid #dfe9e2; border-radius: 6px; }
+.admin-gallery-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 15px; border-top: 1px solid #edf1ee; }
+
+@media (max-width: 650px) {
+  .admin-gallery-row { grid-template-columns: 82px minmax(0,1fr); align-items: start; gap: 9px; }
+  .admin-gallery-thumb { width: 82px; height: 70px; }
+  .admin-gallery-info small { white-space: normal; }
+  .admin-gallery-actions { grid-column: 2; }
+  .admin-gallery-heading { flex-direction: column; }
+  .admin-gallery-heading .admin-save-button { align-self: stretch; }
+  .admin-gallery-form { margin-top: 20px; }
+  .admin-gallery-form-card { padding: 14px; }
+  .admin-gallery-current-image { align-items: flex-start; flex-direction: column; }
 }

@@ -1,1 +1,3 @@
 Flask>=3.0,<4.0
+bleach>=6.0,<7.0
+cloudinary>=1.41,<2.0

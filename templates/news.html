@@ -4,7 +4,8 @@
 <section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">Informasi terbaru</span><h1>Kabar Pesantren</h1><p>Informasi terbaru seputar kegiatan, prestasi, dan kajian di Pondok Pesantren Roudlotul Ulum.</p></div></section>
 <section class="news-listing-section"><div class="container news-layout">
   <div class="news-results">
-    {% set featured = data.news[0] %}
+    {% if data.news %}
+    {% set featured = data.news|first %}
     <article class="featured-news" data-news-card data-category="{{ featured.category|lower }}" data-search="{{ (featured.title ~ ' ' ~ featured.excerpt ~ ' ' ~ featured.category)|lower }}">
       <a class="featured-news-image" href="/berita/{{ featured.slug }}"><img src="{{ featured.image }}" alt="{{ featured.image_alt }}" fetchpriority="high"><span class="image-category">{{ featured.category }}</span><span class="feature-gradient"></span><span class="featured-title">{{ featured.title }}</span></a>
       <div class="featured-meta"><span>◷ {{ featured.date }}</span><span>✦ Redaksi {{ site.short_name }}</span></div>
@@ -14,6 +15,9 @@
     </div>
     <div class="pagination"><button type="button" aria-label="Halaman sebelumnya">‹</button><button type="button" class="is-current">1</button><button type="button" aria-label="Halaman berikutnya">›</button></div>
     <p class="empty-state" hidden>Tidak ada kabar yang cocok dengan pencarian.</p>
+    {% else %}
+    <p class="empty-state">Belum ada berita yang dipublikasikan.</p>
+    {% endif %}
   </div>
   <aside class="news-sidebar">
     <section class="sidebar-box"><h2><span class="sidebar-accent sidebar-accent--orange"></span>Pencarian</h2><label class="search-field"><span class="visually-hidden">Cari artikel</span><input type="search" id="news-search" placeholder="Cari artikel..."><span aria-hidden="true">⌕</span></label></section>

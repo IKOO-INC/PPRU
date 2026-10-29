@@ -7,12 +7,12 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5">
   {% block extra_head %}{% endblock %}
-  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=4"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
-<body>
+<body{% if site.placeholder_image %} style="--page-banner-image: url('{{ site.placeholder_image }}')"{% endif %}>
   <a class="skip-link" href="#main">Lewati ke konten utama</a>
   <header class="site-header">
     <div class="container header-inner">
@@ -75,5 +75,19 @@
       <div><a href="/kontak">Kontak</a><a href="/psb">Penerimaan Santri Baru</a></div>
     </div>
   </footer>
+  <dialog class="gallery-lightbox" id="gallery-lightbox" aria-labelledby="gallery-lightbox-title">
+    <div class="gallery-lightbox-shell">
+      <button class="gallery-lightbox-close" id="gallery-lightbox-close" type="button" aria-label="Tutup foto">×</button>
+      <div class="gallery-lightbox-image-wrap"><img id="gallery-lightbox-image" src="" alt=""></div>
+      <div class="gallery-lightbox-details">
+        <div><h2 id="gallery-lightbox-title"></h2><p id="gallery-lightbox-caption"></p></div>
+        <div class="gallery-lightbox-actions">
+          <a class="gallery-lightbox-download" id="gallery-lightbox-download" href="" download>⬇ Unduh</a>
+          <button class="gallery-lightbox-share" id="gallery-lightbox-share" type="button">↗ Bagikan</button>
+        </div>
+        <p class="gallery-lightbox-status" id="gallery-lightbox-status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </dialog>
 </body>
 </html>

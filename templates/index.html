@@ -81,10 +81,12 @@
       <a class="text-link text-link--gold" href="/berita">Lihat karya lainnya <span aria-hidden="true">→</span></a>
     </div>
     <div class="works-grid">
-      {% for work in data.works %}
+      {% for work in data.works[:3] %}
+      {% set related_post = data.news|selectattr('category', 'equalto', work.category)|first|default(none) %}
+      {% set work_url = '/berita/' ~ related_post.slug if related_post else '/berita' %}
       <article class="work-card">
-        <a class="work-image" href="/berita/{{ data.news[4].slug }}"><img src="{{ work.image }}" alt="{{ work.image_alt }}" loading="lazy"><span class="work-badge">{{ work.category }}</span></a>
-        <div class="work-copy"><span class="work-kicker">{{ work.subtitle }}</span><h3>{{ work.title }}</h3><p>{{ work.excerpt }}</p><a class="card-link card-link--gold" href="/berita/{{ data.news[4].slug }}">{{ work.label }} <span aria-hidden="true">→</span></a></div>
+        <a class="work-image" href="{{ work_url }}"><img src="{{ work.image }}" alt="{{ work.image_alt }}" loading="lazy"><span class="work-badge">{{ work.category }}</span></a>
+        <div class="work-copy"><span class="work-kicker">{{ work.subtitle }}</span><h3>{{ work.title }}</h3><p>{{ work.excerpt }}</p><a class="card-link card-link--gold" href="{{ work_url }}">{{ work.label }} <span aria-hidden="true">→</span></a></div>
       </article>
       {% endfor %}
     </div>

@@ -16,13 +16,9 @@
 
     tabs.forEach((tab) => tab.addEventListener("click", () => showPanel(tab.dataset.adminTab)));
     const initialHash = window.location.hash.slice(1);
-    showPanel(initialHash || document.querySelector("[data-admin-tab].is-active")?.dataset.adminTab || "brand", false);
+    const hashIsPanel = panels.some((panel) => panel.dataset.adminPanel === initialHash);
+    const serverSelected = document.querySelector("[data-admin-tab].is-active")?.dataset.adminTab || "brand";
+    showPanel(hashIsPanel ? initialHash : serverSelected, false);
   }
 
-  document.querySelectorAll("[data-image-input]").forEach((input) => {
-    input.addEventListener("input", () => {
-      const preview = input.closest(".admin-asset-field")?.querySelector("[data-image-preview]");
-      if (preview) preview.src = input.value.trim() || "/static/images/mark.svg";
-    });
-  });
 })();
