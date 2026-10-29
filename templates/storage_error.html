@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#075c45">
+  <title>Penyimpanan Belum Tersedia · PPRU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+</head>
+<body>
+  <main class="container" style="max-width: 760px; padding-top: 12vh; padding-bottom: 12vh">
+    <section style="padding: 32px; background: #fff; border: 1px solid #e4ece6; border-radius: 14px; box-shadow: 0 12px 40px rgba(15,42,29,.08)">
+      <span class="section-eyebrow">PPRU · PANEL ADMIN</span>
+      <h1 style="margin: 8px 0 12px; color: #173c2d; font-size: clamp(24px, 4vw, 34px)">Perubahan belum dapat disimpan</h1>
+      <p style="color: #596960; line-height: 1.7">{{ message }}</p>
+      <a class="button button--green" href="/admin">Kembali ke panel admin</a>
+    </section>
+  </main>
+</body>
+</html>

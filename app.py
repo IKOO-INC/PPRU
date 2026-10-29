@@ -10,7 +10,12 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, ses
 from markupsafe import Markup
 
 from cloudinary_service import CloudinaryConfigurationError, InvalidImageUpload, upload_image
-from content_store import JsonPortalStore
+from content_store import (
+    JsonPortalStore,
+    PersistentStorageError,
+    ReadOnlyPortalStore,
+    UpstashJsonPortalStore,
+)
 from nadzom_service import build_book_catalog, load_book
 from news_service import (
     format_indonesian_date,
@@ -315,6 +320,11 @@ def create_app(test_config=None):
         CLOUDINARY_CLOUD_NAME=os.environ.get("CLOUDINARY_CLOUD_NAME", ""),
         CLOUDINARY_API_KEY=os.environ.get("CLOUDINARY_API_KEY", ""),
         CLOUDINARY_API_SECRET=os.environ.get("CLOUDINARY_API_SECRET", ""),
+        VERCEL=bool(os.environ.get("VERCEL")),
+        VERCEL_ENV=os.environ.get("VERCEL_ENV", "development"),
+        KV_REST_API_URL=os.environ.get("KV_REST_API_URL") or os.environ.get("UPSTASH_REDIS_REST_URL", ""),
+        KV_REST_API_TOKEN=os.environ.get("KV_REST_API_TOKEN") or os.environ.get("UPSTASH_REDIS_REST_TOKEN", ""),
+        PPRU_STORAGE_PREFIX=os.environ.get("PPRU_STORAGE_PREFIX", ""),
         # Allow multipart framing overhead while cloudinary_service enforces the 10 MiB file limit.
         MAX_CONTENT_LENGTH=11 * 1024 * 1024,
         # Change this through the ADMIN_PASSWORD environment variable before deployment.
@@ -326,14 +336,29 @@ def create_app(test_config=None):
     preferences_file = Path(app.config["CONTENT_FILE"])
     news_file = app.config["NEWS_FILE"] or preferences_file.with_name("berita.json")
     gallery_file = app.config["GALLERY_FILE"] or preferences_file.with_name("gallery.json")
-    store = JsonPortalStore(
-        preferences_file=preferences_file,
-        news_file=news_file,
-        gallery_file=gallery_file,
-        seed_preferences_file=app.config["SEED_CONTENT_FILE"],
-        seed_news_file=app.config["NEWS_SEED_FILE"],
-        seed_gallery_file=app.config["GALLERY_SEED_FILE"],
-    )
+    store_options = {
+        "preferences_file": preferences_file,
+        "news_file": news_file,
+        "gallery_file": gallery_file,
+        "seed_preferences_file": app.config["SEED_CONTENT_FILE"],
+        "seed_news_file": app.config["NEWS_SEED_FILE"],
+        "seed_gallery_file": app.config["GALLERY_SEED_FILE"],
+    }
+    kv_url = str(app.config.get("KV_REST_API_URL") or "").strip()
+    kv_token = str(app.config.get("KV_REST_API_TOKEN") or "").strip()
+    if kv_url and kv_token:
+        storage_environment = str(app.config.get("VERCEL_ENV") or "production").strip()
+        storage_prefix = str(app.config.get("PPRU_STORAGE_PREFIX") or f"ppru:{storage_environment}").strip()
+        store = UpstashJsonPortalStore(
+            **store_options,
+            rest_url=kv_url,
+            rest_token=kv_token,
+            key_prefix=storage_prefix,
+        )
+    elif app.config.get("VERCEL") or kv_url or kv_token:
+        store = ReadOnlyPortalStore(JsonPortalStore(**store_options))
+    else:
+        store = JsonPortalStore(**store_options)
     content_lock = threading.RLock()
 
     def load_content():
@@ -823,6 +848,11 @@ def create_app(test_config=None):
     @app.errorhandler(404)
     def not_found(_error):
         return render_template("404.html", **page_context(None)), 404
+
+    @app.errorhandler(PersistentStorageError)
+    def persistent_storage_error(error):
+        app.logger.warning("Portal persistent storage unavailable (%s)", type(error).__name__)
+        return render_template("storage_error.html", message=error.user_message), 503
 
     return app
 

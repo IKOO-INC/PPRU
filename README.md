@@ -30,6 +30,12 @@ Skrip mengunggah aset raster dan SVG lokal yang dirujuk data (SVG hanya untuk mi
 
 Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PASSWORD` dan `SECRET_KEY` dengan nilai rahasia yang kuat. Panel memakai sesi login dan token CSRF; jangan mengekspos konfigurasi development ke internet.
 
+### Penyimpanan data di Vercel
+
+Vercel menjalankan aplikasi Flask sebagai serverless function dengan filesystem deployment yang tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk mengaktifkan penyimpanan berita, galeri, dan preferensi admin, hubungkan database **Upstash Redis** ke project Vercel dan sediakan variabel environment `KV_REST_API_URL` serta `KV_REST_API_TOKEN` (alternatif: `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`). Aplikasi menyimpan tiga bagian JSON sebagai key terpisah dengan prefix environment, misalnya `ppru:production`, dan menulisnya dalam satu perintah `MSET`.
+
+Tanpa konfigurasi KV di Vercel, halaman publik tetap dapat membaca file seed, tetapi perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal, penyimpanan JSON/file tetap digunakan seperti biasa.
+
 ### Berita
 
 - Tab **Berita** di admin menampilkan semua artikel dengan thumbnail, judul, dan jumlah kunjungan; setiap baris menyediakan tombol edit/hapus. Tombol **Buat berita baru** membuka form artikel.

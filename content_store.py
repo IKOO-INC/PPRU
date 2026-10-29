@@ -2,6 +2,8 @@
 import json
 import os
 import tempfile
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -136,3 +138,188 @@ class JsonPortalStore:
         self.news.save(content.get("news", []))
         self.gallery.save(content.get("gallery", []))
         self.preferences.save(preferences)
+
+
+class PersistentStorageError(RuntimeError):
+    """Base class for deployment storage errors that should not become HTTP 500s."""
+
+    user_message = "Penyimpanan data sedang tidak tersedia. Silakan coba kembali."
+
+
+class PersistentStorageNotConfigured(PersistentStorageError):
+    """Raised when a serverless deployment has no durable writable data store."""
+
+    user_message = (
+        "Perubahan admin belum dapat disimpan karena Vercel tidak menyediakan penyimpanan "
+        "file persisten. Hubungkan Upstash Redis ke project Vercel agar "
+        "KV_REST_API_URL dan KV_REST_API_TOKEN tersedia, lalu deploy ulang. "
+        "Data belum diubah."
+    )
+
+
+class PersistentStorageUnavailable(PersistentStorageError):
+    """Raised when the configured remote key-value service cannot be used."""
+
+    user_message = (
+        "Penyimpanan data sedang tidak dapat dihubungi. Perubahan belum tersimpan; "
+        "periksa koneksi Upstash Redis dan coba kembali."
+    )
+
+
+class ReadOnlyPortalStore:
+    """Allow reads from bundled JSON files, but never claim Vercel writes succeeded."""
+
+    def __init__(self, file_store: JsonPortalStore):
+        self.file_store = file_store
+
+    def load(self) -> dict[str, Any]:
+        try:
+            return self.file_store.load()
+        except OSError:
+            # Vercel's deployment bundle is read-only; initialization/migration must
+            # use a persistent store rather than attempting to write beside the code.
+            raise PersistentStorageNotConfigured() from None
+
+    def save(self, content: dict[str, Any]) -> None:
+        raise PersistentStorageNotConfigured()
+
+
+class UpstashRestClient:
+    """Small Redis REST client using only the Python standard library."""
+
+    def __init__(self, url: str, token: str, timeout: float = 8.0):
+        self.url = url.rstrip("/")
+        self.token = token
+        self.timeout = timeout
+
+    def command(self, *parts: str) -> Any:
+        if not self.url.startswith("https://"):
+            raise PersistentStorageUnavailable()
+        body = json.dumps(list(parts), ensure_ascii=False).encode("utf-8")
+        request = urllib.request.Request(
+            self.url,
+            data=body,
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except (urllib.error.URLError, TimeoutError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+            # Never surface the request headers/token or provider response to users/logs.
+            raise PersistentStorageUnavailable() from None
+        if not isinstance(payload, dict) or payload.get("error"):
+            raise PersistentStorageUnavailable()
+        return payload.get("result")
+
+
+class UpstashJsonPortalStore(JsonPortalStore):
+    """Persist the portal's three JSON sections in Upstash Redis via REST commands."""
+
+    def __init__(
+        self,
+        preferences_file: str | Path,
+        news_file: str | Path,
+        gallery_file: str | Path,
+        seed_preferences_file: str | Path,
+        seed_news_file: str | Path,
+        seed_gallery_file: str | Path,
+        rest_url: str,
+        rest_token: str,
+        key_prefix: str,
+    ):
+        super().__init__(
+            preferences_file=preferences_file,
+            news_file=news_file,
+            gallery_file=gallery_file,
+            seed_preferences_file=seed_preferences_file,
+            seed_news_file=seed_news_file,
+            seed_gallery_file=seed_gallery_file,
+        )
+        self.client = UpstashRestClient(rest_url, rest_token)
+        self.key_prefix = key_prefix.strip(":") or "ppru:production"
+
+    def _key(self, section: str) -> str:
+        return f"{self.key_prefix}:{section}"
+
+    def _get_json(self, section: str) -> Any:
+        value = self.client.command("GET", self._key(section))
+        if value is None:
+            return None
+        try:
+            return json.loads(value)
+        except (TypeError, json.JSONDecodeError):
+            raise PersistentStorageUnavailable() from None
+
+    def _seed_list(self, seed: JsonListStore) -> list[Any]:
+        try:
+            return seed.load()
+        except FileNotFoundError:
+            return []
+
+    def load(self) -> dict[str, Any]:
+        preferences = self._get_json("preferensi")
+        preferences_missing = preferences is None
+        if preferences_missing:
+            preferences = self.seed_preferences.load()
+        if not isinstance(preferences, dict):
+            raise ValueError("The preferences data in persistent storage must be an object.")
+
+        has_legacy_news = "news" in preferences
+        has_legacy_gallery = "gallery" in preferences
+        legacy_news = preferences.pop("news", None)
+        legacy_gallery = preferences.pop("gallery", None)
+
+        remote_news = None if has_legacy_news else self._get_json("berita")
+        news_missing = remote_news is None
+        if has_legacy_news:
+            news = legacy_news if isinstance(legacy_news, list) else []
+        elif news_missing:
+            news = self._seed_list(self.seed_news)
+        else:
+            news = remote_news
+        if not isinstance(news, list):
+            raise ValueError("The news data in persistent storage must be an array.")
+
+        remote_gallery = None if has_legacy_gallery else self._get_json("galeri")
+        gallery_missing = remote_gallery is None
+        if has_legacy_gallery:
+            gallery = legacy_gallery if isinstance(legacy_gallery, list) else []
+        elif gallery_missing:
+            gallery = self._seed_list(self.seed_gallery)
+        else:
+            gallery = remote_gallery
+        if not isinstance(gallery, list):
+            raise ValueError("The gallery data in persistent storage must be an array.")
+
+        if (
+            preferences_missing
+            or has_legacy_news
+            or has_legacy_gallery
+            or news_missing
+            or gallery_missing
+        ):
+            self.save({**preferences, "news": news, "gallery": gallery})
+
+        return {**preferences, "news": news, "gallery": gallery}
+
+    def save(self, content: dict[str, Any]) -> None:
+        if not isinstance(content, dict):
+            raise ValueError("The portal content root must be an object.")
+        news = content.get("news", [])
+        gallery = content.get("gallery", [])
+        if not isinstance(news, list) or not isinstance(gallery, list):
+            raise ValueError("The portal news and gallery data must be arrays.")
+        preferences = {key: value for key, value in content.items() if key not in {"news", "gallery"}}
+        command = ["MSET"]
+        for section, value in (
+            ("preferensi", preferences),
+            ("berita", news),
+            ("galeri", gallery),
+        ):
+            command.extend((self._key(section), json.dumps(value, ensure_ascii=False, separators=(",", ":"))))
+        if self.client.command(*command) != "OK":
+            raise PersistentStorageUnavailable()
