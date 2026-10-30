@@ -67,9 +67,16 @@
 .admin-image-preview { grid-column: 2; grid-row: 1 / span 3; width: 150px; height: 96px; object-fit: cover; background: #edf3ee; border: 1px solid #dfe9e2; border-radius: 6px; }
 .admin-repeat-list { display: grid; gap: 11px; }
 .admin-repeat-card { position: relative; padding: 13px 14px 6px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
+.admin-asset-field[data-cloudinary-folder="programs"] .admin-image-preview { object-fit: contain; background: #fff; }
 .admin-program-summary { margin-bottom: 18px; }
 .admin-program-summary .admin-repeat-card { padding-bottom: 12px; }
+.admin-program-summary-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.admin-program-summary-icon { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; overflow: hidden; color: #168259; background: #e7f7ee; border-radius: 7px; }
+.admin-program-summary-icon .fa-solid { font-size: 14px; }
+.admin-program-summary-icon img { width: 100%; height: 100%; padding: 3px; object-fit: contain; background: #fff; }
+.admin-program-summary-heading .admin-repeat-index { margin: 0 0 3px; }
 .admin-program-summary strong { display: block; margin-bottom: 4px; color: #25372c; font-size: 9px; }
+.admin-program-summary-heading strong { margin: 0; }
 .admin-program-summary p { margin: 0; color: #718077; font-size: 8px; line-height: 1.6; }
 .admin-repeat-index { display: block; margin: 0 0 10px; color: #168259; font-size: 8px; font-weight: 800; }
 .admin-repeat-card .admin-fields-grid { margin-bottom: 0; }
@@ -247,8 +254,14 @@
 .academic-admin-list { display: grid; gap: 10px; }
 .academic-admin-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 15px; align-items: center; padding: 15px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
 .academic-admin-item-main { min-width: 0; }
+.academic-admin-program-identity { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.academic-admin-program-icon { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; overflow: hidden; color: #168259; background: #e7f7ee; border-radius: 8px; }
+.academic-admin-program-icon .fa-solid { font-size: 16px; }
+.academic-admin-program-icon img { width: 100%; height: 100%; padding: 3px; object-fit: contain; background: #fff; }
+.academic-admin-program-identity h3 { margin: 3px 0 0; }
 .academic-admin-item-main .program-category { font-size: 7px; }
 .academic-admin-item h3 { margin: 4px 0 5px; color: #27382e; font-size: 11px; font-weight: 800; }
+.academic-admin-item .academic-admin-program-identity h3 { margin: 3px 0 0; }
 .academic-admin-item p { margin: 0; color: #77857c; font-size: 8px; line-height: 1.65; }
 .academic-admin-kitabs { margin-top: 8px; color: #6e7e74; font-size: 7px; line-height: 1.6; }
 .academic-admin-kitabs strong { color: #435b4b; }

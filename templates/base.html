@@ -8,7 +8,9 @@
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}?v=1.13.2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=10">
   {% block extra_head %}{% endblock %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
   {% block extra_scripts %}{% endblock %}

@@ -127,6 +127,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .program-card { position: relative; z-index: 1; display: flex; min-height: 280px; flex-direction: column; align-items: flex-start; padding: 20px 18px 17px; background: #fff; border: 1px solid #f0f3f0; border-radius: 12px; box-shadow: 0 6px 19px rgba(21,57,38,.035); }
 .program-icon { display: grid; width: 34px; height: 34px; place-items: center; margin-bottom: 10px; border-radius: 9px; }
 .program-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.program-icon .fa-solid { font-size: 18px; line-height: 1; }
+.program-logo-image { width: 100%; height: 100%; padding: 3px; object-fit: contain; background: #fff; border-radius: inherit; }
 .program-icon--green { color: #fff; background: #15976b; }
 .program-icon--orange { color: #fff; background: #ec9b19; }
 .program-icon--blue { color: #fff; background: #4080e6; }
@@ -452,6 +454,9 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
 .admission-programs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 730px; margin: 0 auto; padding: 8px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; backdrop-filter: blur(8px); }
 .admission-programs article { display: flex; flex-direction: column; gap: 3px; padding: 11px 8px; }
 .admission-programs article + article { border-left: 1px solid rgba(255,255,255,.23); }
+.admission-program-icon { display: grid; width: 31px; height: 31px; place-items: center; align-self: center; margin-bottom: 4px; color: #fff; background: rgba(255,255,255,.18); border-radius: 8px; }
+.admission-program-icon .fa-solid { font-size: 15px; line-height: 1; }
+.admission-program-logo { width: 100%; height: 100%; padding: 3px; object-fit: contain; background: #fff; border-radius: inherit; }
 .admission-programs strong { color: #f7be46; font-size: 12px; text-transform: uppercase; }
 .admission-programs span { color: #e0ede4; font-size: 7px; }
 .admission-programs a { align-self: center; margin-top: 5px; padding: 4px 7px; color: #e7f5eb; background: rgba(255,255,255,.14); border-radius: 99px; font-size: 7px; }

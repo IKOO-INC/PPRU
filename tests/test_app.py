@@ -81,18 +81,18 @@ class PortalRoutesTestCase(unittest.TestCase):
             stream=BytesIO(b"\x89PNG\r\n\x1a\npng-payload"),
             filename="santri.png",
         )
-        expected_url = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/site/santri"
+        expected_url = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/programs/santri"
         credentials = {"cloud_name": "demo", "api_key": "test-key", "api_secret": "test-secret"}
         with (
             patch("cloudinary_service.cloudinary.config") as config_mock,
             patch("cloudinary_service.uploader.upload", return_value={
-                "public_id": "ppru/site/santri",
+                "public_id": "ppru/programs/santri",
                 "version": 123,
-                "secure_url": "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/santri.png",
+                "secure_url": "https://res.cloudinary.com/demo/image/upload/v123/ppru/programs/santri.png",
             }) as upload_mock,
             patch("cloudinary_service.utils.cloudinary_url", return_value=(expected_url, {})) as url_mock,
         ):
-            result = upload_image(file_storage, credentials, "site")
+            result = upload_image(file_storage, credentials, "programs")
 
         self.assertEqual(result["url"], expected_url)
         config_mock.assert_called_once_with(
@@ -102,7 +102,7 @@ class PortalRoutesTestCase(unittest.TestCase):
             secure=True,
         )
         upload_options = upload_mock.call_args.kwargs
-        self.assertEqual(upload_options["folder"], "ppru/site")
+        self.assertEqual(upload_options["folder"], "ppru/programs")
         self.assertEqual(upload_options["transformation"]["crop"], "limit")
         self.assertEqual(upload_options["transformation"]["quality"], "auto:good")
         self.assertEqual(url_mock.call_args.kwargs["transformation"]["fetch_format"], "auto")
@@ -979,6 +979,106 @@ class PortalRoutesTestCase(unittest.TestCase):
         saved_item = next(item for item in saved_programs if item["title"] == "Kajian Kitab Dasar")
         self.assertEqual(saved_item["education_type"], "non_formal")
         self.assertIn(b"Kajian Kitab Dasar", self.client.get("/akademik/non-formal").data)
+
+    def test_academic_program_logo_upload_and_fontawesome_fallback(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+            admin_session["_csrf_token"] = "program-logo-csrf-token"
+
+        form_response = self.client.get("/admin/akademik/program/baru?education_type=formal")
+        form_html = form_response.get_data(as_text=True)
+        self.assertEqual(form_response.status_code, 200)
+        self.assertIn('name="program_logo"', form_html)
+        self.assertIn('data-cloudinary-folder="programs"', form_html)
+        self.assertIn(">Upload logo</button>", form_html)
+        self.assertIn('name="icon"', form_html)
+        self.assertIn("Font Awesome", form_html)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', form_html).group(1)
+
+        uploaded_logo = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/programs/kajian-kitab"
+        with patch("app.upload_image", return_value={"url": uploaded_logo, "public_id": "ppru/programs/kajian-kitab"}) as upload_mock:
+            upload_response = self.client.post(
+                "/admin/upload-image",
+                data={
+                    "csrf_token": token,
+                    "folder": "programs",
+                    "image_file": (BytesIO(b"fake-image-bytes"), "logo.png"),
+                },
+                content_type="multipart/form-data",
+            )
+        self.assertEqual(upload_response.status_code, 200)
+        self.assertEqual(upload_response.get_json()["url"], uploaded_logo)
+        self.assertEqual(upload_mock.call_args.args[2], "programs")
+
+        created = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "title": "Kajian Kitab Logo",
+                "category": "Pendidikan formal",
+                "education_type": "formal",
+                "description": "Program dengan identitas visual khusus.",
+                "kitabs": "Safinatun Najah",
+                "info_url": "/kontak",
+                "icon": "graduation-cap",
+                "program_logo": uploaded_logo,
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(created.status_code, 200)
+        saved_programs = json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
+        program = next(item for item in saved_programs if item["title"] == "Kajian Kitab Logo")
+        self.assertEqual(program["logo"], uploaded_logo)
+        self.assertEqual(program["icon"], "graduation-cap")
+
+        academic_html = self.client.get("/akademik").get_data(as_text=True)
+        self.assertIn(f'<img class="program-logo-image" src="{uploaded_logo}"', academic_html)
+        self.assertIn('class="fa-solid fa-quran"', academic_html)
+        self.assertIn("vendor/fontawesome-free/css/fontawesome.min.css?v=6.7.2", academic_html)
+        admin_html = self.client.get("/admin/akademik?tab=formal").get_data(as_text=True)
+        self.assertIn(f'<img src="{uploaded_logo}" alt="">', admin_html)
+        psb_html = self.client.get("/psb").get_data(as_text=True)
+        self.assertIn(f'<img class="admission-program-logo" src="{uploaded_logo}"', psb_html)
+
+        edit_form = self.client.get(f"/admin/akademik/program/{program['id']}/edit")
+        token = re.search(r'name="csrf_token" value="([^"]+)"', edit_form.get_data(as_text=True)).group(1)
+        cleared = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "item_id": program["id"],
+                "title": program["title"],
+                "category": program["category"],
+                "education_type": "formal",
+                "description": program["description"],
+                "kitabs": "Safinatun Najah",
+                "info_url": "/kontak",
+                "icon": "scroll",
+                "program_logo": "",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(cleared.status_code, 200)
+        cleared_program = next(
+            item for item in json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
+            if item.get("id") == program["id"]
+        )
+        self.assertEqual(cleared_program["logo"], "")
+        self.assertEqual(cleared_program["icon"], "scroll")
+        fallback_html = self.client.get("/akademik").get_data(as_text=True)
+        self.assertIn('class="fa-solid fa-scroll"', fallback_html)
+        self.assertNotIn(f'<img class="program-logo-image" src="{uploaded_logo}"', fallback_html)
+
+        for asset in (
+            "/static/vendor/fontawesome-free/css/fontawesome.min.css",
+            "/static/vendor/fontawesome-free/css/solid.min.css",
+            "/static/vendor/fontawesome-free/webfonts/fa-solid-900.woff2",
+        ):
+            with self.subTest(asset=asset):
+                response = self.client.get(asset)
+                self.assertEqual(response.status_code, 200)
+                response.close()
 
     def test_academic_admin_manages_programs_and_calendar_at_bottom_of_page(self):
         with self.client.session_transaction() as admin_session:

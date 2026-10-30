@@ -96,7 +96,8 @@
       "color": "green",
       "kitabs": [],
       "info_url": "/kontak",
-      "education_type": "non_formal"
+      "education_type": "non_formal",
+      "logo": ""
     },
     {
       "number": "02",
@@ -107,7 +108,8 @@
       "color": "orange",
       "kitabs": [],
       "info_url": "/kontak",
-      "education_type": "formal"
+      "education_type": "formal",
+      "logo": ""
     },
     {
       "number": "03",
@@ -118,7 +120,8 @@
       "color": "blue",
       "kitabs": [],
       "info_url": "/kontak",
-      "education_type": "non_formal"
+      "education_type": "non_formal",
+      "logo": ""
     }
   ],
   "history": {

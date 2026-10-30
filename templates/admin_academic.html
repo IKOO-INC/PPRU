@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin Pendidikan & Akademik · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=10">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=11">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script>{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page">
@@ -22,11 +22,11 @@
 
     {% if tab in ['formal', 'non_formal'] %}
     <section class="admin-panel academic-admin-panel">
-      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Kurikulum &amp; kelas</span><h2>Program Pendidikan {{ 'Formal' if tab == 'formal' else 'Non Formal' }}</h2><p>Kelola kelas {{ 'pendidikan formal' if tab == 'formal' else 'pendidikan non formal' }}: judul, keterangan, daftar kitab, dan tautan informasi.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_program_new', education_type=tab) }}">+ Tambah program</a></div>
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Kurikulum &amp; kelas</span><h2>Program Pendidikan {{ 'Formal' if tab == 'formal' else 'Non Formal' }}</h2><p>Kelola kelas {{ 'pendidikan formal' if tab == 'formal' else 'pendidikan non formal' }}: judul, logo atau ikon, keterangan, daftar kitab, dan tautan informasi.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_program_new', education_type=tab) }}">+ Tambah program</a></div>
       <div class="academic-admin-list">
         {% for item in programs %}
         <article class="academic-admin-item">
-          <div class="academic-admin-item-main"><span class="program-category">{{ item.category|default('Program pendidikan') }}</span><h3>{{ item.title }}</h3><p>{{ item.description }}</p><div class="academic-admin-kitabs"><strong>Kitab:</strong> {% if item.kitabs %}{{ item.kitabs|join(', ') }}{% else %}belum diisi{% endif %}</div></div>
+          <div class="academic-admin-item-main"><div class="academic-admin-program-identity"><span class="academic-admin-program-icon" aria-hidden="true">{% if item.logo %}<img src="{{ item.logo }}" alt="">{% else %}<i class="fa-solid fa-{{ item.icon|default('book') }}"></i>{% endif %}</span><div><span class="program-category">{{ item.category|default('Program pendidikan') }}</span><h3>{{ item.title }}</h3></div></div><p>{{ item.description }}</p><div class="academic-admin-kitabs"><strong>Kitab:</strong> {% if item.kitabs %}{{ item.kitabs|join(', ') }}{% else %}belum diisi{% endif %}</div></div>
           <div class="academic-admin-actions"><a href="{{ url_for('admin_academic_program_edit', item_id=item.admin_id) }}">Edit</a><form method="post" action="{{ url_for('admin_academic_program_delete', item_id=item.admin_id) }}" data-confirm-delete><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Hapus</button></form></div>
         </article>
         {% else %}<div class="admin-news-empty">Belum ada program di menu {{ 'Pendidikan Formal' if tab == 'formal' else 'Pendidikan Non Formal' }}. Tambahkan kelas melalui tombol di atas.</div>{% endfor %}

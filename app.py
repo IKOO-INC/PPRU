@@ -59,6 +59,15 @@ ACADEMIC_PROGRAM_TYPE_LABELS = {
     "formal": "Pendidikan Formal",
     "non_formal": "Pendidikan Non Formal",
 }
+ACADEMIC_PROGRAM_ICON_OPTIONS = {
+    "quran": "Al-Qur’an",
+    "school": "Sekolah",
+    "book": "Buku",
+    "book-open-reader": "Pembaca",
+    "graduation-cap": "Pendidikan",
+    "chalkboard-user": "Pengajar",
+    "scroll": "Kitab",
+}
 ACADEMIC_PROGRAM_TYPE_SLUGS = {
     "formal": "formal",
     "non_formal": "non-formal",
@@ -161,6 +170,12 @@ def _safe_image_url(value, current):
             parsed = parsed._replace(path=f"{prefix}{marker}{'/'.join(segments)}")
             candidate = urlunsplit(parsed)
     return candidate
+
+
+def _safe_program_logo(value):
+    """Accept only optimized Cloudinary image URLs for uploaded program logos."""
+    candidate = str(value or "").strip()
+    return _safe_image_url(candidate, "")
 
 
 def _youtube_embed_url(value, current=""):
@@ -553,6 +568,16 @@ def create_app(test_config=None):
                 kitabs = _split_list_lines(kitabs)
             program["kitabs"] = [str(kitab).strip() for kitab in kitabs if str(kitab).strip()]
             program["info_url"] = _safe_public_link(program.get("info_url", "/kontak"))
+            logo = _safe_program_logo(program.get("logo", ""))
+            if program.get("logo") != logo:
+                program["logo"] = logo
+                needs_save = True
+            icon = str(program.get("icon", "book") or "book").strip()
+            if icon not in ACADEMIC_PROGRAM_ICON_OPTIONS:
+                icon = "book"
+            if program.get("icon") != icon:
+                program["icon"] = icon
+                needs_save = True
             education_type = _normalize_academic_program_type(
                 program.get("education_type"),
                 program.get("category", ""),
@@ -1316,8 +1341,11 @@ def create_app(test_config=None):
                 "kitabs": [],
                 "info_url": "/kontak",
                 "education_type": education_type,
+                "icon": "book",
+                "logo": "",
             },
             item_id="",
+            icon_options=ACADEMIC_PROGRAM_ICON_OPTIONS,
             error=None,
         )
 
@@ -1341,6 +1369,7 @@ def create_app(test_config=None):
             data=_without_admin_users(content),
             item=item,
             item_id=_academic_item_id(item, index),
+            icon_options=ACADEMIC_PROGRAM_ICON_OPTIONS,
             error=None,
         )
 
@@ -1363,6 +1392,11 @@ def create_app(test_config=None):
         )
         submitted_info_url = request.form.get("info_url", "").strip()
         info_url = _safe_public_link(submitted_info_url)
+        icon_field_provided = "icon" in request.form
+        icon = request.form.get("icon", "").strip() or "book"
+        logo_field_provided = "program_logo" in request.form
+        submitted_logo = request.form.get("program_logo", "").strip()
+        logo = _safe_program_logo(submitted_logo)
         error = None
         if not title:
             error = "Judul kelas/program wajib diisi."
@@ -1372,6 +1406,10 @@ def create_app(test_config=None):
             error = "Tambahkan minimal satu judul kitab, satu per baris."
         elif submitted_education_type and submitted_education_type not in ACADEMIC_PROGRAM_TYPE_LABELS:
             error = "Pilih Pendidikan Formal atau Pendidikan Non Formal."
+        elif icon_field_provided and icon not in ACADEMIC_PROGRAM_ICON_OPTIONS:
+            error = "Pilih ikon Font Awesome yang tersedia."
+        elif submitted_logo and not logo:
+            error = "Logo harus berupa URL gambar Cloudinary HTTPS yang valid."
         elif submitted_info_url and info_url == "/kontak" and submitted_info_url != "/kontak":
             error = "Tautan informasi harus berupa path lokal atau URL HTTPS yang valid."
 
@@ -1383,6 +1421,8 @@ def create_app(test_config=None):
             "description": description,
             "kitabs": kitabs,
             "info_url": info_url,
+            "icon": icon,
+            "logo": logo,
         }
         if error:
             page_content = _without_admin_users(load_content())
@@ -1392,6 +1432,7 @@ def create_app(test_config=None):
                 data=page_content,
                 item=item,
                 item_id=item_id,
+                icon_options=ACADEMIC_PROGRAM_ICON_OPTIONS,
                 error=error,
             ), 400
 
@@ -1405,6 +1446,10 @@ def create_app(test_config=None):
             if item_id and existing_index is None:
                 abort(404)
             existing = programs[existing_index] if existing_index is not None else {}
+            if existing_index is not None and not icon_field_provided:
+                item["icon"] = existing.get("icon", "book")
+            if existing_index is not None and not logo_field_provided:
+                item["logo"] = existing.get("logo", "")
             if not submitted_education_type and existing_index is not None:
                 education_type = _normalize_academic_program_type(
                     existing.get("education_type"),
@@ -1414,7 +1459,6 @@ def create_app(test_config=None):
             item.update({
                 "id": existing.get("id") or secrets.token_urlsafe(10),
                 "number": existing.get("number") or f"{len(programs) + 1:02d}",
-                "icon": existing.get("icon", "book"),
                 "color": existing.get("color", "green"),
             })
             if existing_index is None:

@@ -63,6 +63,7 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 - Panel khusus `/admin/akademik` memisahkan menu **Pendidikan Formal** dan **Pendidikan Non Formal**, selain **Kalender Akademik** dan **Pengumuman / Berita**. Setiap program disimpan pada salah satu jenis pendidikan dan dapat dipindahkan melalui formulir edit.
 - Navigasi publik **Akademik** memiliki menu **Pendidikan Formal** (`/akademik/formal`) dan **Pendidikan Non Formal** (`/akademik/non-formal`); `/akademik` tetap menjadi halaman ringkasan dengan program dikelompokkan berdasarkan jenisnya.
 - Program berisi judul kelas, keterangan, daftar kitab (satu judul per baris), dan tautan **Informasi lebih lanjut**. Isi daftar kitab resmi melalui formulir program sebelum publikasi; daftar yang belum diisi ditandai jelas di situs.
+- Form program mendukung logo opsional melalui URL atau unggahan Cloudinary; kartu publik menampilkan logo tersebut, atau memakai ikon cadangan Font Awesome bila logo kosong. Berkas Font Awesome Free 6.7.2 disajikan lokal dan lisensinya disertakan di `static/vendor/fontawesome-free/LICENSE.txt`.
 - Halaman PSB dan pratinjau admin mengambil daftar program dari sumber Akademik yang sama; tidak ada daftar program PSB terpisah.
 - Kegiatan kalender memiliki tanggal, judul, kategori, dan keterangan. Kalender tampil di bagian paling bawah halaman akademik; bagian **Kegiatan Mendatang** di beranda mengambil hingga tiga event terdekat yang belum lewat dari kalender ini.
 

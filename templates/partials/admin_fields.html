@@ -6,14 +6,14 @@
 <label class="admin-field admin-field--wide"><span>{{ label }}</span><textarea name="{{ name }}" rows="{{ rows }}">{{ value }}</textarea></label>
 {%- endmacro %}
 
-{% macro image_url_field(label, name, value, alt='Pratinjau gambar', folder='site') -%}
+{% macro image_url_field(label, name, value, alt='Pratinjau gambar', folder='site', upload_label='Upload foto') -%}
 <div class="admin-asset-field" data-cloudinary-field data-cloudinary-folder="{{ folder }}">
   <div class="admin-asset-control">
     <label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="https://res.cloudinary.com/..." data-image-input autocomplete="off"></label>
     <div class="admin-asset-actions">
       <input type="hidden" data-cloudinary-csrf value="{{ csrf_token() }}">
       <input class="admin-asset-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-cloudinary-file>
-      <button class="admin-upload-button" type="button" data-cloudinary-upload-button>Upload foto</button>
+      <button class="admin-upload-button" type="button" data-cloudinary-upload-button>{{ upload_label }}</button>
     </div>
   </div>
   <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview{% if not value %} hidden{% endif %}>

@@ -22,7 +22,7 @@ DELIVERY_TRANSFORMATION = {
     "quality": "auto:good",
     "fetch_format": "auto",
 }
-FOLDER_NAMES = {"site", "news", "gallery"}
+FOLDER_NAMES = {"site", "news", "gallery", "programs"}
 
 
 class CloudinaryConfigurationError(RuntimeError):
