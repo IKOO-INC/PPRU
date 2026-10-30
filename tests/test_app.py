@@ -261,6 +261,14 @@ class PortalRoutesTestCase(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b"Pondok Pesantren", response.data)
 
+    def test_home_hero_promo_is_hidden_only_on_mobile(self):
+        styles = (ROOT / "static" / "css" / "style.css").read_text(encoding="utf-8")
+        desktop_styles = styles.split("@media (max-width: 960px)", 1)[0]
+        mobile_styles = styles.split("@media (max-width: 740px)", 1)[1].split("@media (max-width: 520px)", 1)[0]
+
+        self.assertIn(".hero-promo { position: relative;", desktop_styles)
+        self.assertIn(".hero-promo { display: none; }", mobile_styles)
+
     def test_gallery_photos_open_popup_with_download_and_share_actions(self):
         response = self.client.get("/galeri")
         self.assertEqual(response.status_code, 200)
