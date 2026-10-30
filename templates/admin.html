@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
 {% block title %}Kelola Website · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=8">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-page">
@@ -43,13 +43,6 @@
         <section class="admin-panel" data-admin-panel="stats" data-preview-path="/"{% if active_component != 'stats' %} hidden{% endif %}>
           <form method="post" action="{{ url_for('admin_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="component" value="stats"><div class="admin-panel-heading"><div><span class="admin-kicker">Beranda</span><h2>Data statistik</h2><p>Angka ringkasan yang tampil di bawah hero beranda.</p></div></div>
             <div class="admin-repeat-list">{% for item in data.stats %}<div class="admin-repeat-card"><span class="admin-repeat-index">{{ '%02d'|format(loop.index) }}</span>{{ text_field('Angka', 'stat_value_' ~ loop.index0, item.value) }}{{ text_field('Label', 'stat_label_' ~ loop.index0, item.label) }}</div>{% endfor %}</div><div class="admin-form-actions"><span>Pastikan angka sesuai data resmi sebelum dipublikasikan.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div>
-          </form>
-        </section>
-
-        <section class="admin-panel" data-admin-panel="programs" data-preview-path="/akademik"{% if active_component != 'programs' %} hidden{% endif %}>
-          <form method="post" action="{{ url_for('admin_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="component" value="programs"><div class="admin-panel-heading"><div><span class="admin-kicker">Akademik</span><h2>Program pendidikan</h2><p>Edit judul section dan setiap kartu program.</p></div></div>
-            <div class="admin-fields-grid">{{ text_field('Eyebrow section', 'program_intro_eyebrow', data.program_intro.eyebrow) }}{{ text_field('Judul section', 'program_intro_title', data.program_intro.title) }}{{ textarea_field('Deskripsi section', 'program_intro_description', data.program_intro.description, 3) }}</div>
-            <div class="admin-repeat-list">{% for item in data.programs %}<article class="admin-repeat-card admin-repeat-card--media"><span class="admin-repeat-index">Program {{ '%02d'|format(loop.index) }}</span><div class="admin-fields-grid">{{ text_field('Nama program', 'program_title_' ~ loop.index0, item.title) }}{{ text_field('Kategori', 'program_category_' ~ loop.index0, item.category) }}{{ textarea_field('Deskripsi', 'program_description_' ~ loop.index0, item.description, 3) }}</div></article>{% endfor %}</div><div class="admin-form-actions"><span>Kartu akademik memakai ikon tematik sesuai desain referensi.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div>
           </form>
         </section>
 
@@ -108,6 +101,18 @@
           <form method="post" action="{{ url_for('admin_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="component" value="hafalan"><div class="admin-panel-heading"><div><span class="admin-kicker">Sambung Nadzom</span><h2>Konten tantangan hafalan</h2><p>Atur judul dan petunjuk halaman kuis nadzom kitab nahwu.</p></div></div>
             <div class="admin-fields-grid">{{ text_field('Label kecil', 'hafalan_eyebrow', data.hafalan.eyebrow) }}{{ text_field('Judul halaman', 'hafalan_title', data.hafalan.title) }}{{ textarea_field('Deskripsi', 'hafalan_description', data.hafalan.description, 2) }}</div><div class="admin-alert admin-alert--success">Bank soal dibaca dari <code>data/alfiyah.json</code> dan <code>data/imrity.json</code>. Daftar bab diambil otomatis dari array JSON.</div><div class="admin-form-actions"><span>Skor dan sertifikat dihitung di browser setelah semua soal dijawab.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div>
           </form>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="users" data-preview-path="/"{% if active_component != 'users' %} hidden{% endif %}>
+          <div class="admin-panel-heading"><div><span class="admin-kicker">Akses admin</span><h2>Kelola User Admin</h2><p>Atur akun khusus untuk pengelolaan Pendidikan/Akademik. Login tetap melalui halaman <code>/admin</code>.</p></div></div>
+          {% if user_error %}<div class="admin-alert admin-alert--error" role="alert">{{ user_error }}</div>{% endif %}
+          <div class="admin-user-status{% if academic_admin.get('active') %} is-active{% endif %}"><span class="admin-user-status-dot" aria-hidden="true"></span><div><strong>{% if academic_admin.get('active') %}Akun Admin Akademik aktif{% elif academic_admin.get('password_hash') %}Akun Admin Akademik nonaktif{% else %}Akun Admin Akademik belum dibuat{% endif %}</strong><small>{% if academic_admin.get('username') %}Nama pengguna: {{ academic_admin.username }}{% else %}Buat akun agar pengelola pendidikan dapat masuk.{% endif %}</small></div>{% if academic_admin.get('active') %}<a href="{{ url_for('admin_academic') }}">Buka panel Akademik ↗</a>{% endif %}</div>
+          <form method="post" action="{{ url_for('admin_users_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="admin-fields-grid">
+            <label class="admin-field"><span>Nama pengguna</span><input type="text" name="username" value="{{ academic_admin.get('username', 'admin-akademik') }}" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label>
+            <label class="admin-field"><span>Kata sandi baru</span><input type="password" name="password" minlength="12" autocomplete="new-password" placeholder="{% if academic_admin.get('password_hash') %}Kosongkan jika tidak diubah{% else %}Minimal 12 karakter{% endif %}"></label>
+            <label class="admin-field"><span>Konfirmasi kata sandi</span><input type="password" name="password_confirm" minlength="12" autocomplete="new-password" placeholder="Ulangi kata sandi baru"></label>
+            <label class="admin-field admin-user-toggle"><input type="checkbox" name="active" value="1"{% if not academic_admin.get('password_hash') or academic_admin.get('active') %} checked{% endif %}><span>Izinkan akun ini masuk ke panel Pendidikan/Akademik</span></label>
+          </div><div class="admin-form-actions"><span>Kata sandi disimpan sebagai hash dan tidak ditampilkan kembali. Nonaktifkan centang untuk mencabut akses.</span><button class="admin-save-button" type="submit">Simpan akun akademik</button></div></form>
         </section>
         </div>
       </div>

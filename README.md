@@ -5,7 +5,7 @@ Website publik responsif berbasis **Python, Flask, dan Jinja2**. Pola halaman me
 ## Admin website
 
 - Buka `/admin`, lalu masuk dengan kata sandi pengembangan **`admin123`**.
-- Sidebar admin dibagi per komponen: Identitas/Logo, Navigasi, Hero, Statistik, Akademik, Profil/Sejarah, Berita, Karya, Galeri, Agenda, FAQ, Kontak, PSB, dan Hafalan.
+- Sidebar **Admin Utama** berisi pengelolaan situs umum dan menu **Kelola User Admin**. Program pendidikan dikelola melalui panel Pendidikan/Akademik yang terpisah.
 - Pada desktop, editor preferensi memiliki **live preview** di sisi kiri form. Pratinjau merender perubahan yang belum disimpan; tombol simpan tetap terpisah.
 - Setiap komponen punya tombol simpan sendiri. Semua field gambar memakai **URL foto** dengan tombol **Upload** di sampingnya; unggahan dikirim ke Cloudinary dan URL hasilnya mengisi field secara otomatis.
 - Gambar situs disajikan melalui URL Cloudinary yang mengaktifkan format otomatis dan kompresi kualitas otomatis. Upload raster menerima JPG, PNG, GIF, dan WebP sampai 10 MB, lalu membatasi dimensi sumber hingga 2400 × 2400 piksel. Delivery gambar dibatasi hingga 1600 × 1600 piksel.
@@ -56,6 +56,14 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 - Beranda hanya menampilkan **3 berita terbit terbaru**, diurutkan berdasarkan `published_at`; draft tidak muncul di area publik.
 - Setiap pembukaan route `/berita/<slug>` menambah `views` dan menyimpannya ke MongoDB Atlas (serta mirror `berita.json` lokal bila file system dapat ditulis); jumlahnya tampil di baris berita pada admin.
 
+### Admin Pendidikan/Akademik
+
+- Login tetap melalui `/admin`. Admin Utama masuk dengan kata sandi `ADMIN_PASSWORD`; di sidebar **Kelola User Admin**, Admin Utama membuat atau menonaktifkan akun Pendidikan/Akademik, menentukan nama pengguna, dan menetapkan kata sandi minimal 12 karakter. Admin pendidikan mengisi nama pengguna serta kata sandi pada halaman login yang sama.
+- Kata sandi pendidikan disimpan dalam bentuk hash di penyimpanan aplikasi; sesi admin pendidikan dapat dicabut dari **Kelola User Admin** dengan menonaktifkan akun atau memperbarui kredensial.
+- Panel khusus `/admin/akademik` memiliki menu **Program Pendidikan**, **Kalender Akademik**, dan **Pengumuman / Berita**. Admin akademik hanya dapat mengelola pengumuman bertanda akademik; pengumuman terbit juga tampil di halaman Berita.
+- Program berisi judul kelas, keterangan, daftar kitab (satu judul per baris), dan tautan **Informasi lebih lanjut**. Isi daftar kitab resmi melalui formulir program sebelum publikasi; daftar yang belum diisi ditandai jelas di situs.
+- Kegiatan kalender memiliki tanggal, judul, kategori, dan keterangan. Kalender tampil di bagian paling bawah halaman `/akademik`.
+
 ### Galeri
 
 - Tab **Galeri** menampilkan thumbnail foto yang sudah ada beserta judul dan tombol **Edit/Hapus**. Tombol **Upload galeri baru** membuka form terpisah.
@@ -99,7 +107,8 @@ Buka `http://127.0.0.1:5000` untuk website atau `http://127.0.0.1:5000/admin` un
 - `/kontak` — Informasi kontak dan formulir contoh
 - `/psb` — Informasi Penerimaan Santri Baru
 - `/masuk` — Halaman demo masuk lama; tombol header **Masuk Portal Santri** diarahkan langsung ke SIAPik
-- `/admin` — Panel pengelolaan tampilan dan konten
+- `/admin` — Login bersama Admin Utama dan Admin Pendidikan/Akademik
+- `/admin/akademik` — Panel terpisah pengelolaan program, kalender, dan pengumuman akademik
 
 ## Tes route dan penyimpanan admin
 

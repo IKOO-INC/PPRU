@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Admin · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=1">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
 {% block content %}
-<section class="admin-login-wrap"><div class="admin-login-card"><a class="admin-login-brand" href="/"><img src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48"><span><strong>{{ site.short_name }}</strong><small>ADMIN PORTAL</small></span></a><span class="admin-kicker">Area pengelola</span><h1>Masuk Admin</h1><p>Masuk untuk mengubah tampilan, gambar, dan data yang tampil di website.</p>{% if error %}<div class="admin-alert admin-alert--error">{{ error }}</div>{% endif %}<form method="post" action="{{ url_for('admin_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label class="admin-field"><span>Kata sandi admin</span><input type="password" name="password" autocomplete="current-password" placeholder="Masukkan kata sandi" required autofocus></label><button class="admin-save-button" type="submit">Masuk ke Admin <span aria-hidden="true">→</span></button></form><a class="admin-back-link" href="/">← Kembali ke website</a></div></section>
+<section class="admin-login-wrap"><div class="admin-login-card">
+  <a class="admin-login-brand" href="/"><img src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48"><span><strong>{{ site.short_name }}</strong><small>ADMIN PORTAL</small></span></a>
+  <span class="admin-kicker">Area pengelola</span><h1>Masuk Admin</h1>
+  <p>Admin Utama cukup memasukkan kata sandi. Admin Pendidikan/Akademik menggunakan nama pengguna dan kata sandi yang dibuat di menu Kelola User Admin.</p>
+  {% if error %}<div class="admin-alert admin-alert--error">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ url_for('admin_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="admin-field"><span>Nama pengguna Admin Akademik <small>(kosongkan untuk Admin Utama)</small></span><input type="text" name="username" autocomplete="username" placeholder="admin-akademik"></label>
+    <label class="admin-field"><span>Kata sandi admin</span><input type="password" name="password" autocomplete="current-password" placeholder="Masukkan kata sandi" required autofocus></label>
+    <button class="admin-save-button" type="submit">Masuk ke Admin <span aria-hidden="true">→</span></button>
+  </form>
+  <a class="admin-back-link" href="/">← Kembali ke website</a>
+</div></section>
 {% endblock %}

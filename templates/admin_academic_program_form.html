@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit program pendidikan' if item_id else 'Tambah program pendidikan' }} · Admin Akademik{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
+{% block content %}
+<section class="admin-page academic-admin-page"><div class="container admin-container"><div class="admin-academic-form-wrap">
+  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · Program</span><h1>{{ 'Edit program pendidikan' if item_id else 'Tambah program pendidikan' }}</h1><p>Isi judul kelas, keterangan, kitab yang dipelajari, dan tautan informasi.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='programs') }}">← Kembali ke program</a></header>
+  <form class="admin-news-form-card" method="post" action="{{ url_for('admin_academic_program_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="item_id" value="{{ item_id }}">
+    {% if error %}<div class="admin-alert admin-alert--error" role="alert">{{ error }}</div>{% endif %}
+    <label class="admin-field"><span>Judul kelas / program *</span><input type="text" name="title" value="{{ item.get('title', '') }}" required maxlength="120" placeholder="Contoh: Tahfidzul Qur’an"></label>
+    <label class="admin-field"><span>Kategori</span><input type="text" name="category" value="{{ item.get('category', 'Program pendidikan') }}" maxlength="80" placeholder="Program pendidikan"></label>
+    <label class="admin-field"><span>Keterangan program *</span><textarea name="description" rows="4" required maxlength="1200" placeholder="Jelaskan tujuan dan kegiatan kelas.">{{ item.get('description', '') }}</textarea></label>
+    <label class="admin-field"><span>Daftar kitab yang dipelajari *</span><textarea name="kitabs" rows="6" required placeholder="Satu judul kitab per baris">{{ item.get('kitabs', [])|join('\n') if item.get('kitabs') is iterable and item.get('kitabs') is not string else item.get('kitabs', '') }}</textarea><small>Masukkan satu judul kitab per baris. Baris baru atau koma akan dipisahkan menjadi daftar.</small></label>
+    <label class="admin-field"><span>Tautan tombol “Informasi lebih lanjut”</span><input type="text" name="info_url" value="{{ item.get('info_url', '/kontak') }}" placeholder="/kontak atau https://..."><small>Gunakan path halaman pesantren atau tautan HTTPS.</small></label>
+    <div class="admin-news-form-actions"><span>Program akan langsung tampil di halaman Akademik setelah disimpan.</span><div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='programs') }}">Batal</a><button class="admin-save-button" type="submit">Simpan program</button></div></div>
+  </form>
+</div></div></section>
+{% endblock %}

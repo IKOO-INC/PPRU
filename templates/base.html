@@ -7,7 +7,7 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
   {% block extra_head %}{% endblock %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=5"></script>
   {% block extra_scripts %}{% endblock %}

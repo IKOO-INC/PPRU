@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit kegiatan akademik' if item_id else 'Tambah kegiatan akademik' }} · Admin Akademik{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
+{% block content %}
+<section class="admin-page academic-admin-page"><div class="container admin-container"><div class="admin-academic-form-wrap">
+  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · Kalender</span><h1>{{ 'Edit kegiatan akademik' if item_id else 'Tambah kegiatan akademik' }}</h1><p>Masukkan tanggal, kategori, judul kegiatan, dan keterangan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='calendar') }}">← Kembali ke kalender</a></header>
+  <form class="admin-news-form-card" method="post" action="{{ url_for('admin_academic_calendar_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="item_id" value="{{ item_id }}">
+    {% if error %}<div class="admin-alert admin-alert--error" role="alert">{{ error }}</div>{% endif %}
+    <label class="admin-field"><span>Tanggal *</span><input type="date" name="date" value="{{ item.get('date', '') }}" required></label>
+    <label class="admin-field"><span>Nama kegiatan *</span><input type="text" name="title" value="{{ item.get('title', '') }}" maxlength="160" required placeholder="Contoh: Ujian semester ganjil"></label>
+    <label class="admin-field"><span>Kategori</span><input type="text" name="category" value="{{ item.get('category', 'Akademik') }}" maxlength="80" placeholder="Akademik"></label>
+    <label class="admin-field"><span>Keterangan</span><textarea name="description" rows="4" maxlength="1000" placeholder="Keterangan untuk santri dan wali.">{{ item.get('description', '') }}</textarea></label>
+    <div class="admin-news-form-actions"><span>Kegiatan akan diurutkan berdasarkan tanggal di halaman Akademik.</span><div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='calendar') }}">Batal</a><button class="admin-save-button" type="submit">Simpan kegiatan</button></div></div>
+  </form>
+</div></div></section>
+{% endblock %}

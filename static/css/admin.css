@@ -216,3 +216,64 @@
   .admin-gallery-form-card { padding: 14px; }
   .admin-gallery-current-image { align-items: flex-start; flex-direction: column; }
 }
+
+/* Isolated account management for the education administrator */
+.admin-user-status { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 13px 15px; background: #f8faf9; border: 1px solid #e8efea; border-radius: 8px; }
+.admin-user-status.is-active { background: #f1faf4; border-color: #dcefe2; }
+.admin-user-status-dot { width: 9px; height: 9px; flex: 0 0 auto; background: #d4a347; border-radius: 50%; }
+.admin-user-status.is-active .admin-user-status-dot { background: #19a36e; box-shadow: 0 0 0 4px rgba(25,163,110,.11); }
+.admin-user-status > div { display: flex; flex: 1; flex-direction: column; gap: 3px; }
+.admin-user-status strong { color: #34483b; font-size: 9px; }
+.admin-user-status small { color: #7d8b82; font-size: 7px; }
+.admin-user-status > a { color: #08704f; font-size: 8px; font-weight: 800; white-space: nowrap; }
+.admin-user-toggle { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: #f8faf9; border: 1px solid #e8efea; border-radius: 6px; }
+.admin-user-toggle input { width: 16px; min-height: 16px; accent-color: #08704f; }
+.admin-user-toggle span { line-height: 1.5; }
+
+/* Separate education/academic administration workspace */
+.academic-admin-page { min-height: 680px; }
+.academic-admin-nav { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin: 0 0 18px; }
+.academic-admin-nav a { display: flex; min-height: 54px; justify-content: space-between; align-items: center; gap: 10px; padding: 0 15px; color: #53665a; background: #fff; border: 1px solid #e5ede7; border-radius: 8px; font-size: 9px; font-weight: 800; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
+.academic-admin-nav a:hover, .academic-admin-nav a[aria-current="page"] { color: #086249; background: #e9f7ee; border-color: #cfe9d8; }
+.academic-admin-nav a span { display: grid; min-width: 25px; height: 25px; place-items: center; color: #08704f; background: #f3faf5; border-radius: 99px; font-size: 8px; }
+.academic-admin-panel { padding: 23px; }
+.admin-academic-heading { align-items: center; }
+.admin-academic-heading .admin-save-button { flex: 0 0 auto; text-decoration: none; white-space: nowrap; }
+.academic-admin-list { display: grid; gap: 10px; }
+.academic-admin-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 15px; align-items: center; padding: 15px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
+.academic-admin-item-main { min-width: 0; }
+.academic-admin-item-main .program-category { font-size: 7px; }
+.academic-admin-item h3 { margin: 4px 0 5px; color: #27382e; font-size: 11px; font-weight: 800; }
+.academic-admin-item p { margin: 0; color: #77857c; font-size: 8px; line-height: 1.65; }
+.academic-admin-kitabs { margin-top: 8px; color: #6e7e74; font-size: 7px; line-height: 1.6; }
+.academic-admin-kitabs strong { color: #435b4b; }
+.academic-admin-actions { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.academic-admin-actions form { margin: 0; }
+.academic-admin-actions a, .academic-admin-actions button { display: inline-flex; min-height: 29px; align-items: center; justify-content: center; padding: 0 9px; color: #176c4e; background: #eef8f1; border: 1px solid #e0efe5; border-radius: 5px; font-size: 7px; font-weight: 750; text-decoration: none; cursor: pointer; }
+.academic-admin-actions button { color: #a2473b; background: #fff5f3; border-color: #f2e5e2; }
+.academic-admin-event-item { grid-template-columns: 105px minmax(0,1fr) auto; }
+.academic-admin-date { color: #08704f; font-size: 8px; font-weight: 800; }
+.academic-admin-panel .admin-news-row { grid-template-columns: 100px minmax(0,1fr) auto; }
+.academic-admin-panel .admin-news-row .academic-admin-actions { grid-column: 3; }
+.academic-admin-form-wrap { max-width: 860px; margin: 0 auto; }
+.academic-admin-form-wrap .admin-news-form-header { align-items: center; }
+.academic-admin-form-wrap .admin-news-form-card { padding: 23px; }
+.academic-admin-form-wrap .admin-field small { color: #829087; font-size: 7px; font-weight: 450; line-height: 1.55; }
+
+@media (max-width: 650px) {
+  .admin-user-status { align-items: flex-start; flex-wrap: wrap; }
+  .admin-user-status > a { margin-left: 19px; }
+  .academic-admin-nav { overflow-x: auto; grid-template-columns: repeat(3, minmax(150px,1fr)); gap: 6px; }
+  .academic-admin-nav a { min-height: 47px; padding: 0 10px; font-size: 8px; }
+  .academic-admin-panel { padding: 15px; }
+  .admin-academic-heading { align-items: stretch; flex-direction: column; }
+  .admin-academic-heading .admin-save-button { align-self: stretch; }
+  .academic-admin-item, .academic-admin-event-item { grid-template-columns: 1fr; gap: 11px; }
+  .academic-admin-actions { grid-column: 1; }
+  .academic-admin-panel .admin-news-row .academic-admin-actions { grid-column: 2; }
+  .academic-admin-date { padding-bottom: 4px; border-bottom: 1px solid #edf1ee; }
+  .academic-admin-form-wrap .admin-news-form-header { align-items: flex-start; flex-direction: column; }
+  .academic-admin-form-wrap .admin-news-form-card { padding: 15px; }
+  .academic-admin-form-wrap .admin-news-form-actions { align-items: stretch; flex-direction: column; }
+  .academic-admin-form-wrap .admin-news-form-actions > div { display: grid; grid-template-columns: 1fr 1fr; }
+}

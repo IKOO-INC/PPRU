@@ -34,5 +34,5 @@
 <small class="admin-editor-hint">Format dasar: tebal, miring, garis bawah, heading, daftar, kutipan, dan tautan. Format berbahaya dibersihkan saat disimpan.</small>
 <div class="admin-news-form-actions">
   <span class="admin-news-views">{% if is_edit %}◉ {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
-  <div><a class="admin-cancel-button" href="{{ url_for('admin', tab='news') }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan berita' }}</button></div>
+  <div><a class="admin-cancel-button" href="{{ cancel_url }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan pengumuman' if academic else 'Simpan berita' }}</button></div>
 </div>

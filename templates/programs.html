@@ -2,6 +2,18 @@
 {% block title %}Akademik · {{ site.name }}{% endblock %}
 {% block content %}
 <section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">Akademik</span><h1>{{ data.program_intro.title }}</h1><p>{{ data.program_intro.description }}</p></div></section>
-<section class="section academic-page-section"><div class="container"><div class="program-grid program-grid--page">{% for program in data.programs %}{% include "partials/program_card.html" %}{% endfor %}</div></div></section>
+<section class="section academic-page-section"><div class="container"><div class="program-grid program-grid--page">{% for program in data.programs %}{% include "partials/program_card.html" %}{% else %}<p class="empty-state">Informasi program pendidikan akan segera diperbarui.</p>{% endfor %}</div></div></section>
 <section class="academic-note"><div class="container"><p>Kenali juga perjalanan pendidikan kami dan kegiatan santri.</p><a class="button button--green" href="/profil">Tentang pesantren <span aria-hidden="true">↗</span></a></div></section>
+<section class="section academic-calendar-section" id="kalender-akademik">
+  <div class="container">
+    <div class="section-heading-row academic-calendar-heading"><div><span class="section-eyebrow">Jadwal pembelajaran &amp; kegiatan</span><h2>Kalender Akademik</h2><p>Catat tanggal penting kegiatan pendidikan di pesantren.</p></div></div>
+    {% if data.academic_events %}
+    <div class="academic-calendar-list">
+      {% for event in data.academic_events %}
+      <article class="academic-calendar-event"><time datetime="{{ event.date }}"><span>{{ event.date_label }}</span></time><div><span class="academic-calendar-category">{{ event.category|default('Akademik') }}</span><h3>{{ event.title }}</h3>{% if event.description %}<p>{{ event.description }}</p>{% endif %}</div></article>
+      {% endfor %}
+    </div>
+    {% else %}<p class="academic-calendar-empty">Jadwal kalender akademik akan diumumkan melalui halaman ini.</p>{% endif %}
+  </div>
+</section>
 {% endblock %}

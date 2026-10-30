@@ -124,7 +124,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .programs-section .section-title h2 { margin-top: 6px; font-size: clamp(23px, 3vw, 30px); }
 .program-grid { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .program-grid::before { content: ""; position: absolute; z-index: 0; top: -19px; right: 0; left: 0; height: 63px; opacity: .75; background: radial-gradient(circle at 17% 60%, #dff8ec 0 30px, transparent 31px), radial-gradient(circle at 47% 45%, #fff0df 0 26px, transparent 27px), radial-gradient(circle at 82% 60%, #e9f2ff 0 30px, transparent 31px); pointer-events: none; }
-.program-card { position: relative; z-index: 1; display: flex; min-height: 199px; flex-direction: column; align-items: flex-start; padding: 20px 18px 17px; background: #fff; border: 1px solid #f0f3f0; border-radius: 12px; box-shadow: 0 6px 19px rgba(21,57,38,.035); }
+.program-card { position: relative; z-index: 1; display: flex; min-height: 280px; flex-direction: column; align-items: flex-start; padding: 20px 18px 17px; background: #fff; border: 1px solid #f0f3f0; border-radius: 12px; box-shadow: 0 6px 19px rgba(21,57,38,.035); }
 .program-icon { display: grid; width: 34px; height: 34px; place-items: center; margin-bottom: 10px; border-radius: 9px; }
 .program-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .program-icon--green { color: #fff; background: #15976b; }
@@ -132,10 +132,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .program-icon--blue { color: #fff; background: #4080e6; }
 .program-category { color: #97a199; font-size: 7px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
 .program-card h3 { margin: 4px 0 6px; color: #1e2c24; font-size: 14px; font-weight: 800; line-height: 1.3; }
-.program-card p { flex: 1; margin: 0 0 10px; color: #758178; font-size: 8px; line-height: 1.65; }
-.program-card .card-link { font-size: 8px; }
+.program-card p { margin: 0 0 11px; color: #758178; font-size: 8px; line-height: 1.65; }
+.program-kitabs { width: 100%; margin: 0 0 14px; padding: 10px 11px; color: #52645a; background: #f7faf8; border: 1px solid #edf2ee; border-radius: 7px; font-size: 8px; }
+.program-kitabs strong { display: block; margin-bottom: 5px; color: #365346; font-size: 8px; }
+.program-kitabs ul { display: grid; gap: 3px; margin: 0; padding-left: 15px; color: #718077; line-height: 1.45; }
+.program-kitabs li { padding-left: 1px; }
+.program-card .program-info-link { align-self: flex-start; margin-top: auto; font-size: 8px; text-decoration: none; }
 .program-grid--page { gap: 21px; }
-.program-grid--page .program-card { min-height: 225px; padding: 24px; }
+.program-grid--page .program-card { min-height: 330px; padding: 24px; }
 
 /* History banner */
 .history-section { padding: 40px 0; color: #f4f8f4; background: radial-gradient(ellipse at 82% 27%, rgba(40,144,101,.24), transparent 40%), linear-gradient(112deg, #07583f, #034c3a 65%, #063d36); }
@@ -209,6 +213,23 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .gallery-card:hover .gallery-card-hover { opacity: 1; }
 .gallery-mosaic--home .gallery-card--large { grid-column: span 2; grid-row: span 2; }
 .gallery-mosaic--home .gallery-card--wide { grid-column: span 2; grid-row: span 1; }
+
+/* Academic program and calendar page */
+.academic-note { padding: 23px 0; color: #eaf5ee; background: #08704f; }
+.academic-note .container { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.academic-note p { margin: 0; font-size: 9px; }
+.academic-note .button { flex: 0 0 auto; }
+.academic-calendar-section { padding-top: 52px; padding-bottom: 62px; background: #f4faf6; }
+.academic-calendar-heading { align-items: flex-end; margin-bottom: 20px; }
+.academic-calendar-heading h2 { margin: 5px 0 4px; color: #21352a; font-size: clamp(23px, 3vw, 31px); letter-spacing: -.035em; }
+.academic-calendar-heading p { margin: 0; color: #718077; font-size: 9px; }
+.academic-calendar-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.academic-calendar-event { display: grid; grid-template-columns: 105px minmax(0, 1fr); gap: 16px; align-items: center; min-height: 100px; padding: 17px 19px; background: #fff; border: 1px solid #e4eee7; border-radius: 11px; box-shadow: 0 5px 16px rgba(21,54,37,.035); }
+.academic-calendar-event time { display: grid; min-height: 57px; place-items: center; padding: 8px; color: #08704f; background: #e7f7ed; border-radius: 8px; font-size: 11px; font-weight: 800; text-align: center; }
+.academic-calendar-category { color: #8a9b90; font-size: 7px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.academic-calendar-event h3 { margin: 4px 0 3px; color: #28382f; font-size: 11px; font-weight: 800; line-height: 1.45; }
+.academic-calendar-event p { margin: 0; color: #77857c; font-size: 8px; line-height: 1.6; }
+.academic-calendar-empty { margin: 0; padding: 19px; color: #718077; background: #fff; border: 1px dashed #d9e6dd; border-radius: 9px; font-size: 9px; text-align: center; }
 
 /* Events & FAQ */
 .events-section { padding: 45px 0 50px; background: #effbf5; }
@@ -562,6 +583,7 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
   .gallery-mosaic--home { grid-auto-rows: 82px; }
   .event-grid { grid-template-columns: 1fr; gap: 8px; }
   .event-card { min-height: 74px; }
+  .academic-calendar-list { grid-template-columns: 1fr; }
   .faq-section { padding: 35px 0 44px; }
   .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 27px 19px; }
   .footer-brand-block { grid-column: 1 / -1; }
@@ -613,8 +635,10 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
   .program-icon { grid-row: 1 / span 2; width: 33px; height: 33px; margin: 0; }
   .program-category { align-self: end; }
   .program-card h3 { grid-column: 2; margin: 3px 0 4px; font-size: 12px; }
-  .program-card p, .program-card .card-link { grid-column: 1 / -1; }
+  .program-card p, .program-kitabs, .program-card .program-info-link { grid-column: 1 / -1; }
   .program-card p { margin-top: 7px; font-size: 8px; }
+  .program-kitabs { margin-bottom: 10px; }
+  .program-card .program-info-link { justify-self: start; }
   .program-grid--page { grid-template-columns: 1fr; }
   .history-photo { min-height: 260px; }
   .section-heading-row { align-items: flex-start; }
@@ -640,6 +664,11 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
   .gallery-card-hover { opacity: 1; }
   .event-card { grid-template-columns: 38px 1fr 13px; padding: 9px; }
   .event-date { width: 35px; height: 43px; }
+  .academic-note .container { align-items: flex-start; flex-direction: column; }
+  .academic-calendar-section { padding: 37px 0 44px; }
+  .academic-calendar-event { grid-template-columns: 82px minmax(0,1fr); gap: 10px; padding: 12px; }
+  .academic-calendar-event time { min-height: 49px; padding: 6px; font-size: 9px; }
+  .academic-calendar-event h3 { font-size: 10px; }
   .faq-item summary { font-size: 8px; }
   .footer-main { grid-template-columns: 1fr 1fr; gap: 23px 13px; }
   .footer-contact, .footer-newsletter { grid-column: 1 / -1; }

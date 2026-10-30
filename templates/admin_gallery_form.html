@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import image_url_field, textarea_field %}
 {% block title %}{{ 'Edit foto galeri' if is_edit else 'Upload foto galeri' }} · Admin{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=7">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-gallery-form container">

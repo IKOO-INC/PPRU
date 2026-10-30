@@ -4,11 +4,13 @@ import os
 import re
 import secrets
 import threading
+from datetime import date
 from pathlib import Path, PurePosixPath
 from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
 from markupsafe import Markup
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from cloudinary_service import CloudinaryConfigurationError, InvalidImageUpload, upload_image
 from content_store import (
@@ -20,6 +22,7 @@ from content_store import (
 )
 from nadzom_service import build_book_catalog, load_book
 from news_service import (
+    INDONESIAN_MONTHS,
     format_indonesian_date,
     legacy_article_html,
     now_jakarta,
@@ -39,7 +42,6 @@ ADMIN_COMPONENTS = (
     ("navigation", "Navigasi"),
     ("hero", "Hero Beranda"),
     ("stats", "Statistik"),
-    ("programs", "Program Akademik"),
     ("profile", "Profil & Sejarah"),
     ("news", "Berita"),
     ("works", "Karya Santri"),
@@ -49,14 +51,15 @@ ADMIN_COMPONENTS = (
     ("contact", "Kontak"),
     ("admission", "PSB"),
     ("hafalan", "Sambung Nadzom"),
+    ("users", "Kelola User Admin"),
 )
 ADMIN_COMPONENT_IDS = {component_id for component_id, _ in ADMIN_COMPONENTS}
+ADMIN_CONTENT_COMPONENT_IDS = ADMIN_COMPONENT_IDS - {"users"}
 ADMIN_PREVIEW_PAGES = {
     "brand": ("index.html", "home", "/"),
     "navigation": ("index.html", "home", "/"),
     "hero": ("index.html", "home", "/"),
     "stats": ("index.html", "home", "/"),
-    "programs": ("programs.html", "programs", "/akademik"),
     "profile": ("profile.html", "profile", "/profil"),
     "news": ("news.html", "news", "/berita"),
     "works": ("index.html", "home", "/"),
@@ -66,6 +69,7 @@ ADMIN_PREVIEW_PAGES = {
     "contact": ("contact.html", "contact", "/kontak"),
     "admission": ("admission.html", "admission", "/psb"),
     "hafalan": ("hafalan.html", "hafalan", "/hafalan"),
+    "users": ("index.html", "home", "/"),
 }
 
 
@@ -199,6 +203,64 @@ def _split_paragraphs(value):
     ]
 
 
+def _split_list_lines(value):
+    """Read a one-item-per-line list, also accepting comma separated entries."""
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    entries = []
+    seen = set()
+    for line in text.split("\n"):
+        for item in line.split(","):
+            value = item.strip().lstrip("•-* ").strip()
+            if value and value.casefold() not in seen:
+                entries.append(value)
+                seen.add(value.casefold())
+    return entries
+
+
+def _safe_public_link(value, current="/kontak"):
+    """Allow an internal path or an HTTPS information link, never script URLs."""
+    candidate = str(value or "").strip()
+    fallback = str(current or "/kontak")
+    if not candidate:
+        return fallback
+    if candidate.startswith("/"):
+        if candidate.startswith("//") or "\\" in candidate or any(ord(char) < 32 for char in candidate):
+            return fallback
+        return candidate
+    try:
+        parsed = urlsplit(candidate)
+        port = parsed.port
+    except ValueError:
+        return fallback
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or port not in (None, 443)
+        or any(ord(char) < 32 for char in candidate)
+    ):
+        return fallback
+    return candidate
+
+
+def _without_admin_users(content):
+    """Keep private credential hashes out of all rendered page contexts."""
+    return {key: value for key, value in content.items() if key != "admin_users"}
+
+
+def _academic_item_id(item, index):
+    return str(item.get("id") or item.get("number") or index)
+
+
+def _academic_date_label(value):
+    try:
+        parsed = date.fromisoformat(str(value or ""))
+    except (TypeError, ValueError):
+        return str(value or "Tanggal belum ditentukan")
+    return f"{parsed.day} {INDONESIAN_MONTHS[parsed.month - 1]} {parsed.year}"
+
+
 def _apply_admin_form(content, form, component):
     """Update one preference panel while leaving the rest of the JSON intact."""
     site = content.setdefault("site", {})
@@ -236,14 +298,6 @@ def _apply_admin_form(content, form, component):
         for index, item in enumerate(content.get("stats", [])):
             item["value"] = _form_value(form, f"stat_value_{index}", item.get("value", ""))
             item["label"] = _form_value(form, f"stat_label_{index}", item.get("label", ""))
-
-    elif component == "programs":
-        intro = content.setdefault("program_intro", {})
-        for key in ("eyebrow", "title", "description"):
-            intro[key] = _form_value(form, f"program_intro_{key}", intro.get(key, ""))
-        for index, item in enumerate(content.get("programs", [])):
-            for key in ("title", "category", "description"):
-                item[key] = _form_value(form, f"program_{key}_{index}", item.get(key, ""))
 
     elif component == "profile":
         profile = content.setdefault("profile", {})
@@ -451,6 +505,24 @@ def create_app(test_config=None):
         profile = content.get("profile")
         if isinstance(profile, dict):
             profile["video_embed_url"] = _youtube_embed_url(profile.get("video_embed_url", ""))
+        programs = content.get("programs")
+        if not isinstance(programs, list):
+            programs = []
+        normalized_programs = []
+        for program in programs:
+            if not isinstance(program, dict):
+                continue
+            kitabs = program.get("kitabs", [])
+            if not isinstance(kitabs, list):
+                kitabs = _split_list_lines(kitabs)
+            program["kitabs"] = [str(kitab).strip() for kitab in kitabs if str(kitab).strip()]
+            program["info_url"] = _safe_public_link(program.get("info_url", "/kontak"))
+            normalized_programs.append(program)
+        content["programs"] = normalized_programs
+        academic_events = content.get("academic_events")
+        if not isinstance(academic_events, list):
+            academic_events = []
+        content["academic_events"] = [event for event in academic_events if isinstance(event, dict)]
         if needs_save and not isinstance(store, ReadOnlyPortalStore):
             store.save(content)
         return content
@@ -476,7 +548,7 @@ def create_app(test_config=None):
         }
 
     def page_context(active_page, **extra):
-        content = public_content(load_content())
+        content = _without_admin_users(public_content(load_content()))
         return {
             "site": content.get("site", {}),
             "data": content,
@@ -497,23 +569,62 @@ def create_app(test_config=None):
         if not expected or not received or not hmac.compare_digest(expected, received):
             abort(400, description="Sesi formulir tidak valid. Silakan muat ulang halaman.")
 
-    def render_admin_news_form(post, is_edit, error=None, status_code=200):
+    def current_admin_role():
+        if not session.get("admin_authenticated"):
+            return None
+        # Treat older authenticated sessions without a role as the main administrator.
+        return session.get("admin_role", "main")
+
+    def is_main_admin():
+        return current_admin_role() == "main"
+
+    def require_main_admin():
+        role = current_admin_role()
+        if role is None:
+            return redirect(url_for("admin"))
+        if role != "main":
+            abort(403)
+        return None
+
+    def require_academic_admin():
+        role = current_admin_role()
+        if role is None:
+            return redirect(url_for("admin"))
+        if role not in {"main", "academic"}:
+            abort(403)
+        if role == "academic":
+            users = load_content().get("admin_users", {})
+            account = users.get("academic", {}) if isinstance(users, dict) else {}
+            if not isinstance(account, dict):
+                account = {}
+            saved_token = str(account.get("session_token", ""))
+            session_token = str(session.get("admin_token", ""))
+            if not account.get("active") or not saved_token or not session_token or not hmac.compare_digest(saved_token, session_token):
+                session.clear()
+                return redirect(url_for("admin"))
+        return None
+
+    def render_admin_news_form(post, is_edit, error=None, status_code=200, academic=False):
         content = load_content()
+        visible_content = _without_admin_users(content)
         body_html = post.get("body_html") or legacy_article_html(post)
         return render_template(
             "admin_news_form.html",
-            site=content.get("site", {}),
-            data=content,
+            site=visible_content.get("site", {}),
+            data=visible_content,
             active_page=None,
             post=post,
             editor_html=Markup(sanitize_rich_text(body_html)),
             published_at_input=to_local_input(post.get("published_at")),
             is_edit=is_edit,
             error=error,
+            academic=academic,
+            form_action=url_for("admin_academic_announcement_save" if academic else "admin_news_save"),
+            cancel_url=url_for("admin_academic", tab="announcements") if academic else url_for("admin", tab="news"),
         ), status_code
 
     def render_admin_gallery_form(item, is_edit, error=None, status_code=200):
-        content = load_content()
+        content = _without_admin_users(load_content())
         return render_template(
             "admin_gallery_form.html",
             site=content.get("site", {}),
@@ -523,6 +634,90 @@ def create_app(test_config=None):
             is_edit=is_edit,
             error=error,
         ), status_code
+
+    def save_news_entry(academic=False):
+        validate_csrf()
+        with content_lock:
+            content = load_content()
+            items = content.setdefault("news", [])
+            original_slug = request.form.get("original_slug", "").strip()
+            existing_index = next(
+                (index for index, item in enumerate(items) if item.get("slug") == original_slug),
+                None,
+            ) if original_slug else None
+            if original_slug and existing_index is None:
+                abort(404)
+            existing = items[existing_index] if existing_index is not None else {}
+            if academic and existing and not existing.get("academic"):
+                abort(404)
+            title = request.form.get("title", "").strip()
+            submitted_image = request.form.get("image", "").strip()
+            existing_image = existing.get("image", "")
+            image_url = _safe_image_url(submitted_image, existing_image)
+            form_error = None
+            if not title:
+                form_error = "Judul pengumuman wajib diisi." if academic else "Judul berita wajib diisi."
+            elif not image_url:
+                form_error = "Upload foto cover ke Cloudinary atau masukkan URL Cloudinary."
+            elif submitted_image and image_url == existing_image and submitted_image != existing_image:
+                form_error = "URL foto harus menggunakan HTTPS Cloudinary atau gunakan tombol Upload."
+            if form_error:
+                post = {
+                    **existing,
+                    "slug": request.form.get("slug", "").strip(),
+                    "title": title,
+                    "category": request.form.get("category", "Pengumuman Akademik" if academic else "Kegiatan").strip(),
+                    "excerpt": request.form.get("excerpt", "").strip(),
+                    "image": submitted_image or existing_image,
+                    "image_alt": request.form.get("image_alt", "").strip() or title,
+                    "status": request.form.get("status", "published").strip(),
+                    "published_at": request.form.get("published_at", ""),
+                    "body_html": request.form.get("body_html", ""),
+                }
+                return render_admin_news_form(
+                    post,
+                    is_edit=existing_index is not None,
+                    error=form_error,
+                    status_code=400,
+                    academic=academic,
+                )
+
+            requested_slug = request.form.get("slug", "").strip() or title
+            slug = _unique_news_slug(items, requested_slug, current_slug=original_slug or None)
+            body_html = sanitize_rich_text(request.form.get("body_html", ""))
+            body_text = rich_text_plain_text(body_html)
+            excerpt = request.form.get("excerpt", "").strip() or body_text[:220]
+            if len(body_text) > 220 and not request.form.get("excerpt", "").strip():
+                excerpt = excerpt.rstrip() + "…"
+            status = request.form.get("status", "published").strip()
+            if status not in {"published", "draft"}:
+                status = "published"
+            published_at = parse_local_datetime(request.form.get("published_at", ""))
+            post = {
+                **existing,
+                "slug": slug,
+                "title": title,
+                "category": request.form.get("category", "Pengumuman Akademik" if academic else "Kegiatan").strip() or ("Pengumuman Akademik" if academic else "Kegiatan"),
+                "excerpt": excerpt,
+                "date": format_indonesian_date(published_at),
+                "published_at": published_at.isoformat(timespec="minutes"),
+                "status": status,
+                "views": _view_count(existing),
+                "image": image_url,
+                "image_alt": request.form.get("image_alt", "").strip() or title,
+                "body_html": body_html,
+                "updated_at": now_jakarta().isoformat(timespec="minutes"),
+                "academic": True if academic else bool(existing.get("academic")),
+            }
+            if not existing:
+                post["created_at"] = now_jakarta().isoformat(timespec="minutes")
+                items.insert(0, post)
+            else:
+                items[existing_index] = post
+            store.save(content)
+        if academic:
+            return redirect(url_for("admin_academic", tab="announcements", saved="1"))
+        return redirect(url_for("admin", tab="news", saved="1"))
 
     app.jinja_env.globals["csrf_token"] = csrf_value
 
@@ -537,7 +732,12 @@ def create_app(test_config=None):
     @app.get("/akademik")
     @app.get("/program")
     def programs():
-        return render_template("programs.html", **page_context("programs"))
+        context = page_context("programs")
+        calendar_events = context["data"].get("academic_events", [])
+        calendar_events.sort(key=lambda item: str(item.get("date", "9999-12-31")))
+        for item in calendar_events:
+            item["date_label"] = _academic_date_label(item.get("date"))
+        return render_template("programs.html", **context)
 
     @app.get("/berita")
     def news():
@@ -561,7 +761,7 @@ def create_app(test_config=None):
             except (TypeError, ValueError):
                 post["views"] = 1
             store.save(content)
-            content = public_content(content)
+            content = _without_admin_users(public_content(content))
 
         post = next((item for item in content["news"] if item.get("slug") == slug), None)
         if post is None:
@@ -611,12 +811,19 @@ def create_app(test_config=None):
 
     @app.get("/admin")
     def admin():
+        role = current_admin_role()
+        if role == "academic":
+            return redirect(url_for("admin_academic"))
+        if role is not None and role != "main":
+            session.clear()
+            role = None
         content = load_content()
-        if not session.get("admin_authenticated"):
+        visible_content = _without_admin_users(content)
+        if role is None:
             return render_template(
                 "admin_login.html",
-                site=content.get("site", {}),
-                data=content,
+                site=visible_content.get("site", {}),
+                data=visible_content,
                 active_page=None,
                 error=None,
             )
@@ -628,25 +835,40 @@ def create_app(test_config=None):
         if component not in ADMIN_COMPONENT_IDS:
             component = "brand"
         news_items = sorted(content.get("news", []), key=published_at_value, reverse=True)
+        stored_admin_users = content.get("admin_users", {})
+        academic_account = stored_admin_users.get("academic", {}) if isinstance(stored_admin_users, dict) else {}
+        if not isinstance(academic_account, dict):
+            academic_account = {}
+        academic_admin_view = {
+            "username": academic_account.get("username", ""),
+            "active": bool(academic_account.get("active")),
+            "password_hash": bool(academic_account.get("password_hash")),
+        }
+        visible_content = _without_admin_users(content)
+        history_paragraphs = content.get("profile", {}).get("history_paragraphs", [])
+        if not isinstance(history_paragraphs, list):
+            history_paragraphs = [str(history_paragraphs)] if history_paragraphs else []
         return render_template(
             "admin.html",
-            site=content.get("site", {}),
-            data=content,
+            site=visible_content.get("site", {}),
+            data=visible_content,
             active_page=None,
             components=ADMIN_COMPONENTS,
             active_component=component,
             preview_path=ADMIN_PREVIEW_PAGES[component][2],
-            history_text="\n\n".join(content.get("profile", {}).get("history_paragraphs", [])),
+            history_text="\n\n".join(history_paragraphs),
             saved=request.args.get("saved") == "1",
             news_items=news_items,
             gallery_items=content.get("gallery", []),
+            academic_admin=academic_admin_view,
+            user_error=request.args.get("user_error", ""),
             **admin_storage_context(),
         )
 
     @app.post("/admin/live-preview")
     def admin_live_preview():
-        if not session.get("admin_authenticated"):
-            abort(401)
+        if not is_main_admin():
+            abort(401 if current_admin_role() is None else 403)
         validate_csrf()
         component = request.form.get("component", "")
         if component not in ADMIN_PREVIEW_PAGES:
@@ -655,7 +877,7 @@ def create_app(test_config=None):
         content = load_content()
         _apply_admin_form(content, request.form, component)
         template_name, active_page, _preview_path = ADMIN_PREVIEW_PAGES[component]
-        preview_data = public_content(content)
+        preview_data = _without_admin_users(public_content(content))
         template_context = {
             "site": preview_data.get("site", {}),
             "data": preview_data,
@@ -667,8 +889,9 @@ def create_app(test_config=None):
 
     @app.get("/admin/berita/baru")
     def admin_news_new():
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         content = load_content()
         post = {
             "slug": "",
@@ -685,8 +908,9 @@ def create_app(test_config=None):
 
     @app.get("/admin/berita/<slug>/edit")
     def admin_news_edit(slug):
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         content = load_content()
         post = next((item for item in content.get("news", []) if item.get("slug") == slug), None)
         if post is None:
@@ -695,89 +919,16 @@ def create_app(test_config=None):
 
     @app.post("/admin/berita/simpan")
     def admin_news_save():
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
-        validate_csrf()
-        with content_lock:
-            content = load_content()
-            items = content.setdefault("news", [])
-            original_slug = request.form.get("original_slug", "").strip()
-            existing_index = next(
-                (index for index, item in enumerate(items) if item.get("slug") == original_slug),
-                None,
-            ) if original_slug else None
-            if original_slug and existing_index is None:
-                abort(404)
-            existing = items[existing_index] if existing_index is not None else {}
-            title = request.form.get("title", "").strip()
-            submitted_image = request.form.get("image", "").strip()
-            existing_image = existing.get("image", "")
-            image_url = _safe_image_url(submitted_image, existing_image)
-            form_error = None
-            if not title:
-                form_error = "Judul berita wajib diisi."
-            elif not image_url:
-                form_error = "Upload foto cover ke Cloudinary atau masukkan URL Cloudinary."
-            elif submitted_image and image_url == existing_image and submitted_image != existing_image:
-                form_error = "URL foto harus menggunakan HTTPS Cloudinary atau gunakan tombol Upload."
-            if form_error:
-                post = {
-                    **existing,
-                    "slug": request.form.get("slug", "").strip(),
-                    "title": title,
-                    "category": request.form.get("category", "Kegiatan").strip() or "Kegiatan",
-                    "excerpt": request.form.get("excerpt", "").strip(),
-                    "image": submitted_image or existing_image,
-                    "image_alt": request.form.get("image_alt", "").strip() or title,
-                    "status": request.form.get("status", "published").strip(),
-                    "published_at": request.form.get("published_at", ""),
-                    "body_html": request.form.get("body_html", ""),
-                }
-                return render_admin_news_form(
-                    post,
-                    is_edit=existing_index is not None,
-                    error=form_error,
-                    status_code=400,
-                )
-
-            requested_slug = request.form.get("slug", "").strip() or title
-            slug = _unique_news_slug(items, requested_slug, current_slug=original_slug or None)
-            body_html = sanitize_rich_text(request.form.get("body_html", ""))
-            body_text = rich_text_plain_text(body_html)
-            excerpt = request.form.get("excerpt", "").strip() or body_text[:220]
-            if len(body_text) > 220 and not request.form.get("excerpt", "").strip():
-                excerpt = excerpt.rstrip() + "…"
-            status = request.form.get("status", "published").strip()
-            if status not in {"published", "draft"}:
-                status = "published"
-            published_at = parse_local_datetime(request.form.get("published_at", ""))
-            post = {
-                **existing,
-                "slug": slug,
-                "title": title,
-                "category": request.form.get("category", "Kegiatan").strip() or "Kegiatan",
-                "excerpt": excerpt,
-                "date": format_indonesian_date(published_at),
-                "published_at": published_at.isoformat(timespec="minutes"),
-                "status": status,
-                "views": _view_count(existing),
-                "image": image_url,
-                "image_alt": request.form.get("image_alt", "").strip() or title,
-                "body_html": body_html,
-                "updated_at": now_jakarta().isoformat(timespec="minutes"),
-            }
-            if not existing:
-                post["created_at"] = now_jakarta().isoformat(timespec="minutes")
-                items.insert(0, post)
-            else:
-                items[existing_index] = post
-            store.save(content)
-        return redirect(url_for("admin", tab="news", saved="1"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
+        return save_news_entry(academic=False)
 
     @app.post("/admin/berita/<slug>/hapus")
     def admin_news_delete(slug):
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         validate_csrf()
         with content_lock:
             content = load_content()
@@ -814,8 +965,9 @@ def create_app(test_config=None):
     @app.get("/admin/galeri/baru")
     def admin_gallery_new():
 
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         return render_admin_gallery_form(
             {
                 "id": "",
@@ -832,8 +984,9 @@ def create_app(test_config=None):
 
     @app.get("/admin/galeri/<item_id>/edit")
     def admin_gallery_edit(item_id):
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         with content_lock:
             content = load_content()
             if _ensure_gallery_ids(content):
@@ -845,8 +998,9 @@ def create_app(test_config=None):
 
     @app.post("/admin/galeri/simpan")
     def admin_gallery_save():
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         validate_csrf()
         original_id = request.form.get("original_id", "").strip()
         is_edit = bool(original_id)
@@ -924,8 +1078,9 @@ def create_app(test_config=None):
 
     @app.post("/admin/galeri/<item_id>/hapus")
     def admin_gallery_delete(item_id):
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         validate_csrf()
         with content_lock:
             content = load_content()
@@ -939,33 +1094,421 @@ def create_app(test_config=None):
             store.save(content)
         return redirect(url_for("admin", tab="gallery", saved="1"))
 
+    @app.post("/admin/users/save")
+    def admin_users_save():
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        content = load_content()
+        users = content.get("admin_users")
+        if not isinstance(users, dict):
+            users = {}
+            content["admin_users"] = users
+        existing = users.get("academic", {})
+        if not isinstance(existing, dict):
+            existing = {}
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        password_confirm = request.form.get("password_confirm", "")
+        active = request.form.get("active") == "1"
+
+        error = ""
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{3,64}", username):
+            error = "Nama pengguna harus 3–64 karakter dan hanya berisi huruf, angka, titik, garis bawah, atau tanda hubung."
+        elif password and len(password) < 12:
+            error = "Kata sandi admin akademik minimal 12 karakter."
+        elif password and password != password_confirm:
+            error = "Konfirmasi kata sandi tidak cocok."
+        elif active and not (password or existing.get("password_hash")):
+            error = "Tetapkan kata sandi sebelum mengaktifkan akun admin akademik."
+        if error:
+            return redirect(url_for("admin", tab="users", user_error=error))
+
+        account = {
+            **existing,
+            "username": username,
+            "active": active,
+            "session_token": secrets.token_urlsafe(32),
+            "updated_at": now_jakarta().isoformat(timespec="minutes"),
+        }
+        if password:
+            account["password_hash"] = generate_password_hash(password)
+        users["academic"] = account
+        store.save(content)
+        return redirect(url_for("admin", tab="users", saved="1"))
+
+    @app.get("/admin/akademik")
+    def admin_academic():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = load_content()
+        tab = request.args.get("tab", "programs")
+        if tab not in {"programs", "calendar", "announcements"}:
+            tab = "programs"
+        programs = content.get("programs", [])
+        academic_events = sorted(
+            content.get("academic_events", []),
+            key=lambda item: str(item.get("date", "9999-12-31")),
+        )
+        announcements = sorted(
+            [item for item in content.get("news", []) if item.get("academic")],
+            key=published_at_value,
+            reverse=True,
+        )
+        program_items = [
+            {**program, "admin_id": _academic_item_id(program, index)}
+            for index, program in enumerate(programs)
+        ]
+        event_items = [
+            {**item, "admin_id": _academic_item_id(item, index), "date_label": _academic_date_label(item.get("date"))}
+            for index, item in enumerate(academic_events)
+        ]
+        return render_template(
+            "admin_academic.html",
+            site=content.get("site", {}),
+            data=_without_admin_users(content),
+            tab=tab,
+            programs=program_items,
+            academic_events=event_items,
+            announcements=announcements,
+            saved=request.args.get("saved") == "1",
+            admin_username=session.get("admin_username", "Admin Akademik"),
+            **admin_storage_context(),
+        )
+
+    @app.get("/admin/akademik/program/baru")
+    def admin_academic_program_new():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = _without_admin_users(load_content())
+        return render_template(
+            "admin_academic_program_form.html",
+            site=content.get("site", {}),
+            data=content,
+            item={"title": "", "category": "Program pendidikan", "description": "", "kitabs": [], "info_url": "/kontak"},
+            item_id="",
+            error=None,
+        )
+
+    @app.get("/admin/akademik/program/<item_id>/edit")
+    def admin_academic_program_edit(item_id):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = load_content()
+        programs = content.get("programs", [])
+        found = next(
+            ((index, item) for index, item in enumerate(programs) if _academic_item_id(item, index) == item_id),
+            None,
+        )
+        if found is None:
+            abort(404)
+        index, item = found
+        return render_template(
+            "admin_academic_program_form.html",
+            site=content.get("site", {}),
+            data=_without_admin_users(content),
+            item=item,
+            item_id=_academic_item_id(item, index),
+            error=None,
+        )
+
+    @app.post("/admin/akademik/program/simpan")
+    def admin_academic_program_save():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        item_id = request.form.get("item_id", "").strip()
+        title = request.form.get("title", "").strip()
+        category = request.form.get("category", "Program pendidikan").strip() or "Program pendidikan"
+        description = request.form.get("description", "").strip()
+        kitabs = _split_list_lines(request.form.get("kitabs", ""))
+        submitted_info_url = request.form.get("info_url", "").strip()
+        info_url = _safe_public_link(submitted_info_url)
+        error = None
+        if not title:
+            error = "Judul kelas/program wajib diisi."
+        elif not description:
+            error = "Keterangan program wajib diisi."
+        elif not kitabs:
+            error = "Tambahkan minimal satu judul kitab, satu per baris."
+        elif submitted_info_url and info_url == "/kontak" and submitted_info_url != "/kontak":
+            error = "Tautan informasi harus berupa path lokal atau URL HTTPS yang valid."
+
+        item = {
+            "id": item_id,
+            "title": title,
+            "category": category,
+            "description": description,
+            "kitabs": kitabs,
+            "info_url": info_url,
+        }
+        if error:
+            page_content = _without_admin_users(load_content())
+            return render_template(
+                "admin_academic_program_form.html",
+                site=page_content.get("site", {}),
+                data=page_content,
+                item=item,
+                item_id=item_id,
+                error=error,
+            ), 400
+
+        with content_lock:
+            content = load_content()
+            programs = content.setdefault("programs", [])
+            existing_index = next(
+                (index for index, entry in enumerate(programs) if item_id and _academic_item_id(entry, index) == item_id),
+                None,
+            )
+            if item_id and existing_index is None:
+                abort(404)
+            existing = programs[existing_index] if existing_index is not None else {}
+            item.update({
+                "id": existing.get("id") or secrets.token_urlsafe(10),
+                "number": existing.get("number") or f"{len(programs) + 1:02d}",
+                "icon": existing.get("icon", "book"),
+                "color": existing.get("color", "green"),
+            })
+            if existing_index is None:
+                programs.append(item)
+            else:
+                programs[existing_index] = item
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="programs", saved="1"))
+
+    @app.post("/admin/akademik/program/<item_id>/hapus")
+    def admin_academic_program_delete(item_id):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        with content_lock:
+            content = load_content()
+            programs = content.setdefault("programs", [])
+            existing_index = next(
+                (index for index, entry in enumerate(programs) if _academic_item_id(entry, index) == item_id),
+                None,
+            )
+            if existing_index is None:
+                abort(404)
+            programs.pop(existing_index)
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="programs", saved="1"))
+
+    @app.get("/admin/akademik/kalender/baru")
+    def admin_academic_calendar_new():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = _without_admin_users(load_content())
+        return render_template(
+            "admin_academic_calendar_form.html",
+            site=content.get("site", {}),
+            data=content,
+            item={"date": "", "title": "", "category": "Akademik", "description": ""},
+            item_id="",
+            error=None,
+        )
+
+    @app.get("/admin/akademik/kalender/<item_id>/edit")
+    def admin_academic_calendar_edit(item_id):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = load_content()
+        events = content.get("academic_events", [])
+        found = next(
+            ((index, item) for index, item in enumerate(events) if _academic_item_id(item, index) == item_id),
+            None,
+        )
+        if found is None:
+            abort(404)
+        index, item = found
+        return render_template(
+            "admin_academic_calendar_form.html",
+            site=content.get("site", {}),
+            data=_without_admin_users(content),
+            item=item,
+            item_id=_academic_item_id(item, index),
+            error=None,
+        )
+
+    @app.post("/admin/akademik/kalender/simpan")
+    def admin_academic_calendar_save():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        item_id = request.form.get("item_id", "").strip()
+        date_value = request.form.get("date", "").strip()
+        title = request.form.get("title", "").strip()
+        category = request.form.get("category", "Akademik").strip() or "Akademik"
+        description = request.form.get("description", "").strip()
+        try:
+            date.fromisoformat(date_value)
+        except ValueError:
+            date_value = ""
+        error = None
+        if not date_value:
+            error = "Tanggal kalender wajib diisi."
+        elif not title:
+            error = "Nama kegiatan akademik wajib diisi."
+        item = {"id": item_id, "date": date_value, "title": title, "category": category, "description": description}
+        if error:
+            page_content = _without_admin_users(load_content())
+            return render_template(
+                "admin_academic_calendar_form.html",
+                site=page_content.get("site", {}),
+                data=page_content,
+                item=item,
+                item_id=item_id,
+                error=error,
+            ), 400
+
+        with content_lock:
+            content = load_content()
+            events = content.setdefault("academic_events", [])
+            existing_index = next(
+                (index for index, entry in enumerate(events) if item_id and _academic_item_id(entry, index) == item_id),
+                None,
+            )
+            if item_id and existing_index is None:
+                abort(404)
+            existing = events[existing_index] if existing_index is not None else {}
+            item["id"] = existing.get("id") or secrets.token_urlsafe(10)
+            if existing_index is None:
+                events.append(item)
+            else:
+                events[existing_index] = item
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="calendar", saved="1"))
+
+    @app.post("/admin/akademik/kalender/<item_id>/hapus")
+    def admin_academic_calendar_delete(item_id):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        with content_lock:
+            content = load_content()
+            events = content.setdefault("academic_events", [])
+            existing_index = next(
+                (index for index, entry in enumerate(events) if _academic_item_id(entry, index) == item_id),
+                None,
+            )
+            if existing_index is None:
+                abort(404)
+            events.pop(existing_index)
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="calendar", saved="1"))
+
+    @app.get("/admin/akademik/pengumuman/baru")
+    def admin_academic_announcement_new():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        post = {
+            "slug": "", "title": "", "category": "Pengumuman Akademik", "excerpt": "",
+            "image": "", "image_alt": "", "status": "published", "views": 0, "body_html": "",
+        }
+        return render_admin_news_form(post, is_edit=False, academic=True)
+
+    @app.get("/admin/akademik/pengumuman/<slug>/edit")
+    def admin_academic_announcement_edit(slug):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = load_content()
+        post = next(
+            (item for item in content.get("news", []) if item.get("slug") == slug and item.get("academic")),
+            None,
+        )
+        if post is None:
+            abort(404)
+        return render_admin_news_form(post, is_edit=True, academic=True)
+
+    @app.post("/admin/akademik/pengumuman/simpan")
+    def admin_academic_announcement_save():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        return save_news_entry(academic=True)
+
+    @app.post("/admin/akademik/pengumuman/<slug>/hapus")
+    def admin_academic_announcement_delete(slug):
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        with content_lock:
+            content = load_content()
+            items = content.setdefault("news", [])
+            index = next(
+                (index for index, item in enumerate(items) if item.get("slug") == slug and item.get("academic")),
+                None,
+            )
+            if index is None:
+                abort(404)
+            items.pop(index)
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="announcements", saved="1"))
+
     @app.post("/admin/login")
     def admin_login():
-
         content = load_content()
+        visible_content = _without_admin_users(content)
         validate_csrf()
         entered_password = request.form.get("password", "")
+        entered_username = request.form.get("username", "").strip()
         admin_password = str(app.config["ADMIN_PASSWORD"])
-        if not hmac.compare_digest(entered_password, admin_password):
+        main_matches = bool(entered_password) and hmac.compare_digest(entered_password, admin_password)
+        stored_admin_users = content.get("admin_users", {})
+        academic_account = stored_admin_users.get("academic", {}) if isinstance(stored_admin_users, dict) else {}
+        academic_matches = False
+        password_hash = academic_account.get("password_hash") if isinstance(academic_account, dict) else None
+        username_matches = (
+            bool(entered_username)
+            and entered_username.casefold() == str(academic_account.get("username", "")).casefold()
+            if isinstance(academic_account, dict)
+            else False
+        )
+        if not main_matches and username_matches and entered_password and password_hash and academic_account.get("active"):
+            try:
+                academic_matches = check_password_hash(password_hash, entered_password)
+            except (TypeError, ValueError):
+                academic_matches = False
+        if not main_matches and not academic_matches:
             return render_template(
                 "admin_login.html",
-                site=content.get("site", {}),
-                data=content,
+                site=visible_content.get("site", {}),
+                data=visible_content,
                 active_page=None,
                 error="Kata sandi admin tidak sesuai.",
             ), 401
         session.clear()
         session["admin_authenticated"] = True
+        session["admin_role"] = "main" if main_matches else "academic"
+        session["admin_username"] = "Admin Utama" if main_matches else academic_account.get("username", "Admin Akademik")
+        if academic_matches:
+            session["admin_token"] = str(academic_account.get("session_token", ""))
         csrf_value()
+        if academic_matches:
+            return redirect(url_for("admin_academic"))
         return redirect(url_for("admin"))
 
     @app.post("/admin/save")
     def admin_save():
-        if not session.get("admin_authenticated"):
-            return redirect(url_for("admin"))
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
         validate_csrf()
         component = request.form.get("component", "")
-        if component not in ADMIN_COMPONENT_IDS:
+        if component not in ADMIN_CONTENT_COMPONENT_IDS:
             abort(400, description="Komponen admin tidak dikenal.")
         content = load_content()
         _apply_admin_form(content, request.form, component)

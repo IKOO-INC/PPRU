@@ -4,8 +4,9 @@
     {% elif program.icon == 'school' %}<svg viewBox="0 0 24 24"><path d="m3 9 9-5 9 5-9 5zM6 11v6c3.7 2.8 8.3 2.8 12 0v-6M21 9v7"/><circle cx="21" cy="18" r="1"/></svg>
     {% else %}<svg viewBox="0 0 24 24"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5"/></svg>{% endif %}
   </div>
-  <span class="program-category">{{ program.category }}</span>
+  <span class="program-category">{{ program.category|default('Program pendidikan') }}</span>
   <h3>{{ program.title }}</h3>
   <p>{{ program.description }}</p>
-  <a class="card-link" href="/akademik">Pelajari lebih lanjut <span aria-hidden="true">↗</span></a>
+  <div class="program-kitabs"><strong>Kitab yang dipelajari</strong><ul>{% for kitab in program.kitabs|default([]) %}<li>{{ kitab }}</li>{% else %}<li>Daftar kitab akan diinformasikan.</li>{% endfor %}</ul></div>
+  <a class="button button--green button--small program-info-link" href="{{ program.info_url|default('/kontak') }}">Informasi lebih lanjut <span aria-hidden="true">↗</span></a>
 </article>

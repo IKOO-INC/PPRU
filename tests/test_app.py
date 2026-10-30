@@ -689,6 +689,215 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertIn("Kembali ke Home".encode(), response.data)
 
+    def test_main_admin_manages_academic_user_and_academic_login_is_isolated(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            preferences_path = root / "preferensi.json"
+            shutil.copyfile(ROOT / "data" / "site.json", preferences_path)
+            app = create_app({
+                "TESTING": True,
+                "CONTENT_FILE": preferences_path,
+                "NEWS_FILE": root / "berita.json",
+                "GALLERY_FILE": root / "gallery.json",
+                "ADMIN_PASSWORD": "main-admin-secret",
+                "SECRET_KEY": "test-secret-key",
+            })
+            main_client = app.test_client()
+            login_page = main_client.get("/admin")
+            login_page_html = login_page.get_data(as_text=True)
+            token = re.search(r'name="csrf_token" value="([^"]+)"', login_page_html).group(1)
+            self.assertIn("Admin Pendidikan/Akademik", login_page_html)
+            main_client.post("/admin/login", data={"csrf_token": token, "password": "main-admin-secret"})
+
+            users_page = main_client.get("/admin?tab=users")
+            users_html = users_page.get_data(as_text=True)
+            self.assertIn("Kelola User Admin", users_html)
+            self.assertIn("Akun Admin Akademik belum dibuat", users_html)
+            self.assertNotIn('data-admin-tab="programs"', users_html)
+            token = re.search(r'name="csrf_token" value="([^"]+)"', users_html).group(1)
+            password = "education-admin-password"
+            saved_users = main_client.post(
+                "/admin/users/save",
+                data={
+                    "csrf_token": token,
+                    "username": "admin-pendidikan",
+                    "password": password,
+                    "password_confirm": password,
+                    "active": "1",
+                },
+                follow_redirects=True,
+            )
+            self.assertEqual(saved_users.status_code, 200)
+            self.assertIn(b"Akun Admin Akademik aktif", saved_users.data)
+            saved_preferences = json.loads(preferences_path.read_text(encoding="utf-8"))
+            account = saved_preferences["admin_users"]["academic"]
+            self.assertNotIn(account["password_hash"].encode(), saved_users.data)
+            self.assertNotEqual(account["password_hash"], password)
+            self.assertTrue(account["password_hash"].startswith("scrypt:"))
+            self.assertNotIn(password, preferences_path.read_text(encoding="utf-8"))
+            self.assertNotIn(account["password_hash"].encode(), main_client.get("/").data)
+
+            logout_page = main_client.get("/admin?tab=users")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', logout_page.get_data(as_text=True)).group(1)
+            main_client.post("/admin/logout", data={"csrf_token": token})
+            academic_client = app.test_client()
+            login_page = academic_client.get("/admin")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', login_page.get_data(as_text=True)).group(1)
+            missing_username = academic_client.post(
+                "/admin/login",
+                data={"csrf_token": token, "password": password},
+            )
+            self.assertEqual(missing_username.status_code, 401)
+            login_response = academic_client.post(
+                "/admin/login",
+                data={"csrf_token": token, "username": "admin-pendidikan", "password": password},
+            )
+            self.assertEqual(login_response.status_code, 302)
+            self.assertEqual(login_response.location, "/admin/akademik")
+            dashboard = academic_client.get("/admin/akademik")
+            self.assertEqual(dashboard.status_code, 200)
+            self.assertIn(b"Program Pendidikan", dashboard.data)
+            self.assertIn(b"Kalender Akademik", dashboard.data)
+            self.assertIn(b"Pengumuman / Berita", dashboard.data)
+            self.assertEqual(academic_client.get("/admin?tab=brand").location, "/admin/akademik")
+            self.assertEqual(academic_client.get("/admin/berita/baru").status_code, 403)
+
+            announcement_form = academic_client.get("/admin/akademik/pengumuman/baru")
+            self.assertEqual(announcement_form.status_code, 200)
+            token = re.search(r'name="csrf_token" value="([^"]+)"', announcement_form.get_data(as_text=True)).group(1)
+            announcement_image = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/news/announcement"
+            announcement_response = academic_client.post(
+                "/admin/akademik/pengumuman/simpan",
+                data={
+                    "csrf_token": token,
+                    "title": "Pengumuman Ujian",
+                    "slug": "",
+                    "category": "Pendidikan",
+                    "excerpt": "Jadwal ujian semester.",
+                    "image_alt": "Informasi ujian",
+                    "image": announcement_image,
+                    "status": "published",
+                    "published_at": "",
+                    "body_html": "<p>Ujian dimulai <strong>Senin</strong>.</p>",
+                },
+                follow_redirects=True,
+            )
+            self.assertEqual(announcement_response.status_code, 200)
+            self.assertIn(b"Pengumuman Ujian", announcement_response.data)
+            self.assertIn(b"Pengumuman Ujian", academic_client.get("/berita").data)
+
+            root_client = app.test_client()
+            login_page = root_client.get("/admin")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', login_page.get_data(as_text=True)).group(1)
+            root_client.post("/admin/login", data={"csrf_token": token, "password": "main-admin-secret"})
+            users_page = root_client.get("/admin?tab=users")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', users_page.get_data(as_text=True)).group(1)
+            root_client.post(
+                "/admin/users/save",
+                data={"csrf_token": token, "username": "admin-pendidikan", "active": "0"},
+            )
+            revoked = academic_client.get("/admin/akademik")
+            self.assertEqual(revoked.status_code, 302)
+            self.assertEqual(revoked.location, "/admin")
+
+    def test_academic_admin_manages_programs_and_calendar_at_bottom_of_page(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+
+        program_form = self.client.get("/admin/akademik/program/baru")
+        self.assertEqual(program_form.status_code, 200)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', program_form.get_data(as_text=True)).group(1)
+        program_response = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "title": "Kelas Tsanawiyah",
+                "category": "Pendidikan formal",
+                "description": "Pembelajaran bertahap di lingkungan pesantren.",
+                "kitabs": "Safinatun Najah\nJurumiyah, Amtsilati",
+                "info_url": "/psb",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(program_response.status_code, 200)
+        self.assertIn(b"Kelas Tsanawiyah", program_response.data)
+        saved_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        added_program = next(item for item in saved_preferences["programs"] if item["title"] == "Kelas Tsanawiyah")
+        self.assertEqual(added_program["kitabs"], ["Safinatun Najah", "Jurumiyah", "Amtsilati"])
+        academic_page = self.client.get("/akademik")
+        self.assertEqual(academic_page.status_code, 200)
+        academic_html = academic_page.get_data(as_text=True)
+        self.assertIn("Safinatun Najah", academic_html)
+        self.assertIn("Informasi lebih lanjut", academic_html)
+        self.assertIn('href="/psb"', academic_html)
+
+        edit_form = self.client.get(f"/admin/akademik/program/{added_program['id']}/edit")
+        self.assertEqual(edit_form.status_code, 200)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', edit_form.get_data(as_text=True)).group(1)
+        invalid_link_response = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "item_id": added_program["id"],
+                "title": "Kelas Tsanawiyah Terpadu",
+                "description": "Kelas dengan jadwal pembelajaran terpadu.",
+                "kitabs": "Safinatun Najah",
+                "info_url": "javascript:alert(1)",
+            },
+        )
+        self.assertEqual(invalid_link_response.status_code, 400)
+        self.assertIn(b"Tautan informasi harus berupa", invalid_link_response.data)
+        updated_program = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "item_id": added_program["id"],
+                "title": "Kelas Tsanawiyah Terpadu",
+                "description": "Kelas dengan jadwal pembelajaran terpadu.",
+                "kitabs": "Safinatun Najah",
+                "info_url": "/kontak",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(updated_program.status_code, 200)
+        saved_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        updated_item = next(item for item in saved_preferences["programs"] if item.get("id") == added_program["id"])
+        self.assertEqual(updated_item["info_url"], "/kontak")
+        self.assertEqual(updated_item["title"], "Kelas Tsanawiyah Terpadu")
+
+        calendar_form = self.client.get("/admin/akademik/kalender/baru")
+        self.assertEqual(calendar_form.status_code, 200)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', calendar_form.get_data(as_text=True)).group(1)
+        calendar_response = self.client.post(
+            "/admin/akademik/kalender/simpan",
+            data={
+                "csrf_token": token,
+                "date": "2027-01-23",
+                "title": "Ujian Semester",
+                "category": "Ujian",
+                "description": "Ujian semester ganjil untuk seluruh kelas.",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(calendar_response.status_code, 200)
+        academic_page = self.client.get("/akademik")
+        rendered = academic_page.get_data(as_text=True)
+        self.assertIn("23 Januari 2027", rendered)
+        self.assertIn("Ujian Semester", rendered)
+        self.assertGreater(rendered.index('id="kalender-akademik"'), rendered.index("class=\"academic-note\""))
+
+        self.assertEqual(
+            self.client.post(
+                f"/admin/akademik/program/{added_program['id']}/hapus",
+                data={"csrf_token": token},
+                follow_redirects=True,
+            ).status_code,
+            200,
+        )
+        saved_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertFalse(any(item.get("id") == added_program["id"] for item in saved_preferences["programs"]))
+
     def test_admin_edits_are_saved_to_preferensi_json(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             preferences_path = Path(temporary_directory) / "preferensi.json"

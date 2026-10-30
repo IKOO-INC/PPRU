@@ -93,7 +93,9 @@
       "category": "Program Al-Qur’an",
       "description": "Program menghafal Al-Qur’an dengan pendampingan dan pembiasaan murajaah, agar hafalan terjaga serta tumbuh kecintaan kepada Al-Qur’an.",
       "icon": "quran",
-      "color": "green"
+      "color": "green",
+      "kitabs": [],
+      "info_url": "/kontak"
     },
     {
       "number": "02",
@@ -101,7 +103,9 @@
       "category": "Pendidikan formal pesantren",
       "description": "Pembelajaran ilmu agama dan pengetahuan umum yang dirancang bertahap dalam suasana pendidikan pesantren.",
       "icon": "school",
-      "color": "orange"
+      "color": "orange",
+      "kitabs": [],
+      "info_url": "/kontak"
     },
     {
       "number": "03",
@@ -109,7 +113,9 @@
       "category": "Penguatan ilmu keislaman",
       "description": "Pembelajaran dasar-dasar keislaman untuk menguatkan pemahaman, ibadah, dan akhlak santri dalam keseharian.",
       "icon": "book",
-      "color": "blue"
+      "color": "blue",
+      "kitabs": [],
+      "info_url": "/kontak"
     }
   ],
   "history": {
@@ -298,5 +304,6 @@
     "email_label": "Email",
     "email": "Informasi email menyusul",
     "map_image": "/static/images/pondok-campus.jpg"
-  }
+  },
+  "academic_events": []
 }
