@@ -75,6 +75,7 @@ ACADEMIC_PROGRAM_TYPE_SLUGS = {
     "non_formal": "non-formal",
 }
 PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v2"
+ACADEMIC_PROGRAM_DETAILS_REVISION = "madrasah-diniyah-details-2026-v1"
 PROFILE_PROGRAM_ALIASES = {
     "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
     "Madrasah Diniyah": {"Diniyah Takmiliyah"},
@@ -497,7 +498,7 @@ def _merge_profile_programs(current_programs, seed_programs):
         if match_index is not None:
             existing = current_programs[match_index]
             consumed.add(match_index)
-            for key in ("id", "number", "color", "icon", "logo", "info_url"):
+            for key in ("id", "number", "color", "icon", "logo", "info_url", "class_details"):
                 if key in existing and existing[key] not in (None, ""):
                     updated_program[key] = copy.deepcopy(existing[key])
         merged.append(updated_program)
@@ -566,6 +567,96 @@ def _apply_profile_content_revision(content, seed_content):
         content["faq"] = copy.deepcopy(seed_faq)
 
     content["_profile_content_revision"] = PROFILE_CONTENT_REVISION
+    return True
+
+
+def _parse_program_class_details(value):
+    """Parse one class per line: name | note/schedule | kitab 1; kitab 2."""
+    entries = []
+    seen_names = set()
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    for line in text.split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = [part.strip() for part in line.split("|", 2)]
+        name = parts[0][:120].strip()
+        if not name or name.casefold() in seen_names:
+            continue
+        seen_names.add(name.casefold())
+        note = parts[1][:500].strip() if len(parts) > 1 else ""
+        kitabs = []
+        if len(parts) > 2:
+            for item in parts[2].split(";"):
+                item = item.strip().lstrip("•-* ").strip()
+                if item and item.casefold() not in {entry.casefold() for entry in kitabs}:
+                    kitabs.append(item[:160])
+        entries.append({
+            "name": name,
+            "description": note,
+            "kitabs_label": "Kitab bandungan",
+            "kitabs": kitabs[:30],
+        })
+        if len(entries) >= 30:
+            break
+    return entries
+
+
+def _format_program_class_details(value):
+    """Format class details into the editable one-class-per-line admin syntax."""
+    lines = []
+    for item in value if isinstance(value, list) else []:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name", "")).strip()
+        if not name:
+            continue
+        note = str(item.get("description", "")).strip()
+        kitabs = item.get("kitabs", [])
+        if not isinstance(kitabs, list):
+            kitabs = _split_list_lines(kitabs)
+        lines.append(f"{name} | {note} | {'; '.join(str(book).strip() for book in kitabs if str(book).strip())}")
+    return "\n".join(lines)
+
+
+def _apply_academic_program_details_revision(content, seed_content):
+    """Seed the first Madrasah Diniyah class-and-book details once, leaving later edits alone."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_academic_program_details_revision") == ACADEMIC_PROGRAM_DETAILS_REVISION:
+        return False
+    seed_programs = seed_content.get("programs")
+    if not isinstance(seed_programs, list):
+        return False
+    seed_program = next(
+        (
+            item for item in seed_programs
+            if isinstance(item, dict)
+            and _normalize_profile_program_title(item.get("title"))
+            == _normalize_profile_program_title("Madrasah Diniyah")
+        ),
+        None,
+    )
+    if not seed_program:
+        return False
+    programs = content.get("programs")
+    if not isinstance(programs, list):
+        return False
+    target = next(
+        (
+            item for item in programs
+            if isinstance(item, dict)
+            and _normalize_profile_program_title(item.get("title"))
+            == _normalize_profile_program_title(seed_program.get("title"))
+        ),
+        None,
+    )
+    if target is None:
+        return False
+    for field in ("description", "class_details"):
+        if field in seed_program:
+            target[field] = copy.deepcopy(seed_program[field])
+    content["_academic_program_details_revision"] = ACADEMIC_PROGRAM_DETAILS_REVISION
     return True
 
 
@@ -670,6 +761,7 @@ def create_app(test_config=None):
         content = store.load()
         needs_save = _migrate_legacy_hafalan_preferences(content)
         needs_save = _apply_profile_content_revision(content, profile_seed_content) or needs_save
+        needs_save = _apply_academic_program_details_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
         if isinstance(site, dict):
             if site.get("login_url") in (None, "", "/masuk"):
@@ -695,6 +787,31 @@ def create_app(test_config=None):
             kitabs_label = str(program.get("kitabs_label", "Kitab yang dipelajari") or "Kitab yang dipelajari").strip()
             if program.get("kitabs_label") != kitabs_label or "kitabs_label" not in program:
                 program["kitabs_label"] = kitabs_label
+                needs_save = True
+            raw_class_details = program.get("class_details", [])
+            normalized_class_details = []
+            if isinstance(raw_class_details, list):
+                for class_item in raw_class_details:
+                    if not isinstance(class_item, dict):
+                        continue
+                    class_name = str(class_item.get("name", "")).strip()[:120]
+                    if not class_name:
+                        continue
+                    class_kitabs = class_item.get("kitabs", [])
+                    if not isinstance(class_kitabs, list):
+                        class_kitabs = _split_list_lines(class_kitabs)
+                    normalized_class_details.append({
+                        **class_item,
+                        "name": class_name,
+                        "description": str(class_item.get("description", "")).strip()[:500],
+                        "kitabs_label": str(class_item.get("kitabs_label", "Kitab bandungan") or "Kitab bandungan").strip()[:80],
+                        "kitabs": [str(book).strip()[:160] for book in class_kitabs if str(book).strip()][:30],
+                    })
+            if "class_details" in program and program.get("class_details") != normalized_class_details:
+                program["class_details"] = normalized_class_details
+                needs_save = True
+            elif "class_details" not in program and normalized_class_details:
+                program["class_details"] = normalized_class_details
                 needs_save = True
             program["info_url"] = _safe_public_link(program.get("info_url", "/kontak"))
             logo = _safe_program_logo(program.get("logo", ""))
@@ -746,6 +863,9 @@ def create_app(test_config=None):
 
     def page_context(active_page, **extra):
         content = _without_admin_users(public_content(load_content()))
+        for program in content.get("programs", []):
+            if isinstance(program, dict) and program.get("class_details"):
+                program["detail_url"] = f"/akademik/program/{slugify(program.get('title', ''))}"
         return {
             "site": content.get("site", {}),
             "data": content,
@@ -998,6 +1118,26 @@ def create_app(test_config=None):
             "programs.html",
             **academic_page_context(selected_education_type=selected_education_type),
         )
+
+    @app.get("/akademik/program/<program_slug>")
+    def academic_program_detail(program_slug):
+        context = page_context("programs")
+        program = next(
+            (
+                item for item in context["data"].get("programs", [])
+                if isinstance(item, dict)
+                and slugify(item.get("title", "")) == program_slug
+                and item.get("class_details")
+            ),
+            None,
+        )
+        if program is None:
+            abort(404)
+        education_type = _normalize_academic_program_type(program.get("education_type"), program.get("category", ""))
+        context["program"] = program
+        context["education_type_label"] = ACADEMIC_PROGRAM_TYPE_LABELS[education_type]
+        context["back_url"] = f"/akademik/{ACADEMIC_PROGRAM_TYPE_SLUGS[education_type]}"
+        return render_template("academic_program_detail.html", **context)
 
     @app.get("/berita")
     def news():
@@ -1469,6 +1609,8 @@ def create_app(test_config=None):
                 "description": "",
                 "kitabs_label": "Materi utama",
                 "kitabs": [],
+                "class_details": [],
+                "class_details_text": "",
                 "info_url": "/kontak",
                 "education_type": education_type,
                 "icon": "book",
@@ -1493,6 +1635,7 @@ def create_app(test_config=None):
         if found is None:
             abort(404)
         index, item = found
+        item = {**item, "class_details_text": _format_program_class_details(item.get("class_details", []))}
         return render_template(
             "admin_academic_program_form.html",
             site=content.get("site", {}),
@@ -1516,6 +1659,9 @@ def create_app(test_config=None):
         kitabs = _split_list_lines(request.form.get("kitabs", ""))
         kitabs_label_field_provided = "kitabs_label" in request.form
         kitabs_label = request.form.get("kitabs_label", "").strip() or "Kitab yang dipelajari"
+        class_details_field_provided = "class_details" in request.form
+        class_details_text = request.form.get("class_details", "")
+        class_details = _parse_program_class_details(class_details_text)
         submitted_education_type = request.form.get("education_type", "").strip()
         education_type = (
             submitted_education_type
@@ -1553,6 +1699,7 @@ def create_app(test_config=None):
             "description": description,
             "kitabs_label": kitabs_label,
             "kitabs": kitabs,
+            "class_details": class_details,
             "info_url": info_url,
             "icon": icon,
             "logo": logo,
@@ -1563,7 +1710,7 @@ def create_app(test_config=None):
                 "admin_academic_program_form.html",
                 site=page_content.get("site", {}),
                 data=page_content,
-                item=item,
+                item={**item, "class_details_text": class_details_text},
                 item_id=item_id,
                 icon_options=ACADEMIC_PROGRAM_ICON_OPTIONS,
                 error=error,
@@ -1581,6 +1728,8 @@ def create_app(test_config=None):
             existing = programs[existing_index] if existing_index is not None else {}
             if existing_index is not None and not kitabs_label_field_provided:
                 item["kitabs_label"] = existing.get("kitabs_label", "Kitab yang dipelajari")
+            if existing_index is not None and not class_details_field_provided:
+                item["class_details"] = existing.get("class_details", [])
             if existing_index is not None and not icon_field_provided:
                 item["icon"] = existing.get("icon", "book")
             if existing_index is not None and not logo_field_provided:

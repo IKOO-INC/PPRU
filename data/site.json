@@ -108,7 +108,7 @@
       "number": "02",
       "title": "Madrasah Diniyah",
       "category": "Pendidikan salafiyah berjenjang",
-      "description": "Madrasah diniyah diterapkan pada jenjang I’dadiyah, Ibtida, Tsanawi, dan Aliyah. Kegiatan belajar berlangsung pada waktu pagi dan malam sebagai bagian dari pendidikan keseharian santri.",
+      "description": "Madrasah Diniyah mencakup jenjang I’dadiyah, Ibtida, Tsanawi, dan Aliyah. Kegiatan pagi berlangsung pukul 06.30–08.30, sedangkan madrasah lailiyah pukul 18.30–20.00. Sorogan dilaksanakan selepas Subuh dan bandungan menyesuaikan jenjang.",
       "icon": "book-open-reader",
       "color": "green",
       "kitabs_label": "Jenjang belajar",
@@ -120,7 +120,44 @@
       ],
       "info_url": "/kontak",
       "education_type": "non_formal",
-      "logo": ""
+      "logo": "",
+      "class_details": [
+        {
+          "name": "I’dadiyah",
+          "description": "Syawir dilaksanakan selepas salat Isya hingga pukul 22.00.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": []
+        },
+        {
+          "name": "Ibtida",
+          "description": "Bandungan kitab mengikuti jenjang santri.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Fathul Qorib",
+            "Ta’limul Muta’allim"
+          ]
+        },
+        {
+          "name": "Tsanawi",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Al-Hikam",
+            "Fathul Wahab",
+            "Tafsir Al-Qur’an"
+          ]
+        },
+        {
+          "name": "Aliyah",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Al-Hikam",
+            "Fathul Wahab",
+            "Tafsir Al-Qur’an"
+          ]
+        }
+      ]
     },
     {
       "number": "03",
@@ -384,5 +421,6 @@
     "map_image": "/static/images/pondok-campus.jpg"
   },
   "academic_events": [],
-  "_profile_content_revision": "musyawarah-profil-2026-v2"
+  "_profile_content_revision": "musyawarah-profil-2026-v2",
+  "_academic_program_details_revision": "madrasah-diniyah-details-2026-v1"
 }

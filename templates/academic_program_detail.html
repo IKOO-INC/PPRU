@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ program.title }} · Akademik · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-banner page-banner--compact">
+  <div class="container page-banner-content">
+    <span class="light-eyebrow">{{ education_type_label }} · {{ program.category|default('Program pendidikan') }}</span>
+    <h1>{{ program.title }}</h1>
+    <p>{{ program.description }}</p>
+  </div>
+</section>
+<section class="academic-program-menu-section">
+  <div class="container"><a class="text-link" href="{{ back_url }}">← Kembali ke {{ education_type_label }}</a></div>
+</section>
+<section class="section academic-program-detail-section">
+  <div class="container">
+    <header class="academic-program-detail-heading">
+      <span class="section-eyebrow">Rincian pembelajaran</span>
+      <h2>Kelas dan kitab</h2>
+      <p>Rincian jenjang, kegiatan, dan kitab bandungan pada program ini.</p>
+    </header>
+    <div class="academic-class-grid">
+      {% for class_item in program.class_details %}
+      <article class="academic-class-card">
+        <span class="academic-class-index">Kelas {{ '%02d'|format(loop.index) }}</span>
+        <h3>{{ class_item.name }}</h3>
+        {% if class_item.description %}<p>{{ class_item.description }}</p>{% endif %}
+        {% if class_item.kitabs %}
+        <strong>{{ class_item.get('kitabs_label', 'Kitab bandungan') }}</strong>
+        <ul>{% for kitab in class_item.kitabs %}<li>{{ kitab }}</li>{% endfor %}</ul>
+        {% else %}
+        <p class="academic-class-empty">Daftar kitab untuk jenjang ini belum dirinci.</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    <div class="academic-program-detail-footer"><a class="button button--green" href="/kontak">Tanyakan informasi lebih lanjut <span aria-hidden="true">↗</span></a></div>
+  </div>
+</section>
+{% endblock %}

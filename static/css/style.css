@@ -227,6 +227,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .academic-program-group-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin-bottom: 18px; }
 .academic-program-group-heading h2 { margin: 5px 0 0; color: #21352a; font-size: clamp(21px, 2.7vw, 29px); letter-spacing: -.035em; }
 .academic-program-group-heading .text-link { flex: 0 0 auto; }
+.academic-program-detail-section { padding-top: 36px; background: #f6faf7; }
+.academic-program-detail-heading { max-width: 650px; margin: 0 auto 22px; text-align: center; }
+.academic-program-detail-heading h2 { margin: 5px 0 7px; color: #21352a; font-size: clamp(22px, 3vw, 30px); letter-spacing: -.035em; }
+.academic-program-detail-heading p { margin: 0; color: #718077; font-size: 9px; line-height: 1.7; }
+.academic-class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+.academic-class-card { min-width: 0; padding: 18px 19px; background: #fff; border: 1px solid #e4eee7; border-radius: 12px; box-shadow: 0 6px 17px rgba(21,54,37,.04); }
+.academic-class-index { color: #8a9b90; font-size: 7px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.academic-class-card h3 { margin: 5px 0 7px; color: #21352a; font-size: 15px; }
+.academic-class-card p { margin: 0 0 12px; color: #718077; font-size: 9px; line-height: 1.7; }
+.academic-class-card > strong { color: #08704f; font-size: 8px; }
+.academic-class-card ul { display: grid; gap: 6px; margin: 8px 0 0; padding-left: 16px; color: #4c5d52; font-size: 9px; line-height: 1.55; }
+.academic-class-card li::marker { color: #e79b27; }
+.academic-class-card .academic-class-empty { margin: 9px 0 0; font-size: 8px; font-style: italic; }
+.academic-program-detail-footer { display: flex; justify-content: center; margin-top: 24px; }
 .academic-note { padding: 23px 0; color: #eaf5ee; background: #08704f; }
 .academic-note .container { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
 .academic-note p { margin: 0; font-size: 9px; }

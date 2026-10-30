@@ -406,6 +406,66 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(later_response.status_code, 200)
         self.assertIn("Perubahan admin setelah pembaruan.", later_response.get_data(as_text=True))
 
+    def test_madrasah_diniyah_details_link_and_academic_admin_editing(self):
+        legacy_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        legacy_content.pop("_academic_program_details_revision", None)
+        madrasah = next(item for item in legacy_content["programs"] if item["title"] == "Madrasah Diniyah")
+        madrasah.pop("class_details", None)
+        madrasah["description"] = "Keterangan Madrasah Diniyah lama."
+        self.content_file.write_text(json.dumps(legacy_content, ensure_ascii=False), encoding="utf-8")
+
+        overview = self.client.get("/akademik")
+        self.assertEqual(overview.status_code, 200)
+        self.assertIn('href="/akademik/program/madrasah-diniyah"', overview.get_data(as_text=True))
+        detail = self.client.get("/akademik/program/madrasah-diniyah")
+        self.assertEqual(detail.status_code, 200)
+        detail_html = detail.get_data(as_text=True)
+        self.assertIn("Kelas dan kitab", detail_html)
+        self.assertIn("Fathul Qorib", detail_html)
+        self.assertIn("Ta’limul Muta’allim", detail_html)
+        self.assertIn("06.30–08.30", detail_html)
+        self.assertIn("Tafsir Al-Qur’an", detail_html)
+        self.assertIn('href="/akademik/program/madrasah-diniyah"', self.client.get("/psb").get_data(as_text=True))
+
+        migrated = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(migrated["_academic_program_details_revision"], "madrasah-diniyah-details-2026-v1")
+        migrated_madrasah = next(item for item in migrated["programs"] if item["title"] == "Madrasah Diniyah")
+        self.assertEqual(len(migrated_madrasah["class_details"]), 4)
+        self.assertIn("06.30–08.30", migrated_madrasah["description"])
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+        programs = migrated["programs"]
+        madrasah_index = next(index for index, item in enumerate(programs) if item["title"] == "Madrasah Diniyah")
+        item_id = str(migrated_madrasah.get("id") or migrated_madrasah.get("number") or madrasah_index)
+        edit_response = self.client.get(f"/admin/akademik/program/{item_id}/edit")
+        self.assertEqual(edit_response.status_code, 200)
+        edit_html = edit_response.get_data(as_text=True)
+        self.assertIn('name="class_details"', edit_html)
+        csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', edit_html).group(1)
+        updated = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": csrf_token,
+                "item_id": item_id,
+                "title": migrated_madrasah["title"],
+                "category": migrated_madrasah["category"],
+                "education_type": "non_formal",
+                "description": migrated_madrasah["description"],
+                "kitabs_label": migrated_madrasah["kitabs_label"],
+                "kitabs": "I’dadiyah\nIbtida\nTsanawi\nAliyah",
+                "class_details": "Ibtida | Contoh yang diedit di Admin Akademik | Safinatun Najah; Jurumiyah",
+                "info_url": "/kontak",
+                "icon": migrated_madrasah["icon"],
+                "program_logo": migrated_madrasah.get("logo", ""),
+            },
+        )
+        self.assertEqual(updated.status_code, 302)
+        saved_detail = self.client.get("/akademik/program/madrasah-diniyah")
+        self.assertIn("Contoh yang diedit di Admin Akademik", saved_detail.get_data(as_text=True))
+        self.assertIn("Safinatun Najah", saved_detail.get_data(as_text=True))
+
     def test_profile_admin_saves_single_history_textarea_and_real_youtube_embed(self):
         with self.client.session_transaction() as admin_session:
             admin_session["admin_authenticated"] = True
