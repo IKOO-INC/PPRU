@@ -60,9 +60,10 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 
 - Login tetap melalui `/admin`. Admin Utama masuk dengan kata sandi `ADMIN_PASSWORD`; di sidebar **Kelola User Admin**, Admin Utama membuat atau menonaktifkan akun Pendidikan/Akademik, menentukan nama pengguna, dan menetapkan kata sandi minimal 12 karakter. Admin pendidikan mengisi nama pengguna serta kata sandi pada halaman login yang sama.
 - Kata sandi pendidikan disimpan dalam bentuk hash di penyimpanan aplikasi; sesi admin pendidikan dapat dicabut dari **Kelola User Admin** dengan menonaktifkan akun atau memperbarui kredensial.
-- Panel khusus `/admin/akademik` memiliki menu **Program Pendidikan**, **Kalender Akademik**, dan **Pengumuman / Berita**. Admin akademik hanya dapat mengelola pengumuman bertanda akademik; pengumuman terbit juga tampil di halaman Berita.
+- Panel khusus `/admin/akademik` memisahkan menu **Pendidikan Formal** dan **Pendidikan Non Formal**, selain **Kalender Akademik** dan **Pengumuman / Berita**. Setiap program disimpan pada salah satu jenis pendidikan dan dapat dipindahkan melalui formulir edit.
+- Navigasi publik **Akademik** memiliki menu **Pendidikan Formal** (`/akademik/formal`) dan **Pendidikan Non Formal** (`/akademik/non-formal`); `/akademik` tetap menjadi halaman ringkasan dengan program dikelompokkan berdasarkan jenisnya.
 - Program berisi judul kelas, keterangan, daftar kitab (satu judul per baris), dan tautan **Informasi lebih lanjut**. Isi daftar kitab resmi melalui formulir program sebelum publikasi; daftar yang belum diisi ditandai jelas di situs.
-- Kegiatan kalender memiliki tanggal, judul, kategori, dan keterangan. Kalender tampil di bagian paling bawah halaman `/akademik`.
+- Kegiatan kalender memiliki tanggal, judul, kategori, dan keterangan. Kalender tampil di bagian paling bawah halaman akademik.
 
 ### Galeri
 
@@ -100,7 +101,8 @@ Buka `http://127.0.0.1:5000` untuk website atau `http://127.0.0.1:5000/admin` un
 
 - `/` — Beranda
 - `/profil` — Sejarah, profil, visi dan misi
-- `/akademik` atau `/program` — Program pendidikan
+- `/akademik` atau `/program` — Ringkasan program formal dan non formal
+- `/akademik/formal` dan `/akademik/non-formal` — Program menurut jenis pendidikan
 - `/berita` dan `/berita/<slug>` — Daftar dan detail berita
 - `/galeri` — Galeri kegiatan dengan filter
 - `/hafalan` — Kuis Sambung Nadzom Alfiyah dan Imrity

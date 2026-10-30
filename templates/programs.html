@@ -1,8 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Akademik · {{ site.name }}{% endblock %}
+{% block title %}{{ selected_education_type_label or 'Akademik' }} · {{ site.name }}{% endblock %}
 {% block content %}
-<section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">Akademik</span><h1>{{ data.program_intro.title }}</h1><p>{{ data.program_intro.description }}</p></div></section>
-<section class="section academic-page-section"><div class="container"><div class="program-grid program-grid--page">{% for program in data.programs %}{% include "partials/program_card.html" %}{% else %}<p class="empty-state">Informasi program pendidikan akan segera diperbarui.</p>{% endfor %}</div></div></section>
+<section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">{{ selected_education_type_label or 'Pendidikan formal dan non formal' }}</span><h1>{{ selected_education_type_label or data.program_intro.title }}</h1><p>{{ data.program_intro.description }}</p></div></section>
+<section class="academic-program-menu-section"><div class="container">
+  <nav class="academic-program-menu" aria-label="Menu pendidikan">
+    <a href="/akademik"{% if not selected_education_type %} aria-current="page"{% endif %}>Semua Program</a>
+    <a href="/akademik/formal"{% if selected_education_type == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
+    <a href="/akademik/non-formal"{% if selected_education_type == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal <span>{{ education_type_counts.non_formal }}</span></a>
+  </nav>
+</div></section>
+<section class="section academic-page-section"><div class="container academic-program-groups">
+  {% for group in education_groups %}
+  <section class="academic-program-group" id="{{ group.slug }}">
+    <header class="academic-program-group-heading"><div><span class="section-eyebrow">Program pendidikan</span><h2>{{ group.label }}</h2></div>{% if not selected_education_type %}<a class="text-link" href="/akademik/{{ group.slug }}">Lihat menu <span aria-hidden="true">→</span></a>{% endif %}</header>
+    <div class="program-grid program-grid--page">{% for program in group.programs %}{% include "partials/program_card.html" %}{% else %}<p class="empty-state">Informasi {{ group.label|lower }} akan segera diperbarui.</p>{% endfor %}</div>
+  </section>
+  {% endfor %}
+</div></section>
 <section class="academic-note"><div class="container"><p>Kenali juga perjalanan pendidikan kami dan kegiatan santri.</p><a class="button button--green" href="/profil">Tentang pesantren <span aria-hidden="true">↗</span></a></div></section>
 <section class="section academic-calendar-section" id="kalender-akademik">
   <div class="container">

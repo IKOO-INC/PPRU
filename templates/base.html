@@ -7,9 +7,9 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
   {% block extra_head %}{% endblock %}
-  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=5"></script>
+  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
 <body{% if site.placeholder_image %} style="--page-banner-image: url('{{ site.placeholder_image }}')"{% endif %}>
@@ -24,7 +24,18 @@
       <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
         <div class="nav-links">
           {% for item in site.navigation %}
-            {% if item.id == 'profile' %}
+            {% if item.id == 'programs' %}
+              <div class="nav-dropdown" data-nav-dropdown>
+                <button class="nav-link nav-dropdown-toggle{% if active_page == 'programs' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="academic-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'programs' %} aria-current="page"{% endif %}>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true">⌄</span>
+                </button>
+                <div class="nav-dropdown-menu" id="academic-dropdown-menu" data-nav-dropdown-menu>
+                  <a href="{{ item.url }}"{% if active_page == 'programs' and not selected_education_type|default('') %} aria-current="page"{% endif %}>Semua Program</a>
+                  <a href="/akademik/formal"{% if active_page == 'programs' and selected_education_type|default('') == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal</a>
+                  <a href="/akademik/non-formal"{% if active_page == 'programs' and selected_education_type|default('') == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal</a>
+                </div>
+              </div>
+            {% elif item.id == 'profile' %}
               <div class="nav-dropdown" data-nav-dropdown>
                 <button class="nav-link nav-dropdown-toggle{% if active_page == 'profile' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="profile-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'profile' %} aria-current="page"{% endif %}>
                   {{ item.label }} <span class="nav-caret" aria-hidden="true">⌄</span>

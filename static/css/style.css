@@ -55,7 +55,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .nav-dropdown-menu { position: absolute; z-index: 60; top: calc(100% - 1px); left: -12px; display: none; min-width: 168px; gap: 2px; padding: 8px; background: #fff; border: 1px solid #e7eee9; border-radius: 9px; box-shadow: 0 12px 28px rgba(14,48,31,.13); }
 .nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu, .nav-dropdown.is-open .nav-dropdown-menu { display: grid; }
 .nav-dropdown-menu a { display: flex; min-height: 34px; align-items: center; padding: 0 10px; color: #45554c; border-radius: 5px; font-size: 10px; font-weight: 600; white-space: nowrap; }
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a:focus-visible { color: var(--green); background: var(--mint); }
+.nav-dropdown-menu a:hover, .nav-dropdown-menu a:focus-visible, .nav-dropdown-menu a[aria-current="page"] { color: var(--green); background: var(--mint); }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .login-link { padding: 7px 16px; color: var(--green); border: 1px solid #e2ece6; border-radius: 999px; font-size: 10px; font-weight: 700; }
 .login-link:hover { background: var(--mint); }
@@ -215,6 +215,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .gallery-mosaic--home .gallery-card--wide { grid-column: span 2; grid-row: span 1; }
 
 /* Academic program and calendar page */
+.academic-program-menu-section { padding: 22px 0 0; }
+.academic-program-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
+.academic-program-menu a { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; padding: 0 15px; color: #476154; background: #fff; border: 1px solid #e2ece5; border-radius: 999px; font-size: 9px; font-weight: 750; text-decoration: none; transition: color .18s, background .18s, border-color .18s; }
+.academic-program-menu a:hover, .academic-program-menu a[aria-current="page"] { color: #fff; background: #08704f; border-color: #08704f; }
+.academic-program-menu a span { display: grid; min-width: 21px; height: 21px; place-items: center; color: #08704f; background: #e7f7ed; border-radius: 50%; font-size: 8px; }
+.academic-program-menu a[aria-current="page"] span { color: #08704f; background: #fff; }
+.academic-program-groups { display: grid; gap: 43px; }
+.academic-program-group-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin-bottom: 18px; }
+.academic-program-group-heading h2 { margin: 5px 0 0; color: #21352a; font-size: clamp(21px, 2.7vw, 29px); letter-spacing: -.035em; }
+.academic-program-group-heading .text-link { flex: 0 0 auto; }
 .academic-note { padding: 23px 0; color: #eaf5ee; background: #08704f; }
 .academic-note .container { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
 .academic-note p { margin: 0; font-size: 9px; }

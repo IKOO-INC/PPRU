@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ 'Edit kegiatan akademik' if item_id else 'Tambah kegiatan akademik' }} · Admin Akademik{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=10">{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page"><div class="container admin-container"><div class="admin-academic-form-wrap">
   <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · Kalender</span><h1>{{ 'Edit kegiatan akademik' if item_id else 'Tambah kegiatan akademik' }}</h1><p>Masukkan tanggal, kategori, judul kegiatan, dan keterangan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='calendar') }}">← Kembali ke kalender</a></header>

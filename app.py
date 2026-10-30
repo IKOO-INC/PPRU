@@ -55,6 +55,14 @@ ADMIN_COMPONENTS = (
 )
 ADMIN_COMPONENT_IDS = {component_id for component_id, _ in ADMIN_COMPONENTS}
 ADMIN_CONTENT_COMPONENT_IDS = ADMIN_COMPONENT_IDS - {"users"}
+ACADEMIC_PROGRAM_TYPE_LABELS = {
+    "formal": "Pendidikan Formal",
+    "non_formal": "Pendidikan Non Formal",
+}
+ACADEMIC_PROGRAM_TYPE_SLUGS = {
+    "formal": "formal",
+    "non_formal": "non-formal",
+}
 ADMIN_PREVIEW_PAGES = {
     "brand": ("index.html", "home", "/"),
     "navigation": ("index.html", "home", "/"),
@@ -251,6 +259,18 @@ def _without_admin_users(content):
 
 def _academic_item_id(item, index):
     return str(item.get("id") or item.get("number") or index)
+
+
+def _normalize_academic_program_type(value, category=""):
+    """Normalize legacy and current program types to formal/non-formal buckets."""
+    for candidate in (value, category):
+        normalized = str(candidate or "").strip().casefold().replace("_", " ").replace("-", " ")
+        words = normalized.split()
+        if "nonformal" in words or ("non" in words and "formal" in words):
+            return "non_formal"
+        if "formal" in words:
+            return "formal"
+    return "non_formal"
 
 
 def _academic_date_label(value):
@@ -517,6 +537,13 @@ def create_app(test_config=None):
                 kitabs = _split_list_lines(kitabs)
             program["kitabs"] = [str(kitab).strip() for kitab in kitabs if str(kitab).strip()]
             program["info_url"] = _safe_public_link(program.get("info_url", "/kontak"))
+            education_type = _normalize_academic_program_type(
+                program.get("education_type"),
+                program.get("category", ""),
+            )
+            if program.get("education_type") != education_type:
+                program["education_type"] = education_type
+                needs_save = True
             normalized_programs.append(program)
         content["programs"] = normalized_programs
         academic_events = content.get("academic_events")
@@ -721,6 +748,36 @@ def create_app(test_config=None):
 
     app.jinja_env.globals["csrf_token"] = csrf_value
 
+    def academic_page_context(selected_education_type=None):
+        context = page_context("programs", selected_education_type=selected_education_type)
+        all_programs = context["data"].get("programs", [])
+        context["education_groups"] = [
+            {
+                "key": education_type,
+                "slug": ACADEMIC_PROGRAM_TYPE_SLUGS[education_type],
+                "label": label,
+                "programs": [
+                    program for program in all_programs
+                    if _normalize_academic_program_type(program.get("education_type")) == education_type
+                ],
+            }
+            for education_type, label in ACADEMIC_PROGRAM_TYPE_LABELS.items()
+            if selected_education_type is None or education_type == selected_education_type
+        ]
+        context["education_type_counts"] = {
+            education_type: sum(
+                1 for program in all_programs
+                if _normalize_academic_program_type(program.get("education_type")) == education_type
+            )
+            for education_type in ACADEMIC_PROGRAM_TYPE_LABELS
+        }
+        context["selected_education_type_label"] = ACADEMIC_PROGRAM_TYPE_LABELS.get(selected_education_type, "")
+        calendar_events = context["data"].get("academic_events", [])
+        calendar_events.sort(key=lambda item: str(item.get("date", "9999-12-31")))
+        for item in calendar_events:
+            item["date_label"] = _academic_date_label(item.get("date"))
+        return context
+
     @app.get("/")
     def home():
         return render_template("index.html", **page_context("home"))
@@ -732,12 +789,24 @@ def create_app(test_config=None):
     @app.get("/akademik")
     @app.get("/program")
     def programs():
-        context = page_context("programs")
-        calendar_events = context["data"].get("academic_events", [])
-        calendar_events.sort(key=lambda item: str(item.get("date", "9999-12-31")))
-        for item in calendar_events:
-            item["date_label"] = _academic_date_label(item.get("date"))
-        return render_template("programs.html", **context)
+        return render_template("programs.html", **academic_page_context())
+
+    @app.get("/akademik/<education_type_slug>")
+    def academic_programs_by_type(education_type_slug):
+        selected_education_type = next(
+            (
+                education_type
+                for education_type, slug in ACADEMIC_PROGRAM_TYPE_SLUGS.items()
+                if slug == education_type_slug
+            ),
+            None,
+        )
+        if selected_education_type is None:
+            abort(404)
+        return render_template(
+            "programs.html",
+            **academic_page_context(selected_education_type=selected_education_type),
+        )
 
     @app.get("/berita")
     def news():
@@ -1144,9 +1213,11 @@ def create_app(test_config=None):
         if access_response is not None:
             return access_response
         content = load_content()
-        tab = request.args.get("tab", "programs")
-        if tab not in {"programs", "calendar", "announcements"}:
-            tab = "programs"
+        tab = request.args.get("tab", "formal")
+        if tab == "programs":
+            tab = "formal"
+        if tab not in {"formal", "non_formal", "calendar", "announcements"}:
+            tab = "formal"
         programs = content.get("programs", [])
         academic_events = sorted(
             content.get("academic_events", []),
@@ -1160,7 +1231,15 @@ def create_app(test_config=None):
         program_items = [
             {**program, "admin_id": _academic_item_id(program, index)}
             for index, program in enumerate(programs)
-        ]
+            if _normalize_academic_program_type(program.get("education_type")) == tab
+        ] if tab in ACADEMIC_PROGRAM_TYPE_LABELS else []
+        education_type_counts = {
+            education_type: sum(
+                1 for program in programs
+                if _normalize_academic_program_type(program.get("education_type")) == education_type
+            )
+            for education_type in ACADEMIC_PROGRAM_TYPE_LABELS
+        }
         event_items = [
             {**item, "admin_id": _academic_item_id(item, index), "date_label": _academic_date_label(item.get("date"))}
             for index, item in enumerate(academic_events)
@@ -1171,6 +1250,8 @@ def create_app(test_config=None):
             data=_without_admin_users(content),
             tab=tab,
             programs=program_items,
+            education_type_counts=education_type_counts,
+            education_type_labels=ACADEMIC_PROGRAM_TYPE_LABELS,
             academic_events=event_items,
             announcements=announcements,
             saved=request.args.get("saved") == "1",
@@ -1184,11 +1265,21 @@ def create_app(test_config=None):
         if access_response is not None:
             return access_response
         content = _without_admin_users(load_content())
+        education_type = request.args.get("education_type", "formal")
+        if education_type not in ACADEMIC_PROGRAM_TYPE_LABELS:
+            education_type = "formal"
         return render_template(
             "admin_academic_program_form.html",
             site=content.get("site", {}),
             data=content,
-            item={"title": "", "category": "Program pendidikan", "description": "", "kitabs": [], "info_url": "/kontak"},
+            item={
+                "title": "",
+                "category": "Program pendidikan",
+                "description": "",
+                "kitabs": [],
+                "info_url": "/kontak",
+                "education_type": education_type,
+            },
             item_id="",
             error=None,
         )
@@ -1227,6 +1318,12 @@ def create_app(test_config=None):
         category = request.form.get("category", "Program pendidikan").strip() or "Program pendidikan"
         description = request.form.get("description", "").strip()
         kitabs = _split_list_lines(request.form.get("kitabs", ""))
+        submitted_education_type = request.form.get("education_type", "").strip()
+        education_type = (
+            submitted_education_type
+            if submitted_education_type in ACADEMIC_PROGRAM_TYPE_LABELS
+            else _normalize_academic_program_type("", category)
+        )
         submitted_info_url = request.form.get("info_url", "").strip()
         info_url = _safe_public_link(submitted_info_url)
         error = None
@@ -1236,6 +1333,8 @@ def create_app(test_config=None):
             error = "Keterangan program wajib diisi."
         elif not kitabs:
             error = "Tambahkan minimal satu judul kitab, satu per baris."
+        elif submitted_education_type and submitted_education_type not in ACADEMIC_PROGRAM_TYPE_LABELS:
+            error = "Pilih Pendidikan Formal atau Pendidikan Non Formal."
         elif submitted_info_url and info_url == "/kontak" and submitted_info_url != "/kontak":
             error = "Tautan informasi harus berupa path lokal atau URL HTTPS yang valid."
 
@@ -1243,6 +1342,7 @@ def create_app(test_config=None):
             "id": item_id,
             "title": title,
             "category": category,
+            "education_type": education_type,
             "description": description,
             "kitabs": kitabs,
             "info_url": info_url,
@@ -1268,6 +1368,12 @@ def create_app(test_config=None):
             if item_id and existing_index is None:
                 abort(404)
             existing = programs[existing_index] if existing_index is not None else {}
+            if not submitted_education_type and existing_index is not None:
+                education_type = _normalize_academic_program_type(
+                    existing.get("education_type"),
+                    existing.get("category", category),
+                )
+                item["education_type"] = education_type
             item.update({
                 "id": existing.get("id") or secrets.token_urlsafe(10),
                 "number": existing.get("number") or f"{len(programs) + 1:02d}",
@@ -1279,7 +1385,7 @@ def create_app(test_config=None):
             else:
                 programs[existing_index] = item
             store.save(content)
-        return redirect(url_for("admin_academic", tab="programs", saved="1"))
+        return redirect(url_for("admin_academic", tab=education_type, saved="1"))
 
     @app.post("/admin/akademik/program/<item_id>/hapus")
     def admin_academic_program_delete(item_id):
@@ -1296,9 +1402,10 @@ def create_app(test_config=None):
             )
             if existing_index is None:
                 abort(404)
+            deleted_type = _normalize_academic_program_type(programs[existing_index].get("education_type"))
             programs.pop(existing_index)
             store.save(content)
-        return redirect(url_for("admin_academic", tab="programs", saved="1"))
+        return redirect(url_for("admin_academic", tab=deleted_type, saved="1"))
 
     @app.get("/admin/akademik/kalender/baru")
     def admin_academic_calendar_new():

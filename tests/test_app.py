@@ -800,6 +800,79 @@ class PortalRoutesTestCase(unittest.TestCase):
             self.assertEqual(revoked.status_code, 302)
             self.assertEqual(revoked.location, "/admin")
 
+    def test_legacy_academic_program_categories_are_normalized_into_types(self):
+        legacy_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        for program in legacy_content["programs"]:
+            program.pop("education_type", None)
+        self.content_file.write_text(json.dumps(legacy_content, ensure_ascii=False), encoding="utf-8")
+
+        response = self.client.get("/akademik")
+        self.assertEqual(response.status_code, 200)
+        saved_programs = json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
+        types_by_title = {program["title"]: program["education_type"] for program in saved_programs}
+        self.assertEqual(types_by_title["SPM (Muadalah)"], "formal")
+        self.assertEqual(types_by_title["Tahfidzul Qur’an"], "non_formal")
+        self.assertEqual(types_by_title["Diniyah Takmiliyah"], "non_formal")
+
+    def test_academic_program_menus_separate_formal_and_nonformal_programs(self):
+        overview = self.client.get("/akademik")
+        self.assertEqual(overview.status_code, 200)
+        overview_html = overview.get_data(as_text=True)
+        self.assertIn("Pendidikan Formal", overview_html)
+        self.assertIn("Pendidikan Non Formal", overview_html)
+        self.assertIn('href="/akademik/formal"', overview_html)
+        self.assertIn('href="/akademik/non-formal"', overview_html)
+
+        formal_page = self.client.get("/akademik/formal")
+        self.assertEqual(formal_page.status_code, 200)
+        formal_html = formal_page.get_data(as_text=True)
+        self.assertIn("SPM (Muadalah)", formal_html)
+        self.assertNotIn("Tahfidzul Qur’an", formal_html)
+        self.assertNotIn("Diniyah Takmiliyah", formal_html)
+
+        nonformal_page = self.client.get("/akademik/non-formal")
+        self.assertEqual(nonformal_page.status_code, 200)
+        nonformal_html = nonformal_page.get_data(as_text=True)
+        self.assertIn("Tahfidzul Qur’an", nonformal_html)
+        self.assertIn("Diniyah Takmiliyah", nonformal_html)
+        self.assertNotIn("SPM (Muadalah)", nonformal_html)
+        self.assertEqual(self.client.get("/akademik/unknown").status_code, 404)
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+        formal_admin = self.client.get("/admin/akademik?tab=formal")
+        self.assertEqual(formal_admin.status_code, 200)
+        self.assertIn(b"SPM (Muadalah)", formal_admin.data)
+        self.assertNotIn("Tahfidzul Qur’an".encode(), formal_admin.data)
+        nonformal_admin = self.client.get("/admin/akademik?tab=non_formal")
+        self.assertEqual(nonformal_admin.status_code, 200)
+        self.assertIn("Tahfidzul Qur’an".encode(), nonformal_admin.data)
+        self.assertNotIn(b"SPM (Muadalah)", nonformal_admin.data)
+
+        new_nonformal = self.client.get("/admin/akademik/program/baru?education_type=non_formal")
+        self.assertEqual(new_nonformal.status_code, 200)
+        self.assertIn(b'<option value="non_formal" selected>', new_nonformal.data)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', new_nonformal.get_data(as_text=True)).group(1)
+        saved_nonformal = self.client.post(
+            "/admin/akademik/program/simpan",
+            data={
+                "csrf_token": token,
+                "title": "Kajian Kitab Dasar",
+                "category": "Program diniyah",
+                "education_type": "non_formal",
+                "description": "Pembelajaran diniyah untuk santri.",
+                "kitabs": "Safinatun Najah",
+                "info_url": "/kontak",
+            },
+        )
+        self.assertEqual(saved_nonformal.status_code, 302)
+        self.assertEqual(saved_nonformal.location, "/admin/akademik?tab=non_formal&saved=1")
+        saved_programs = json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
+        saved_item = next(item for item in saved_programs if item["title"] == "Kajian Kitab Dasar")
+        self.assertEqual(saved_item["education_type"], "non_formal")
+        self.assertIn(b"Kajian Kitab Dasar", self.client.get("/akademik/non-formal").data)
+
     def test_academic_admin_manages_programs_and_calendar_at_bottom_of_page(self):
         with self.client.session_transaction() as admin_session:
             admin_session["admin_authenticated"] = True
@@ -865,6 +938,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         updated_item = next(item for item in saved_preferences["programs"] if item.get("id") == added_program["id"])
         self.assertEqual(updated_item["info_url"], "/kontak")
         self.assertEqual(updated_item["title"], "Kelas Tsanawiyah Terpadu")
+        self.assertEqual(updated_item["education_type"], "formal")
 
         calendar_form = self.client.get("/admin/akademik/kalender/baru")
         self.assertEqual(calendar_form.status_code, 200)

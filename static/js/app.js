@@ -25,25 +25,29 @@
     });
   }
 
-  const profileDropdown = document.querySelector("[data-nav-dropdown]");
-  const profileDropdownToggle = profileDropdown?.querySelector("[data-nav-dropdown-toggle]");
-  if (profileDropdown && profileDropdownToggle) {
-    const closeProfileDropdown = () => {
-      profileDropdown.classList.remove("is-open");
-      profileDropdownToggle.setAttribute("aria-expanded", "false");
-    };
-    profileDropdownToggle.addEventListener("click", () => {
-      const opening = profileDropdownToggle.getAttribute("aria-expanded") !== "true";
-      profileDropdown.classList.toggle("is-open", opening);
-      profileDropdownToggle.setAttribute("aria-expanded", String(opening));
+  const navDropdowns = Array.from(document.querySelectorAll("[data-nav-dropdown]"));
+  const closeNavDropdown = (dropdown) => {
+    dropdown.classList.remove("is-open");
+    dropdown.querySelector("[data-nav-dropdown-toggle]")?.setAttribute("aria-expanded", "false");
+  };
+  navDropdowns.forEach((dropdown) => {
+    const dropdownToggle = dropdown.querySelector("[data-nav-dropdown-toggle]");
+    if (!dropdownToggle) return;
+    dropdownToggle.addEventListener("click", () => {
+      const opening = dropdownToggle.getAttribute("aria-expanded") !== "true";
+      navDropdowns.forEach((otherDropdown) => {
+        if (otherDropdown !== dropdown) closeNavDropdown(otherDropdown);
+      });
+      dropdown.classList.toggle("is-open", opening);
+      dropdownToggle.setAttribute("aria-expanded", String(opening));
     });
     document.addEventListener("click", (event) => {
-      if (!profileDropdown.contains(event.target)) closeProfileDropdown();
+      if (!dropdown.contains(event.target)) closeNavDropdown(dropdown);
     });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeProfileDropdown();
-    });
-  }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") navDropdowns.forEach(closeNavDropdown);
+  });
 
   const newsCards = Array.from(document.querySelectorAll("[data-news-card]"));
   const searchInput = document.querySelector("#news-search");

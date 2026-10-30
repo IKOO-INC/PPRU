@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
 {% block title %}Kelola Website · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=10">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-page">

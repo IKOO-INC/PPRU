@@ -95,7 +95,8 @@
       "icon": "quran",
       "color": "green",
       "kitabs": [],
-      "info_url": "/kontak"
+      "info_url": "/kontak",
+      "education_type": "non_formal"
     },
     {
       "number": "02",
@@ -105,7 +106,8 @@
       "icon": "school",
       "color": "orange",
       "kitabs": [],
-      "info_url": "/kontak"
+      "info_url": "/kontak",
+      "education_type": "formal"
     },
     {
       "number": "03",
@@ -115,7 +117,8 @@
       "icon": "book",
       "color": "blue",
       "kitabs": [],
-      "info_url": "/kontak"
+      "info_url": "/kontak",
+      "education_type": "non_formal"
     }
   ],
   "history": {

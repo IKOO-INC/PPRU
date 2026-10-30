@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=9">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=10">{% endblock %}
 {% block content %}
 <section class="admin-login-wrap"><div class="admin-login-card">
   <a class="admin-login-brand" href="/"><img src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48"><span><strong>{{ site.short_name }}</strong><small>ADMIN PORTAL</small></span></a>
