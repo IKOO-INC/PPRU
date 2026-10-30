@@ -78,6 +78,7 @@ PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v2"
 ACADEMIC_PROGRAM_DETAILS_REVISION = "madrasah-diniyah-details-2026-v2"
 CONTACT_ADDRESS_REVISION = "contact-address-2026-v1"
 HOME_STATS_REVISION = "home-stats-santri-alumni-2026-v1"
+SOCIAL_LINKS_REVISION = "official-social-links-2026-v1"
 SOCIAL_PLATFORMS = ("facebook", "instagram", "youtube", "tiktok")
 PROFILE_PROGRAM_ALIASES = {
     "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
@@ -781,6 +782,33 @@ def _apply_home_stats_revision(content, seed_content):
     return True
 
 
+def _apply_social_links_revision(content, seed_content):
+    """Add the user-supplied official social URLs without replacing admin-managed links."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_social_links_revision") == SOCIAL_LINKS_REVISION:
+        return False
+    seed_site = seed_content.get("site")
+    seed_links = seed_site.get("social_links") if isinstance(seed_site, dict) else None
+    if not isinstance(seed_links, dict):
+        return False
+    site = content.setdefault("site", {})
+    if not isinstance(site, dict):
+        site = content["site"] = {}
+    current_links = site.get("social_links")
+    if not isinstance(current_links, dict):
+        current_links = {}
+    social_links = copy.deepcopy(current_links)
+    for platform in SOCIAL_PLATFORMS:
+        official_url = _safe_social_url(seed_links.get(platform, ""))
+        current_url = _safe_social_url(social_links.get(platform, ""))
+        if official_url and not current_url:
+            social_links[platform] = official_url
+    site["social_links"] = social_links
+    content["_social_links_revision"] = SOCIAL_LINKS_REVISION
+    return True
+
+
 def _unique_news_slug(items, requested_slug, current_slug=None):
     base_slug = slugify(requested_slug)
     existing = {item.get("slug") for item in items if item.get("slug") != current_slug}
@@ -885,6 +913,7 @@ def create_app(test_config=None):
         needs_save = _apply_academic_program_details_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_contact_address_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_home_stats_revision(content, profile_seed_content) or needs_save
+        needs_save = _apply_social_links_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
         if isinstance(site, dict):
             if site.get("login_url") in (None, "", "/masuk"):

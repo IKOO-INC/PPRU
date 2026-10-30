@@ -50,7 +50,12 @@
     "phone": "",
     "email": "",
     "logo_path": "/static/images/mark.svg",
-    "social_links": {}
+    "social_links": {
+      "facebook": "https://www.facebook.com/pprukarangtanjungisrugans/?locale=id_ID",
+      "instagram": "https://www.instagram.com/roudlotululum_karangtanjung/",
+      "youtube": "https://www.youtube.com/@mediaroudlatululum6018",
+      "tiktok": "https://www.tiktok.com/@roudlotululum1983?_r=1&_t=ZS-9AzQydgGWTx"
+    }
   },
   "hero": {
     "eyebrow": "Pesantren Salafiyah · Karangtanjung, Kebumen",
@@ -425,5 +430,6 @@
   "_profile_content_revision": "musyawarah-profil-2026-v2",
   "_academic_program_details_revision": "madrasah-diniyah-details-2026-v2",
   "_contact_address_revision": "contact-address-2026-v1",
-  "_home_stats_revision": "home-stats-santri-alumni-2026-v1"
+  "_home_stats_revision": "home-stats-santri-alumni-2026-v1",
+  "_social_links_revision": "official-social-links-2026-v1"
 }

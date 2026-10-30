@@ -292,12 +292,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         updated_admission = json.loads(self.content_file.read_text(encoding="utf-8"))["admission"]
         self.assertNotIn("programs", updated_admission)
 
-    def test_footer_uses_local_fontawesome_icons_and_only_configured_social_links(self):
-        initial_html = self.client.get("/").get_data(as_text=True)
-        initial_footer = initial_html.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
-        self.assertNotIn('<div class="social-links"', initial_footer)
-        self.assertIn("/static/vendor/fontawesome-free/css/brands.min.css?v=6.7.2", initial_html)
-        self.assertNotIn("bootstrap-icons", initial_html)
+    def test_footer_uses_local_fontawesome_icons_and_user_supplied_social_urls(self):
+        rendered = self.client.get("/").get_data(as_text=True)
+        footer = rendered.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
+        self.assertIn("/static/vendor/fontawesome-free/css/brands.min.css?v=6.7.2", rendered)
+        self.assertNotIn("bootstrap-icons", rendered)
 
         icons_css = self.client.get("/static/vendor/fontawesome-free/css/brands.min.css")
         icons_font = self.client.get("/static/vendor/fontawesome-free/webfonts/fa-brands-400.woff2")
@@ -306,23 +305,38 @@ class PortalRoutesTestCase(unittest.TestCase):
         icons_css.close()
         icons_font.close()
 
-        content = json.loads(self.content_file.read_text(encoding="utf-8"))
-        content["site"]["social_links"] = {
-            "facebook": "https://www.facebook.com/ppru.test",
-            "instagram": "https://www.instagram.com/ppru.test",
-            "youtube": "https://www.youtube.com/@ppru-test",
-            "tiktok": "",
-        }
-        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
-        rendered = self.client.get("/").get_data(as_text=True)
-        footer = rendered.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
-        for platform, icon in (("facebook", "fa-facebook-f"), ("instagram", "fa-instagram"), ("youtube", "fa-youtube")):
-            with self.subTest(platform=platform):
-                self.assertIn(f'href="https://www.{platform}.com/', footer)
+        expected_links = (
+            ('href="https://www.facebook.com/pprukarangtanjungisrugans/?locale=id_ID"', "fa-facebook-f"),
+            ('href="https://www.instagram.com/roudlotululum_karangtanjung/"', "fa-instagram"),
+            ('href="https://www.youtube.com/@mediaroudlatululum6018"', "fa-youtube"),
+            ('href="https://www.tiktok.com/@roudlotululum1983?_r=1&amp;_t=ZS-9AzQydgGWTx"', "fa-tiktok"),
+        )
+        for href, icon in expected_links:
+            with self.subTest(icon=icon):
+                self.assertIn(href, footer)
                 self.assertIn(icon, footer)
-        self.assertNotIn("fa-tiktok", footer)
         self.assertNotIn('href="#footer"', footer)
         self.assertIn('class="footer-icon fa-solid fa-location-dot"', footer)
+
+    def test_social_links_revision_adds_official_urls_without_overwriting_admin_links(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content.pop("_social_links_revision", None)
+        content["site"]["social_links"] = {
+            "facebook": "https://www.facebook.com/admin-managed-profile",
+        }
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        rendered = self.client.get("/").get_data(as_text=True)
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(saved["_social_links_revision"], "official-social-links-2026-v1")
+        self.assertEqual(saved["site"]["social_links"]["facebook"], "https://www.facebook.com/admin-managed-profile")
+        self.assertEqual(saved["site"]["social_links"]["instagram"], "https://www.instagram.com/roudlotululum_karangtanjung/")
+        self.assertEqual(saved["site"]["social_links"]["youtube"], "https://www.youtube.com/@mediaroudlatululum6018")
+        self.assertEqual(saved["site"]["social_links"]["tiktok"], "https://www.tiktok.com/@roudlotululum1983?_r=1&_t=ZS-9AzQydgGWTx")
+        self.assertIn('href="https://www.facebook.com/admin-managed-profile"', rendered)
+        self.assertIn("fa-instagram", rendered)
+        self.assertIn("fa-youtube", rendered)
+        self.assertIn("fa-tiktok", rendered)
 
     def test_template_icons_use_fontawesome_not_unicode_or_bootstrap_glyphs(self):
         forbidden_icons = "↗←→↓↑⌄×ⓘ◉✓▶✳✦◷⌕⌖✉◎▤⬇‹›¶•"
@@ -417,7 +431,10 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         saved = json.loads(self.content_file.read_text(encoding="utf-8"))
         self.assertEqual(saved["site"]["social_links"]["facebook"], "https://www.facebook.com/official.test")
-        self.assertEqual(saved["site"]["social_links"]["instagram"], "")
+        self.assertEqual(
+            saved["site"]["social_links"]["instagram"],
+            "https://www.instagram.com/roudlotululum_karangtanjung/",
+        )
         self.assertNotIn("social_facebook", saved["site"])
         rendered = self.client.get("/kontak").get_data(as_text=True)
         self.assertIn('href="https://www.facebook.com/official.test"', rendered)
