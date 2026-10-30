@@ -74,7 +74,7 @@ ACADEMIC_PROGRAM_TYPE_SLUGS = {
     "formal": "formal",
     "non_formal": "non-formal",
 }
-PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v1"
+PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v2"
 PROFILE_PROGRAM_ALIASES = {
     "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
     "Madrasah Diniyah": {"Diniyah Takmiliyah"},
@@ -521,8 +521,8 @@ def _apply_profile_content_revision(content, seed_content):
 
     section_fields = {
         "site": ("description", "footer_note", "address"),
-        "hero": ("eyebrow", "title", "description", "image_note"),
-        "history": ("eyebrow", "title", "intro", "body", "quote"),
+        "hero": ("eyebrow", "title", "description", "image_note", "image_alt"),
+        "history": ("eyebrow", "title", "intro", "body", "quote", "image_alt"),
         "profile": (
             "eyebrow", "title", "subtitle", "history_title", "history_paragraphs",
             "vision_title", "vision", "mission", "leadership_title", "leadership_note",

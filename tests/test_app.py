@@ -358,8 +358,10 @@ class PortalRoutesTestCase(unittest.TestCase):
         legacy.pop("_profile_content_revision", None)
         legacy["site"]["description"] = "Deskripsi lama"
         legacy["hero"]["title"] = "Judul lama"
+        legacy["hero"]["image_alt"] = "Label hero lama"
         legacy["stats"] = [{"value": "1095", "label": "Santri Aktif"}]
         legacy["history"]["intro"] = "Ringkasan sejarah lama"
+        legacy["history"]["image_alt"] = "Elyasir Independent School ( EYIS )"
         legacy["profile"]["vision"] = "Visi lama"
         legacy["profile"]["history_paragraphs"] = ["Sejarah lama"]
         legacy["profile"]["image"] = "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/profile"
@@ -383,9 +385,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("Musabaqah Qira’atil Kutub", rendered)
 
         migrated = json.loads(self.content_file.read_text(encoding="utf-8"))
-        self.assertEqual(migrated["_profile_content_revision"], "musyawarah-profil-2026-v1")
+        self.assertEqual(migrated["_profile_content_revision"], "musyawarah-profil-2026-v2")
         self.assertEqual(migrated["site"]["description"], seed["site"]["description"])
         self.assertEqual(migrated["hero"]["title"], seed["hero"]["title"])
+        self.assertEqual(migrated["hero"]["image_alt"], seed["hero"]["image_alt"])
+        self.assertEqual(migrated["history"]["image_alt"], seed["history"]["image_alt"])
         self.assertEqual(migrated["stats"], seed["stats"])
         self.assertEqual(migrated["faq"][1]["answer"], seed["faq"][1]["answer"])
         self.assertEqual(migrated["profile"]["image"], legacy["profile"]["image"])
