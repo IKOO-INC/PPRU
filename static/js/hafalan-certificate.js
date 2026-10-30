@@ -57,7 +57,7 @@
         return await window.html2canvas(frame, {
           backgroundColor: "#fcfdfb",
           scale: 2,
-          useCORS: false,
+          useCORS: true,
           allowTaint: false,
           logging: false,
           windowWidth: Math.max(window.innerWidth, frame.offsetWidth + 36),
