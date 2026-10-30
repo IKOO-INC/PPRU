@@ -1,4 +1,4 @@
-"""JSON-backed storage for portal preferences, news, and gallery data."""
+"""Atlas-primary storage with JSON persistence and local fallback for portal content."""
 import json
 import os
 import tempfile
@@ -166,6 +166,24 @@ class PersistentStorageUnavailable(PersistentStorageError):
     )
 
 
+class JsonFallbackUnavailable(PersistentStorageError):
+    """Raised when both MongoDB and a writable local JSON fallback are unavailable."""
+
+    user_message = (
+        "MongoDB Atlas sedang tidak dapat dihubungi dan preferensi.json lokal tidak dapat "
+        "ditulis. Perubahan belum tersimpan."
+    )
+
+
+class PersistentStorageMirrorUnavailable(PersistentStorageError):
+    """Raised when Atlas is saved but the optional local JSON mirror cannot be updated."""
+
+    user_message = (
+        "MongoDB Atlas berhasil menyimpan perubahan, tetapi mirror JSON lokal gagal "
+        "diperbarui. Data utama tetap berada di MongoDB Atlas."
+    )
+
+
 class ReadOnlyPortalStore:
     """Allow reads from bundled JSON files, but never claim Vercel writes succeeded."""
 
@@ -199,6 +217,8 @@ class MongoPortalStore(JsonPortalStore):
         database_name: str = "ppru",
         collection_name: str = "portal_data",
         document_id: str = "ppru:production",
+        mirror_json: bool = True,
+        allow_json_fallback: bool = False,
     ):
         super().__init__(
             preferences_file=preferences_file,
@@ -212,6 +232,9 @@ class MongoPortalStore(JsonPortalStore):
         self.database_name = str(database_name or "ppru").strip()
         self.collection_name = str(collection_name or "portal_data").strip()
         self.document_id = str(document_id or "ppru:production").strip()
+        self.mirror_json = bool(mirror_json)
+        self.allow_json_fallback = bool(allow_json_fallback)
+        self.json_fallback_active = False
         self.client = None
         self._collection = None
 
@@ -235,6 +258,14 @@ class MongoPortalStore(JsonPortalStore):
         return self._collection
 
     def _seed_content(self) -> dict[str, Any]:
+        # When Atlas has no document yet, import the current runtime JSON first.
+        # Seed files are only a read-only fallback for a new deployment without
+        # writable/runtime JSON files.
+        try:
+            return super().load()
+        except OSError:
+            pass
+
         preferences = self.seed_preferences.load()
         if not isinstance(preferences, dict):
             raise PersistentStorageUnavailable()
@@ -251,12 +282,36 @@ class MongoPortalStore(JsonPortalStore):
         except FileNotFoundError:
             return []
 
+    def _load_json_fallback(self, error: Exception) -> dict[str, Any]:
+        if not self.allow_json_fallback:
+            if isinstance(error, PersistentStorageError):
+                raise error
+            raise PersistentStorageUnavailable() from None
+        try:
+            content = super().load()
+        except (OSError, ValueError):
+            raise JsonFallbackUnavailable() from None
+        self.json_fallback_active = True
+        return content
+
+    def _save_json_fallback(self, content: dict[str, Any], error: Exception) -> None:
+        if not self.allow_json_fallback:
+            if isinstance(error, PersistentStorageError):
+                raise error
+            raise PersistentStorageUnavailable() from None
+        try:
+            super().save(content)
+        except (OSError, ValueError):
+            raise JsonFallbackUnavailable() from None
+        self.json_fallback_active = True
+
     def load(self) -> dict[str, Any]:
         try:
             document = self._get_collection().find_one({"_id": self.document_id})
-        except PyMongoError:
-            raise PersistentStorageUnavailable() from None
+        except (PyMongoError, PersistentStorageError) as error:
+            return self._load_json_fallback(error)
 
+        self.json_fallback_active = False
         if document is None:
             content = self._seed_content()
             self.save(content)
@@ -323,7 +378,15 @@ class MongoPortalStore(JsonPortalStore):
                 document,
                 upsert=True,
             )
-        except PyMongoError:
-            raise PersistentStorageUnavailable() from None
+        except (PyMongoError, PersistentStorageError) as error:
+            self._save_json_fallback(content, error)
+            return
         if not result.acknowledged:
             raise PersistentStorageUnavailable()
+
+        self.json_fallback_active = False
+        if self.mirror_json:
+            try:
+                super().save(content)
+            except OSError:
+                raise PersistentStorageMirrorUnavailable() from None

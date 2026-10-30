@@ -9,7 +9,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from app import _safe_image_url, create_app
+from app import _safe_image_url, _split_paragraphs, _youtube_embed_url, create_app
 from cloudinary_service import upload_image, upload_local_image
 from content_store import MongoPortalStore
 from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
@@ -261,6 +261,117 @@ class PortalRoutesTestCase(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b"Pondok Pesantren", response.data)
 
+    def test_profile_navigation_dropdown_and_siapik_portal_link(self):
+        legacy_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        legacy_preferences["site"]["login_label"] = "Masuk"
+        legacy_preferences["site"]["login_url"] = "/masuk"
+        self.content_file.write_text(json.dumps(legacy_preferences, ensure_ascii=False), encoding="utf-8")
+
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn('data-nav-dropdown', rendered)
+        self.assertIn('href="/profil#sejarah">Sejarah</a>', rendered)
+        self.assertIn('href="/profil#visi-misi">Visi misi</a>', rendered)
+        self.assertIn('href="/profil#masyayikh">Masyayikh</a>', rendered)
+        self.assertIn('href="https://siapik.com">Masuk Portal Santri</a>', rendered)
+        migrated_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(migrated_preferences["site"]["login_url"], "https://siapik.com")
+        self.assertEqual(migrated_preferences["site"]["login_label"], "Masuk Portal Santri")
+
+    def test_profile_admin_saves_single_history_textarea_and_real_youtube_embed(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "profile-csrf-token"
+
+        admin_page = self.client.get("/admin?tab=profile")
+        admin_html = admin_page.get_data(as_text=True)
+        self.assertEqual(admin_page.status_code, 200)
+        self.assertIn('data-live-preview-frame', admin_html)
+        self.assertIn('name="history_paragraphs"', admin_html)
+        history_textarea = re.search(r'<textarea name="history_paragraphs" rows="10">(.*?)</textarea>', admin_html, re.S)
+        self.assertIsNotNone(history_textarea)
+        self.assertIn("\n\n", html.unescape(history_textarea.group(1)))
+        self.assertNotIn('name="history_paragraph_0"', admin_html)
+        self.assertIn('name="video_embed_url"', admin_html)
+        default_profile = self.client.get("/profil").get_data(as_text=True)
+        self.assertIn("Video profil belum tersedia.", default_profile)
+        self.assertNotIn("play-button", default_profile)
+
+        response = self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "profile-csrf-token",
+                "component": "profile",
+                "profile_title": "Profil Pesantren",
+                "history_paragraphs": "Sejarah pertama dengan\nbaris lanjutan.\n\nSejarah kedua.",
+                "video_embed_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        saved_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(
+            saved_preferences["profile"]["history_paragraphs"],
+            ["Sejarah pertama dengan baris lanjutan.", "Sejarah kedua."],
+        )
+        self.assertEqual(
+            saved_preferences["profile"]["video_embed_url"],
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        )
+
+        profile_page = self.client.get("/profil")
+        profile_html = profile_page.get_data(as_text=True)
+        self.assertIn('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"', profile_html)
+        self.assertIn('id="sejarah"', profile_html)
+        self.assertIn('id="visi-misi"', profile_html)
+        self.assertIn('id="masyayikh"', profile_html)
+        self.assertNotIn("play-button", profile_html)
+
+        self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "profile-csrf-token",
+                "component": "profile",
+                "video_embed_url": "https://evil.example/video/unsafe-id",
+            },
+        )
+        saved_after_invalid_url = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(
+            saved_after_invalid_url["profile"]["video_embed_url"],
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        )
+
+    def test_profile_admin_live_preview_does_not_save_unsaved_changes(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "preview-csrf-token"
+
+        saved_before = self.content_file.read_text(encoding="utf-8")
+        response = self.client.post(
+            "/admin/live-preview",
+            data={
+                "csrf_token": "preview-csrf-token",
+                "component": "profile",
+                "profile_title": "Judul Pratinjau Saja",
+                "history_paragraphs": "Cerita pratinjau satu.\n\nCerita pratinjau dua.",
+                "video_embed_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn("Judul Pratinjau Saja", rendered)
+        self.assertIn("Cerita pratinjau satu.", rendered)
+        self.assertIn('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"', rendered)
+        self.assertEqual(self.content_file.read_text(encoding="utf-8"), saved_before)
+
+    def test_youtube_embed_url_only_accepts_youtube_links(self):
+        self.assertEqual(
+            _youtube_embed_url("https://youtu.be/dQw4w9WgXcQ", ""),
+            "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+        )
+        self.assertEqual(_youtube_embed_url("https://evil.example/watch?v=dQw4w9WgXcQ", ""), "")
+        self.assertEqual(_split_paragraphs("  first\nline\n\n\nsecond  "), ["first line", "second"])
+
     def test_home_hero_promo_is_hidden_only_on_mobile(self):
         styles = (ROOT / "static" / "css" / "style.css").read_text(encoding="utf-8")
         desktop_styles = styles.split("@media (max-width: 960px)", 1)[0]
@@ -346,7 +457,13 @@ class PortalRoutesTestCase(unittest.TestCase):
         collection = MemoryCollection()
         store._collection = collection
 
+        expected_runtime_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        expected_runtime_news = json.loads(self.news_file.read_text(encoding="utf-8"))
+        expected_runtime_gallery = json.loads(self.gallery_file.read_text(encoding="utf-8"))
         content = store.load()
+        self.assertEqual(content["site"]["name"], expected_runtime_preferences["site"]["name"])
+        self.assertEqual(content["news"], expected_runtime_news)
+        self.assertEqual(content["gallery"], expected_runtime_gallery)
         self.assertTrue(content["news"])
         self.assertTrue(content["gallery"])
         self.assertEqual(collection.replace_count, 1)
@@ -359,6 +476,92 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("preferensi", collection.document)
         self.assertIn("berita", collection.document)
         self.assertIn("gallery", collection.document)
+        self.assertEqual(json.loads(self.news_file.read_text(encoding="utf-8")), [{"slug": "persisted-from-mongodb"}])
+        self.assertNotIn("news", json.loads(self.content_file.read_text(encoding="utf-8")))
+        self.assertNotIn("gallery", json.loads(self.content_file.read_text(encoding="utf-8")))
+
+    def test_local_mongodb_outage_falls_back_to_json_and_surfaces_fallback_state(self):
+        class FailingCollection:
+            def find_one(self, _query):
+                raise PyMongoError("simulated Atlas outage")
+
+            def replace_one(self, _query, _replacement, upsert=False):
+                raise PyMongoError("simulated Atlas outage")
+
+        store = MongoPortalStore(
+            preferences_file=self.content_file,
+            news_file=self.news_file,
+            gallery_file=self.gallery_file,
+            seed_preferences_file=ROOT / "data" / "site.json",
+            seed_news_file=ROOT / "data" / "berita.json",
+            seed_gallery_file=ROOT / "data" / "gallery.json",
+            mongo_uri="mongodb://atlas.example.invalid",
+            document_id="ppru:local",
+            mirror_json=True,
+            allow_json_fallback=True,
+        )
+        store._collection = FailingCollection()
+        content = store.load()
+        self.assertTrue(store.json_fallback_active)
+        content["stats"][0]["value"] = "321"
+        store.save(content)
+        self.assertTrue(store.json_fallback_active)
+        self.assertEqual(json.loads(self.content_file.read_text(encoding="utf-8"))["stats"][0]["value"], "321")
+
+    def test_local_admin_shows_json_fallback_popup_when_atlas_is_down(self):
+        class FailingCollection:
+            def find_one(self, _query):
+                raise PyMongoError("simulated Atlas outage")
+
+        app = create_app({
+            "TESTING": True,
+            "VERCEL": False,
+            "MONGODB_URI": "mongodb://atlas.example.invalid",
+            "CONTENT_FILE": self.content_file,
+            "NEWS_FILE": self.news_file,
+            "GALLERY_FILE": self.gallery_file,
+            "SECRET_KEY": "test-secret-key",
+        })
+        client = app.test_client()
+        with client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "fallback-csrf-token"
+
+        with patch.object(MongoPortalStore, "_get_collection", return_value=FailingCollection()):
+            response = client.get("/admin?tab=profile")
+
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn('role="alertdialog"', rendered)
+        self.assertIn("mongo eror sementara pakai preferensi.json", rendered)
+        self.assertIn("belum tersinkron ke MongoDB Atlas", rendered)
+
+    def test_mongodb_store_can_skip_ephemeral_vercel_json_mirror(self):
+        class MemoryCollection:
+            def replace_one(self, _query, replacement, upsert=False):
+                self.document = dict(replacement)
+                return type("WriteResult", (), {"acknowledged": True})()
+
+        original_preferences = self.content_file.read_bytes()
+        original_news = self.news_file.read_bytes()
+        original_gallery = self.gallery_file.read_bytes()
+        store = MongoPortalStore(
+            preferences_file=self.content_file,
+            news_file=self.news_file,
+            gallery_file=self.gallery_file,
+            seed_preferences_file=ROOT / "data" / "site.json",
+            seed_news_file=ROOT / "data" / "berita.json",
+            seed_gallery_file=ROOT / "data" / "gallery.json",
+            mongo_uri="mongodb://atlas.example.invalid",
+            document_id="ppru:production",
+            mirror_json=False,
+            allow_json_fallback=False,
+        )
+        store._collection = MemoryCollection()
+        store.save(self.content)
+        self.assertEqual(self.content_file.read_bytes(), original_preferences)
+        self.assertEqual(self.news_file.read_bytes(), original_news)
+        self.assertEqual(self.gallery_file.read_bytes(), original_gallery)
 
     def test_vercel_mongodb_write_failure_returns_error_without_claiming_success(self):
         class FailingCollection:
@@ -409,7 +612,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
+        self.assertIn("mongo eror sementara pakai preferensi.json", response_text)
         self.assertIn("Perubahan belum tersimpan", response_text)
+        self.assertIn("file JSON deployment tidak persisten", response_text)
         self.assertNotIn("Perubahan berhasil disimpan", response_text)
         self.assertEqual(collection.write_attempts, 1)
         self.assertEqual(collection.document, initial_document)

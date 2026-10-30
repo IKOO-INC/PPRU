@@ -25,6 +25,26 @@
     });
   }
 
+  const profileDropdown = document.querySelector("[data-nav-dropdown]");
+  const profileDropdownToggle = profileDropdown?.querySelector("[data-nav-dropdown-toggle]");
+  if (profileDropdown && profileDropdownToggle) {
+    const closeProfileDropdown = () => {
+      profileDropdown.classList.remove("is-open");
+      profileDropdownToggle.setAttribute("aria-expanded", "false");
+    };
+    profileDropdownToggle.addEventListener("click", () => {
+      const opening = profileDropdownToggle.getAttribute("aria-expanded") !== "true";
+      profileDropdown.classList.toggle("is-open", opening);
+      profileDropdownToggle.setAttribute("aria-expanded", String(opening));
+    });
+    document.addEventListener("click", (event) => {
+      if (!profileDropdown.contains(event.target)) closeProfileDropdown();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeProfileDropdown();
+    });
+  }
+
   const newsCards = Array.from(document.querySelectorAll("[data-news-card]"));
   const searchInput = document.querySelector("#news-search");
   const categoryButtons = Array.from(document.querySelectorAll("[data-news-filter]"));

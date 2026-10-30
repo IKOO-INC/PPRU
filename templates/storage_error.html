@@ -4,16 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#075c45">
-  <title>Penyimpanan Belum Tersedia · PPRU</title>
+  <title>{{ title|default('Penyimpanan Belum Tersedia') }} · PPRU</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
 </head>
-<body>
-  <main class="container" style="max-width: 760px; padding-top: 12vh; padding-bottom: 12vh">
-    <section style="padding: 32px; background: #fff; border: 1px solid #e4ece6; border-radius: 14px; box-shadow: 0 12px 40px rgba(15,42,29,.08)">
+<body class="storage-error-body">
+  <main class="storage-error-overlay">
+    <section class="storage-error-dialog" role="alertdialog" aria-modal="true" aria-labelledby="storage-error-title">
       <span class="section-eyebrow">PPRU · PANEL ADMIN</span>
-      <h1 style="margin: 8px 0 12px; color: #173c2d; font-size: clamp(24px, 4vw, 34px)">Perubahan belum dapat disimpan</h1>
-      <p style="color: #596960; line-height: 1.7">{{ message }}</p>
-      <a class="button button--green" href="/admin">Kembali ke panel admin</a>
+      <h1 id="storage-error-title">{{ title|default('Perubahan belum dapat disimpan') }}</h1>
+      <p class="storage-error-callout">{% if data_saved %}Perubahan utama sudah tersimpan di MongoDB Atlas.{% else %}mongo eror sementara pakai preferensi.json{% endif %}</p>
+      <p>{{ message }}</p>
+      {% if not data_saved %}<p class="storage-error-honesty">Perubahan belum disimpan. Di production Vercel, file JSON deployment tidak persisten dan tidak dapat menggantikan MongoDB Atlas.</p>{% endif %}
+      <div class="storage-error-actions"><a class="button button--green" href="/admin">Kembali ke panel admin</a><a class="storage-error-home" href="/">Lihat website</a></div>
     </section>
   </main>
 </body>

@@ -1,10 +1,11 @@
-"""Flask application for the PPRU public portal and JSON preferences admin."""
+"""Flask application for the PPRU public portal and MongoDB-backed admin."""
 import hmac
 import os
+import re
 import secrets
 import threading
 from pathlib import Path, PurePosixPath
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
 from markupsafe import Markup
@@ -13,6 +14,7 @@ from cloudinary_service import CloudinaryConfigurationError, InvalidImageUpload,
 from content_store import (
     JsonPortalStore,
     PersistentStorageError,
+    PersistentStorageMirrorUnavailable,
     MongoPortalStore,
     ReadOnlyPortalStore,
 )
@@ -49,6 +51,22 @@ ADMIN_COMPONENTS = (
     ("hafalan", "Sambung Nadzom"),
 )
 ADMIN_COMPONENT_IDS = {component_id for component_id, _ in ADMIN_COMPONENTS}
+ADMIN_PREVIEW_PAGES = {
+    "brand": ("index.html", "home", "/"),
+    "navigation": ("index.html", "home", "/"),
+    "hero": ("index.html", "home", "/"),
+    "stats": ("index.html", "home", "/"),
+    "programs": ("programs.html", "programs", "/akademik"),
+    "profile": ("profile.html", "profile", "/profil"),
+    "news": ("news.html", "news", "/berita"),
+    "works": ("index.html", "home", "/"),
+    "gallery": ("gallery.html", "gallery", "/galeri"),
+    "events": ("index.html", "home", "/"),
+    "faq": ("index.html", "home", "/"),
+    "contact": ("contact.html", "contact", "/kontak"),
+    "admission": ("admission.html", "admission", "/psb"),
+    "hafalan": ("hafalan.html", "hafalan", "/hafalan"),
+}
 
 
 def _form_value(form, key, current=""):
@@ -133,6 +151,54 @@ def _safe_image_url(value, current):
     return candidate
 
 
+def _youtube_embed_url(value, current=""):
+    """Normalize trusted YouTube links to a privacy-enhanced embed URL."""
+    candidate = str(value or "").strip()
+    current = str(current or "")
+    if not candidate:
+        return ""
+    try:
+        parsed = urlsplit(candidate)
+        port = parsed.port
+    except ValueError:
+        return current
+
+    host = (parsed.hostname or "").lower()
+    if (
+        parsed.scheme != "https"
+        or parsed.username
+        or parsed.password
+        or port not in (None, 443)
+    ):
+        return current
+
+    video_id = ""
+    if host in {"youtube.com", "www.youtube.com", "m.youtube.com", "youtube-nocookie.com", "www.youtube-nocookie.com"}:
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) == 2 and parts[0] == "embed":
+            video_id = parts[1]
+        elif parsed.path == "/watch":
+            video_id = parse_qs(parsed.query).get("v", [""])[0]
+    elif host == "youtu.be":
+        parts = [part for part in parsed.path.split("/") if part]
+        if parts:
+            video_id = parts[0]
+
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        return current
+    return f"https://www.youtube-nocookie.com/embed/{video_id}"
+
+
+def _split_paragraphs(value):
+    """Split history text on blank lines, treating single line breaks as spaces."""
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    return [
+        " ".join(paragraph.split())
+        for paragraph in re.split(r"\n[ \t]*\n+", text)
+        if paragraph.strip()
+    ]
+
+
 def _apply_admin_form(content, form, component):
     """Update one preference panel while leaving the rest of the JSON intact."""
     site = content.setdefault("site", {})
@@ -184,10 +250,16 @@ def _apply_admin_form(content, form, component):
         history = content.setdefault("history", {})
         for key in ("title", "subtitle", "history_title", "vision_title", "vision"):
             profile[key] = _form_value(form, f"profile_{key}", profile.get(key, ""))
-        for index, paragraph in enumerate(profile.get("history_paragraphs", [])):
-            profile["history_paragraphs"][index] = _form_value(
-                form, f"history_paragraph_{index}", paragraph
-            )
+        history_text = _form_value(
+            form,
+            "history_paragraphs",
+            "\n\n".join(profile.get("history_paragraphs", [])),
+        )
+        profile["history_paragraphs"] = _split_paragraphs(history_text)
+        profile["video_embed_url"] = _youtube_embed_url(
+            _form_value(form, "video_embed_url", profile.get("video_embed_url", "")),
+            profile.get("video_embed_url", ""),
+        )
         profile["image"] = _safe_image_url(
             _form_value(form, "profile_image", profile.get("image", "")),
             profile.get("image", ""),
@@ -349,12 +421,15 @@ def create_app(test_config=None):
     if mongo_uri:
         storage_environment = str(app.config.get("VERCEL_ENV") or "production").strip()
         storage_namespace = str(app.config.get("MONGODB_NAMESPACE") or "ppru").strip()
+        is_vercel = bool(app.config.get("VERCEL"))
         store = MongoPortalStore(
             **store_options,
             mongo_uri=mongo_uri,
             database_name=app.config.get("MONGODB_DATABASE", "ppru"),
             collection_name=app.config.get("MONGODB_COLLECTION", "portal_data"),
             document_id=f"{storage_namespace}:{storage_environment}",
+            mirror_json=not is_vercel,
+            allow_json_fallback=not is_vercel,
         )
     elif app.config.get("VERCEL"):
         store = ReadOnlyPortalStore(JsonPortalStore(**store_options))
@@ -364,9 +439,41 @@ def create_app(test_config=None):
 
     def load_content():
         content = store.load()
-        if _migrate_legacy_hafalan_preferences(content):
+        needs_save = _migrate_legacy_hafalan_preferences(content)
+        site = content.get("site")
+        if isinstance(site, dict):
+            if site.get("login_url") in (None, "", "/masuk"):
+                site["login_url"] = "https://siapik.com"
+                needs_save = True
+            if site.get("login_label") in (None, "", "Masuk"):
+                site["login_label"] = "Masuk Portal Santri"
+                needs_save = True
+        profile = content.get("profile")
+        if isinstance(profile, dict):
+            profile["video_embed_url"] = _youtube_embed_url(profile.get("video_embed_url", ""))
+        if needs_save and not isinstance(store, ReadOnlyPortalStore):
             store.save(content)
         return content
+
+    def admin_storage_context():
+        if isinstance(store, MongoPortalStore):
+            fallback = bool(store.json_fallback_active)
+            return {
+                "storage_backend": "json-fallback" if fallback else "mongodb",
+                "storage_fallback": fallback,
+                "storage_json_mirror": bool(store.mirror_json),
+            }
+        if isinstance(store, ReadOnlyPortalStore):
+            return {
+                "storage_backend": "read-only",
+                "storage_fallback": False,
+                "storage_json_mirror": False,
+            }
+        return {
+            "storage_backend": "json",
+            "storage_fallback": False,
+            "storage_json_mirror": False,
+        }
 
     def page_context(active_page, **extra):
         content = public_content(load_content())
@@ -528,10 +635,35 @@ def create_app(test_config=None):
             active_page=None,
             components=ADMIN_COMPONENTS,
             active_component=component,
+            preview_path=ADMIN_PREVIEW_PAGES[component][2],
+            history_text="\n\n".join(content.get("profile", {}).get("history_paragraphs", [])),
             saved=request.args.get("saved") == "1",
             news_items=news_items,
             gallery_items=content.get("gallery", []),
+            **admin_storage_context(),
         )
+
+    @app.post("/admin/live-preview")
+    def admin_live_preview():
+        if not session.get("admin_authenticated"):
+            abort(401)
+        validate_csrf()
+        component = request.form.get("component", "")
+        if component not in ADMIN_PREVIEW_PAGES:
+            abort(400, description="Komponen preview tidak dikenal.")
+
+        content = load_content()
+        _apply_admin_form(content, request.form, component)
+        template_name, active_page, _preview_path = ADMIN_PREVIEW_PAGES[component]
+        preview_data = public_content(content)
+        template_context = {
+            "site": preview_data.get("site", {}),
+            "data": preview_data,
+            "active_page": active_page,
+        }
+        if component == "hafalan":
+            template_context["book_catalog"] = build_book_catalog()
+        return render_template(template_name, **template_context)
 
     @app.get("/admin/berita/baru")
     def admin_news_new():
@@ -853,7 +985,13 @@ def create_app(test_config=None):
     @app.errorhandler(PersistentStorageError)
     def persistent_storage_error(error):
         app.logger.warning("Portal persistent storage unavailable (%s)", type(error).__name__)
-        return render_template("storage_error.html", message=error.user_message), 503
+        mirror_saved = isinstance(error, PersistentStorageMirrorUnavailable)
+        return render_template(
+            "storage_error.html",
+            message=error.user_message,
+            title="MongoDB Atlas berhasil menyimpan" if mirror_saved else "Perubahan belum dapat disimpan",
+            data_saved=mirror_saved,
+        ), 503
 
     return app
 

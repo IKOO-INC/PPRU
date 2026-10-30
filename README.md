@@ -5,10 +5,11 @@ Website publik responsif berbasis **Python, Flask, dan Jinja2**. Pola halaman me
 ## Admin website
 
 - Buka `/admin`, lalu masuk dengan kata sandi pengembangan **`admin123`**.
-- Sidebar admin dibagi per komponen: Identitas/Logo, Hero, Statistik, Akademik, Profil/Sejarah, Berita, Karya, Galeri, Agenda, FAQ, Kontak, PSB, dan Hafalan.
+- Sidebar admin dibagi per komponen: Identitas/Logo, Navigasi, Hero, Statistik, Akademik, Profil/Sejarah, Berita, Karya, Galeri, Agenda, FAQ, Kontak, PSB, dan Hafalan.
+- Pada desktop, editor preferensi memiliki **live preview** di sisi kiri form. Pratinjau merender perubahan yang belum disimpan; tombol simpan tetap terpisah.
 - Setiap komponen punya tombol simpan sendiri. Semua field gambar memakai **URL foto** dengan tombol **Upload** di sampingnya; unggahan dikirim ke Cloudinary dan URL hasilnya mengisi field secara otomatis.
 - Gambar situs disajikan melalui URL Cloudinary yang mengaktifkan format otomatis dan kompresi kualitas otomatis. Upload raster menerima JPG, PNG, GIF, dan WebP sampai 10 MB, lalu membatasi dimensi sumber hingga 2400 × 2400 piksel. Delivery gambar dibatasi hingga 1600 × 1600 piksel.
-- Data dipisah berdasarkan jenis: pengaturan dan konten lain disimpan di **`preferensi.json`**, artikel di **`berita.json`**, dan item galeri di **`gallery.json`**. Data awal masing-masing berada di `data/site.json`, `data/berita.json`, dan `data/gallery.json`. Setiap file ditulis secara atomik.
+- Dengan `MONGODB_URI`, MongoDB Atlas adalah sumber data utama untuk preferensi, berita, dan galeri. Pada lingkungan lokal yang bisa ditulis, perubahan Atlas juga memperbarui mirror `preferensi.json`, `berita.json`, dan `gallery.json`; tanpa Atlas, lokal tetap memakai file JSON. Filesystem deployment Vercel bukan penyimpanan persisten, sehingga JSON di Vercel tidak dianggap mirror durable.
 
 ### Konfigurasi Cloudinary
 
@@ -34,7 +35,7 @@ Kata sandi admin default hanya untuk development. Sebelum deploy, atur `ADMIN_PA
 
 Filesystem deployment Vercel tidak dapat dipakai untuk menyimpan perubahan JSON secara permanen. Untuk CRUD admin, buat cluster dan database user di **MongoDB Atlas**, lalu atur connection string sebagai environment variable rahasia `MONGODB_URI` pada project Vercel. Opsional: atur `MONGODB_DATABASE` (default `ppru`), `MONGODB_COLLECTION` (default `portal_data`), dan `MONGODB_NAMESPACE` (default `ppru`). Aplikasi menyimpan preferensi, berita, dan galeri dalam satu dokumen per environment (`preview` atau `production`) agar perubahan dokumen tersimpan secara atomik.
 
-Atur `MONGODB_URI` pada environment **Preview** dan **Production**, pastikan aturan Network Access Atlas mengizinkan koneksi dari Vercel, lalu deploy ulang. Jangan commit atau mengirim connection string melalui chat. Tanpa URI di Vercel, halaman publik tetap membaca file seed, sedangkan perubahan admin ditolak dengan pesan konfigurasi (HTTP 503), bukan gagal sebagai Internal Server Error atau tampak berhasil tanpa tersimpan. Untuk lokal tanpa `MONGODB_URI`, penyimpanan JSON/file tetap digunakan seperti biasa.
+Atur `MONGODB_URI` pada environment **Preview** dan **Production**, pastikan aturan Network Access Atlas mengizinkan koneksi dari Vercel, lalu deploy ulang. Jangan commit atau mengirim connection string melalui chat. Tanpa URI di Vercel, halaman publik tetap membaca file JSON deployment secara read-only dan perubahan admin ditolak dengan HTTP 503. Di lokal, jika Atlas sementara gagal, aplikasi dapat memakai file JSON dan menampilkan pemberitahuan **“mongo eror sementara pakai preferensi.json”**; perubahan itu hanya fallback lokal dan belum tersinkron ke Atlas. Di Vercel tidak ada fallback tulis ke JSON karena filesystem deployment tidak durable: aplikasi menolak perubahan, memberi pesan yang sama bersama penjelasan bahwa perubahan belum tersimpan, dan tidak menampilkan status sukses.
 
 #### Migrasi data JSON aktif ke MongoDB
 
@@ -53,13 +54,19 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 - Tab **Berita** di admin menampilkan semua artikel dengan thumbnail, judul, dan jumlah kunjungan; setiap baris menyediakan tombol edit/hapus. Tombol **Buat berita baru** membuka form artikel.
 - Form berita mendukung draft/terbit, kategori, ringkasan, waktu publikasi, URL foto dengan tombol unggah Cloudinary, serta toolbar sederhana untuk bold, italic, underline, heading, daftar, kutipan, dan tautan. HTML difilter di server sebelum disimpan.
 - Beranda hanya menampilkan **3 berita terbit terbaru**, diurutkan berdasarkan `published_at`; draft tidak muncul di area publik.
-- Setiap pembukaan route `/berita/<slug>` menambah `views` dan menyimpannya ke `berita.json`; jumlahnya tampil di baris berita pada admin.
+- Setiap pembukaan route `/berita/<slug>` menambah `views` dan menyimpannya ke MongoDB Atlas (serta mirror `berita.json` lokal bila file system dapat ditulis); jumlahnya tampil di baris berita pada admin.
 
 ### Galeri
 
 - Tab **Galeri** menampilkan thumbnail foto yang sudah ada beserta judul dan tombol **Edit/Hapus**. Tombol **Upload galeri baru** membuka form terpisah.
-- Form galeri menerima URL Cloudinary atau unggahan JPG, PNG, GIF, dan WebP sampai 10 MB. Metadata dan URL foto disimpan di `gallery.json`; penghapusan item galeri tidak menghapus aset di Cloudinary.
+- Form galeri menerima URL Cloudinary atau unggahan JPG, PNG, GIF, dan WebP sampai 10 MB. Metadata dan URL foto disimpan di MongoDB Atlas (dengan mirror `gallery.json` lokal bila tersedia); penghapusan item galeri tidak menghapus aset di Cloudinary.
 - Foto galeri dapat dibuka dalam popup; pengunjung bisa mengunduh foto atau membagikan tautannya.
+
+### Profil
+
+- Menu **Profil** berupa dropdown dengan tautan Sejarah, Visi misi, dan Masyayikh.
+- Sejarah berdiri diedit dalam satu textarea; baris kosong memisahkan paragraf. Field link embed menerima URL YouTube `/embed/`, `watch?v=`, atau `youtu.be/` yang dinormalisasi ke domain `youtube-nocookie.com`.
+- Tombol **Masuk Portal Santri** pada header membuka `https://siapik.com`. Tidak ada URL video profil bawaan yang diasumsikan; masukkan tautan resmi melalui panel Profil agar player YouTube ditampilkan.
 
 ### Tantangan Sambung Nadzom
 
@@ -91,7 +98,7 @@ Buka `http://127.0.0.1:5000` untuk website atau `http://127.0.0.1:5000/admin` un
 - `/hafalan` — Kuis Sambung Nadzom Alfiyah dan Imrity
 - `/kontak` — Informasi kontak dan formulir contoh
 - `/psb` — Informasi Penerimaan Santri Baru
-- `/masuk` — Tampilan masuk santri
+- `/masuk` — Halaman demo masuk lama; tombol header **Masuk Portal Santri** diarahkan langsung ke SIAPik
 - `/admin` — Panel pengelolaan tampilan dan konten
 
 ## Tes route dan penyimpanan admin

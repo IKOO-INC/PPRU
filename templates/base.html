@@ -7,9 +7,9 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
   {% block extra_head %}{% endblock %}
-  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=4"></script>
+  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=5"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
 <body{% if site.placeholder_image %} style="--page-banner-image: url('{{ site.placeholder_image }}')"{% endif %}>
@@ -24,7 +24,20 @@
       <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
         <div class="nav-links">
           {% for item in site.navigation %}
-            <a class="nav-link{% if active_page == item.id %} is-active{% endif %}" href="{{ item.url }}"{% if active_page == item.id %} aria-current="page"{% endif %}>{{ item.label }}{% if item.id == 'profile' %}<span class="nav-caret" aria-hidden="true">⌄</span>{% endif %}</a>
+            {% if item.id == 'profile' %}
+              <div class="nav-dropdown" data-nav-dropdown>
+                <button class="nav-link nav-dropdown-toggle{% if active_page == 'profile' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="profile-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'profile' %} aria-current="page"{% endif %}>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true">⌄</span>
+                </button>
+                <div class="nav-dropdown-menu" id="profile-dropdown-menu" data-nav-dropdown-menu>
+                  <a href="{{ item.url }}#sejarah">Sejarah</a>
+                  <a href="{{ item.url }}#visi-misi">Visi misi</a>
+                  <a href="{{ item.url }}#masyayikh">Masyayikh</a>
+                </div>
+              </div>
+            {% else %}
+              <a class="nav-link{% if active_page == item.id %} is-active{% endif %}" href="{{ item.url }}"{% if active_page == item.id %} aria-current="page"{% endif %}>{{ item.label }}</a>
+            {% endif %}
           {% endfor %}
         </div>
         <div class="header-actions">

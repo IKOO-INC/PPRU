@@ -41,8 +41,8 @@
         "url": "/kontak"
       }
     ],
-    "login_label": "Masuk",
-    "login_url": "/masuk",
+    "login_label": "Masuk Portal Santri",
+    "login_url": "https://siapik.com",
     "admission_label": "Daftar PSB",
     "admission_url": "/psb",
     "footer_note": "Membangun generasi Qur'ani yang beradab, berilmu, dan berwawasan melalui pendidikan pesantren.",
@@ -189,7 +189,8 @@
       "Membekali santri dengan keterampilan, kemandirian, dan kepedulian."
     ],
     "video_label": "Video profil Pondok Pesantren Roudlotul Ulum",
-    "image": "/static/images/pondok-campus.jpg"
+    "image": "/static/images/pondok-campus.jpg",
+    "video_embed_url": ""
   },
   "admission": {
     "eyebrow": "Penerimaan Santri Baru",
