@@ -225,6 +225,17 @@ def _split_list_lines(value):
     return entries
 
 
+def _split_numbered_lines(value):
+    """Parse one mission statement per line, stripping optional typed numbering."""
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    entries = []
+    for line in text.split("\n"):
+        item = re.sub(r"^\s*(?:\d+[.)-]|[•*-])\s*", "", line).strip()
+        if item:
+            entries.append(item)
+    return entries
+
+
 def _safe_public_link(value, current="/kontak"):
     """Allow an internal path or an HTTPS information link, never script URLs."""
     candidate = str(value or "").strip()
@@ -346,8 +357,15 @@ def _apply_admin_form(content, form, component):
             _form_value(form, "history_image", history.get("image", "")),
             history.get("image", ""),
         )
-        for index, mission in enumerate(profile.get("mission", [])):
-            profile["mission"][index] = _form_value(form, f"mission_{index}", mission)
+        mission_items = profile.get("mission", [])
+        if not isinstance(mission_items, list):
+            mission_items = _split_numbered_lines(mission_items)
+            profile["mission"] = mission_items
+        if "profile_mission_items" in form:
+            profile["mission"] = _split_numbered_lines(form.get("profile_mission_items", ""))
+        else:
+            for index, mission in enumerate(mission_items):
+                profile["mission"][index] = _form_value(form, f"mission_{index}", mission)
 
     elif component == "news":
         for index, item in enumerate(content.get("news", [])):
@@ -403,9 +421,7 @@ def _apply_admin_form(content, form, component):
             _form_value(form, "admission_image", admission.get("image", "")),
             admission.get("image", ""),
         )
-        for index, item in enumerate(admission.get("programs", [])):
-            item["name"] = _form_value(form, f"admission_program_name_{index}", item.get("name", ""))
-            item["detail"] = _form_value(form, f"admission_program_detail_{index}", item.get("detail", ""))
+        admission.pop("programs", None)
         for index, item in enumerate(admission.get("steps", [])):
             for key in ("number", "title", "description"):
                 item[key] = _form_value(form, f"admission_step_{key}_{index}", item.get(key, ""))

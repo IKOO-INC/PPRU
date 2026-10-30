@@ -63,6 +63,7 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 - Panel khusus `/admin/akademik` memisahkan menu **Pendidikan Formal** dan **Pendidikan Non Formal**, selain **Kalender Akademik** dan **Pengumuman / Berita**. Setiap program disimpan pada salah satu jenis pendidikan dan dapat dipindahkan melalui formulir edit.
 - Navigasi publik **Akademik** memiliki menu **Pendidikan Formal** (`/akademik/formal`) dan **Pendidikan Non Formal** (`/akademik/non-formal`); `/akademik` tetap menjadi halaman ringkasan dengan program dikelompokkan berdasarkan jenisnya.
 - Program berisi judul kelas, keterangan, daftar kitab (satu judul per baris), dan tautan **Informasi lebih lanjut**. Isi daftar kitab resmi melalui formulir program sebelum publikasi; daftar yang belum diisi ditandai jelas di situs.
+- Halaman PSB dan pratinjau admin mengambil daftar program dari sumber Akademik yang sama; tidak ada daftar program PSB terpisah.
 - Kegiatan kalender memiliki tanggal, judul, kategori, dan keterangan. Kalender tampil di bagian paling bawah halaman akademik; bagian **Kegiatan Mendatang** di beranda mengambil hingga tiga event terdekat yang belum lewat dari kalender ini.
 
 ### Galeri
@@ -74,7 +75,8 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 ### Profil
 
 - Menu **Profil** berupa dropdown dengan tautan Sejarah, Visi misi, dan Masyayikh.
-- Sejarah berdiri diedit dalam satu textarea; baris kosong memisahkan paragraf. Field link embed menerima URL YouTube `/embed/`, `watch?v=`, atau `youtu.be/` yang dinormalisasi ke domain `youtube-nocookie.com`.
+- Sejarah berdiri diedit dalam satu textarea; baris kosong memisahkan paragraf. Visi juga memakai textarea, sementara daftar misi diisi satu butir per baris dan ditampilkan bernomor. Field link embed menerima URL YouTube `/embed/`, `watch?v=`, atau `youtu.be/` yang dinormalisasi ke domain `youtube-nocookie.com`.
+- Ikon sosial dan kontak di footer memakai Bootstrap Icons yang disajikan lokal; lisensinya disertakan di `static/vendor/bootstrap-icons/LICENSE`.
 - Tombol **Masuk Portal Santri** pada header membuka `https://siapik.com`. Tidak ada URL video profil bawaan yang diasumsikan; masukkan tautan resmi melalui panel Profil agar player YouTube ditampilkan.
 
 ### Tantangan Sambung Nadzom

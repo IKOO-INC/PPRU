@@ -7,7 +7,8 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}?v=1.13.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
   {% block extra_head %}{% endblock %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
   {% block extra_scripts %}{% endblock %}
@@ -70,7 +71,7 @@
         </a>
         <p>{{ site.footer_note }}</p>
         <div class="social-links" aria-label="Media sosial">
-          <a href="#footer" aria-label="Facebook">f</a><a href="#footer" aria-label="Instagram">◎</a><a href="#footer" aria-label="YouTube">▶</a><a href="#footer" aria-label="TikTok">♪</a>
+          <a href="#footer" aria-label="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a><a href="#footer" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a><a href="#footer" aria-label="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a><a href="#footer" aria-label="TikTok"><i class="bi bi-tiktok" aria-hidden="true"></i></a>
         </div>
       </div>
       <div class="footer-links">
@@ -79,9 +80,9 @@
       </div>
       <div class="footer-contact">
         <h2 class="footer-title">Hubungi Kami</h2>
-        <p><span class="footer-icon" aria-hidden="true">⌖</span>{{ data.contact.address }}</p>
-        <p><span class="footer-icon" aria-hidden="true">◉</span>{{ data.contact.phone }}</p>
-        <p><span class="footer-icon" aria-hidden="true">✉</span>{{ data.contact.email }}</p>
+        <p><i class="footer-icon bi bi-geo-alt-fill" aria-hidden="true"></i>{{ data.contact.address }}</p>
+        <p><i class="footer-icon bi bi-telephone-fill" aria-hidden="true"></i>{{ data.contact.phone }}</p>
+        <p><i class="footer-icon bi bi-envelope-fill" aria-hidden="true"></i>{{ data.contact.email }}</p>
       </div>
       <div class="footer-newsletter">
         <h2 class="footer-title">Buletin</h2>
@@ -89,7 +90,7 @@
         <form class="newsletter-form" data-demo-form>
           <label class="visually-hidden" for="newsletter-email">Email Anda</label>
           <input id="newsletter-email" type="email" placeholder="Email Anda" required>
-          <button type="submit" aria-label="Daftar buletin">→</button>
+          <button type="submit" aria-label="Daftar buletin"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
         </form>
         <p class="form-status" aria-live="polite"></p>
       </div>

@@ -262,6 +262,51 @@ class PortalRoutesTestCase(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b"Pondok Pesantren", response.data)
 
+    def test_psb_programs_use_the_academic_program_source(self):
+        preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        preferences["admission"]["programs"] = [{"name": "Program Duplikat", "detail": "Data lama"}]
+        preferences["programs"][0]["title"] = "Program Akademik Utama"
+        self.content_file.write_text(json.dumps(preferences, ensure_ascii=False), encoding="utf-8")
+
+        psb_html = self.client.get("/psb").get_data(as_text=True)
+        self.assertIn("Program Akademik Utama", psb_html)
+        self.assertNotIn("Program Duplikat", psb_html)
+        self.assertIn('href="/akademik/non-formal"', psb_html)
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "admission-csrf-token"
+        admin_html = self.client.get("/admin?tab=admission").get_data(as_text=True)
+        self.assertIn("Program Akademik Utama", admin_html)
+        self.assertNotIn("Program PSB 01", admin_html)
+        self.assertNotIn('name="admission_program_name_0"', admin_html)
+        saved = self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "admission-csrf-token",
+                "component": "admission",
+                "admission_title": "PSB Terbaru",
+            },
+        )
+        self.assertEqual(saved.status_code, 302)
+        updated_admission = json.loads(self.content_file.read_text(encoding="utf-8"))["admission"]
+        self.assertNotIn("programs", updated_admission)
+
+    def test_footer_uses_local_bootstrap_icons(self):
+        rendered = self.client.get("/").get_data(as_text=True)
+        footer = rendered.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
+        self.assertIn("/static/vendor/bootstrap-icons/font/bootstrap-icons.min.css?v=1.13.2", rendered)
+        icons_css = self.client.get("/static/vendor/bootstrap-icons/font/bootstrap-icons.min.css")
+        icons_font = self.client.get("/static/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff2")
+        self.assertEqual(icons_css.status_code, 200)
+        self.assertEqual(icons_font.status_code, 200)
+        icons_css.close()
+        icons_font.close()
+        for icon in ("facebook", "instagram", "youtube", "tiktok", "geo-alt-fill", "telephone-fill", "envelope-fill"):
+            with self.subTest(icon=icon):
+                self.assertIn(f"bi-{icon}", footer)
+        self.assertNotIn("aria-label=\"Facebook\">f</a>", footer)
+
     def test_home_upcoming_events_are_the_next_three_academic_calendar_items(self):
         today = now_jakarta().date()
         upcoming_dates = [today + timedelta(days=days) for days in (20, 4, -1, 10, 40)]
@@ -368,6 +413,40 @@ class PortalRoutesTestCase(unittest.TestCase):
             saved_after_invalid_url["profile"]["video_embed_url"],
             "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
         )
+
+    def test_profile_vision_and_mission_use_textareas_and_render_numbered_missions(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "vision-mission-csrf-token"
+
+        admin_html = self.client.get("/admin?tab=profile").get_data(as_text=True)
+        self.assertRegex(admin_html, r'<textarea name="profile_vision" rows="3">')
+        self.assertRegex(admin_html, r'<textarea name="profile_mission_items" rows="6">')
+        self.assertNotIn('name="mission_0"', admin_html)
+
+        response = self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "vision-mission-csrf-token",
+                "component": "profile",
+                "profile_vision": "Menjadi pesantren yang unggul.",
+                "profile_mission_items": "1. Membangun akhlak.\n2) Menguatkan ilmu.\n• Mengabdi kepada masyarakat.",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        saved_profile = json.loads(self.content_file.read_text(encoding="utf-8"))["profile"]
+        self.assertEqual(saved_profile["vision"], "Menjadi pesantren yang unggul.")
+        self.assertEqual(
+            saved_profile["mission"],
+            ["Membangun akhlak.", "Menguatkan ilmu.", "Mengabdi kepada masyarakat."],
+        )
+
+        profile_html = self.client.get("/profil").get_data(as_text=True)
+        mission_list = re.search(r'<article class="mission-card".*?<ol>(.*?)</ol>', profile_html, re.S)
+        self.assertIsNotNone(mission_list)
+        self.assertIn("<li>Membangun akhlak.</li>", mission_list.group(1))
+        self.assertIn("<li>Menguatkan ilmu.</li>", mission_list.group(1))
+        self.assertIn("<li>Mengabdi kepada masyarakat.</li>", mission_list.group(1))
 
     def test_profile_admin_live_preview_does_not_save_unsaved_changes(self):
         with self.client.session_transaction() as admin_session:

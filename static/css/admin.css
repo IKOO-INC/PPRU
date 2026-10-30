@@ -12,6 +12,7 @@
 .admin-logout-button { color: #7b5145; cursor: pointer; }
 .admin-alert { margin-bottom: 17px; padding: 11px 14px; border-radius: 7px; font-size: 9px; }
 .admin-alert--success { color: #176344; background: #e5f7ec; border: 1px solid #d1efdc; }
+.admin-alert a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 .admin-alert--error { margin: 0 0 15px; color: #9b352c; background: #fff1ef; border: 1px solid #f4d9d6; }
 .admin-layout { display: grid; grid-template-columns: 225px minmax(0,1fr); gap: 18px; align-items: start; }
 .admin-edit-workspace { display: grid; grid-template-columns: minmax(270px,.9fr) minmax(0,1.2fr); gap: 14px; align-items: start; min-width: 0; }
@@ -66,6 +67,10 @@
 .admin-image-preview { grid-column: 2; grid-row: 1 / span 3; width: 150px; height: 96px; object-fit: cover; background: #edf3ee; border: 1px solid #dfe9e2; border-radius: 6px; }
 .admin-repeat-list { display: grid; gap: 11px; }
 .admin-repeat-card { position: relative; padding: 13px 14px 6px; background: #fbfcfb; border: 1px solid #edf1ee; border-radius: 8px; }
+.admin-program-summary { margin-bottom: 18px; }
+.admin-program-summary .admin-repeat-card { padding-bottom: 12px; }
+.admin-program-summary strong { display: block; margin-bottom: 4px; color: #25372c; font-size: 9px; }
+.admin-program-summary p { margin: 0; color: #718077; font-size: 8px; line-height: 1.6; }
 .admin-repeat-index { display: block; margin: 0 0 10px; color: #168259; font-size: 8px; font-weight: 800; }
 .admin-repeat-card .admin-fields-grid { margin-bottom: 0; }
 .admin-repeat-card .admin-field { margin-bottom: 8px; }
