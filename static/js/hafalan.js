@@ -26,8 +26,37 @@
   const answerStatus = document.querySelector("#quiz-answer-status");
   const reviewButton = document.querySelector("#review-toggle");
   const reviewPanel = document.querySelector("#review-panel");
-  const certificate = document.querySelector("#hafalan-certificate");
   let quiz = null;
+  let currentMotivation = "";
+
+  const NADZOM_MOTIVATION = {
+    excellent: [
+      "MasyaAllah, sambunganmu tepat semua. Jaga irama murajaah dan teruskan belajar dengan rendah hati.",
+      "Alhamdulillah, hafalan baitmu sangat kuat hari ini. Pertahankan kebiasaan mengulang sedikit demi sedikit.",
+      "Hasil yang membanggakan. Semoga ketepatan ini menjadi semangat untuk lebih memahami makna dan kaidahnya.",
+      "Setoran yang mantap lahir dari ketekunan. Terus rawat hafalan dan jangan tinggalkan murajaah.",
+      "MasyaAllah, kamu menyambung bait dengan cermat. Jadikan hasil ini penyemangat untuk terus istiqamah.",
+      "Semoga ilmu yang dihafal semakin kokoh, dipahami, dan membawa manfaat. Teruskan langkah baikmu.",
+    ],
+    growing: [
+      "Hafalan nadzom menguat lewat pengulangan yang teratur. Catat bait yang masih tertukar, lalu ulangi kembali.",
+      "Hasil baik dibangun dari murajaah. Periksa lagi urutan bait dan maknanya, lalu coba tantangan berikutnya.",
+      "Setiap bait yang keliru memberi petunjuk bagian yang perlu diperkuat. Ulangi perlahan tanpa terburu-buru.",
+      "Jaga semangat belajar: dengarkan contoh bacaan, pahami maksud bait, lalu setorkan kembali kepada guru.",
+      "Kemajuan tidak harus sekaligus. Sedikit murajaah yang konsisten membantu urutan nadzom semakin melekat.",
+      "Kamu sudah berusaha sampai selesai. Tandai bagian yang belum lancar dan jadwalkan pengulangan berikutnya.",
+      "Menghafal dan memahami berjalan beriringan. Coba hubungkan bait dengan kaidah yang sedang dipelajari.",
+    ],
+    keepGoing: [
+      "Jangan berkecil hati. Bait yang belum tepat bukan akhir, melainkan peta untuk murajaah berikutnya.",
+      "Mulai lagi dengan langkah kecil: pilih beberapa bait, pahami artinya, lalu ulangi sampai semakin lancar.",
+      "Hafalan tumbuh melalui sabar dan pengulangan. Beristirahat sejenak bila perlu, kemudian lanjutkan kembali.",
+      "Tidak ada usaha belajar yang sia-sia. Coba dengarkan nadzom, tutup teksnya, lalu sambung bait dengan tenang.",
+      "Bagian yang terasa sulit sering menjadi bagian yang paling kuat setelah diulang. Tetap semangat belajar.",
+      "Terus berproses. Minta bimbingan guru untuk bait yang membingungkan dan rawat hafalan dengan murajaah.",
+      "Satu tantangan belum menentukan kemampuanmu. Ambil pelajarannya, ulangi sedikit demi sedikit, lalu coba lagi.",
+    ],
+  };
 
   const shuffle = (items) => {
     const shuffled = [...items];
@@ -139,10 +168,12 @@
   };
 
   const motivationFor = (score) => {
-    if (score === 100) return "MasyaAllah, semua sambungan tepat! Pertahankan murajaah dan terus perdalam ilmu nahwu.";
-    if (score >= 80) return "Hasil yang sangat baik. Sedikit pengulangan lagi akan membuat hafalan semakin kuat.";
-    if (score >= 60) return "Usahamu sudah bagus. Tandai bait yang keliru, lalu ulangi perlahan sampai melekat.";
-    return "Jangan berkecil hati. Setiap bait yang diulang adalah langkah menuju hafalan yang lebih kuat. Coba lagi dengan semangat.";
+    const pool = score === 100
+      ? NADZOM_MOTIVATION.excellent
+      : score >= 60
+        ? NADZOM_MOTIVATION.growing
+        : NADZOM_MOTIVATION.keepGoing;
+    return pool[Math.floor(Math.random() * pool.length)];
   };
 
   const appendReviewLine = (container, label, value, direction = "") => {
@@ -172,7 +203,8 @@
     document.querySelector("#score-summary").textContent = `${correctCount} dari ${quiz.questions.length} sambungan tepat`;
     document.querySelector("#result-book").textContent = book.title;
     document.querySelector("#result-range").textContent = `Bab: ${rangeLabel}`;
-    document.querySelector("#motivation-message").textContent = motivationFor(score);
+    currentMotivation = motivationFor(score);
+    document.querySelector("#motivation-message").textContent = currentMotivation;
 
     const mistakesList = document.querySelector("#mistakes-list");
     mistakesList.replaceChildren();
@@ -202,10 +234,15 @@
       });
     }
 
+    document.querySelector("#certificate-kicker").textContent = "Apresiasi atas ketekunan belajar";
+    document.querySelector("#certificate-title").textContent = "Sertifikat Partisipasi";
+    document.querySelector("#certificate-subtitle").textContent = "Kitab Klasik · Tantangan Sambung Nadzom";
     document.querySelector("#certificate-name").textContent = quiz.participant;
+    document.querySelector("#certificate-description").textContent = "Atas semangatnya menyelesaikan tantangan sambung nadzom kitab:";
     document.querySelector("#certificate-book").textContent = book.title;
     document.querySelector("#certificate-range").textContent = `Rentang bab: ${rangeLabel}`;
     document.querySelector("#certificate-score").textContent = `${score}% (${correctCount}/${quiz.questions.length})`;
+    document.querySelector("#certificate-encouragement").textContent = currentMotivation;
     document.querySelector("#certificate-date").textContent = new Intl.DateTimeFormat("id-ID", {
       day: "numeric", month: "long", year: "numeric",
     }).format(new Date());
@@ -306,19 +343,19 @@
     const opening = reviewPanel.hidden;
     reviewPanel.hidden = !opening;
     reviewButton.setAttribute("aria-expanded", String(opening));
-    reviewButton.textContent = opening ? "Sembunyikan Evaluasi" : "Lihat Kesalahan & Motivasi";
+    reviewButton.textContent = opening ? "Sembunyikan Evaluasi & Motivasi" : "Lihat Evaluasi & Motivasi";
     if (opening) reviewPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 
-  document.querySelector("#certificate-print").addEventListener("click", () => {
-    certificate.classList.add("is-printing");
-    certificate.setAttribute("aria-hidden", "false");
-    const finishPrint = () => {
-      certificate.classList.remove("is-printing");
-      certificate.setAttribute("aria-hidden", "true");
-    };
-    window.addEventListener("afterprint", finishPrint, { once: true });
-    window.print();
-    window.setTimeout(finishPrint, 3000);
+  document.querySelector("#nadzom-panel")?.addEventListener("hafalan:open", () => {
+    if (resultsView.hidden) return;
+    resultsView.hidden = true;
+    setupForm.hidden = false;
+    quizView.hidden = true;
+    guide.hidden = false;
+    reviewPanel.hidden = true;
+    reviewButton.setAttribute("aria-expanded", "false");
+    reviewButton.textContent = "Lihat Evaluasi & Motivasi";
+    status.textContent = "";
   });
 })();

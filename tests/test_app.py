@@ -222,23 +222,52 @@ class PortalRoutesTestCase(unittest.TestCase):
 
             response = app.test_client().get("/hafalan")
             self.assertEqual(response.status_code, 200)
-            self.assertIn("Sambung Nadzom Challenge".encode(), response.data)
+            self.assertIn("Kitab Klasik".encode(), response.data)
+            self.assertIn("Sambung Nadzom".encode(), response.data)
             self.assertNotIn("Sambung Ayat Challenge".encode(), response.data)
             saved = json.loads(preferences_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["hafalan"]["title"], "Sambung Nadzom Challenge")
             self.assertNotIn("frequent_items", saved["hafalan"])
 
-    def test_hafalan_page_uses_nadzom_books_and_chapter_ranges(self):
+    def test_hafalan_page_uses_two_challenges_and_nadzom_books(self):
         response = self.client.get("/hafalan")
         self.assertEqual(response.status_code, 200)
         rendered = response.get_data(as_text=True)
-        self.assertIn("Sambung Nadzom Challenge", rendered)
+        self.assertIn('data-hafalan-choice="nadzom"', rendered)
+        self.assertIn('data-hafalan-choice="quran"', rendered)
+        self.assertIn("Kitab Klasik", rendered)
+        self.assertIn("Al-Qur’an", rendered)
+        self.assertIn("Surah Challenge", rendered)
+        self.assertIn("Rentang Juz", rendered)
+        self.assertIn("Bil Ghaib · 30 Juz", rendered)
+        self.assertIn('id="quran-surah-juz"', rendered)
+        self.assertIn("Sambung Nadzom", rendered)
         self.assertIn("Alfiyah Ibnu Malik", rendered)
         self.assertIn("Imrity", rendered)
         self.assertIn("Bab awal", rendered)
         self.assertIn("Sampai bab", rendered)
         self.assertIn("jumlah soal", rendered.lower())
-        self.assertNotIn("Pilih rentang juz", rendered)
+        self.assertIn("Nama lengkap peserta", rendered)
+        self.assertIn("Cetak / Simpan PDF", rendered)
+        self.assertIn("Unduh PNG", rendered)
+        self.assertIn("Unduh JPG", rendered)
+        self.assertIn("Bagikan", rendered)
+        self.assertIn("Sertifikat Partisipasi", rendered)
+        self.assertIn('alt="Logo Pondok Pesantren Roudlotul Ulum"', rendered)
+        self.assertIn('class="nav-link is-active" href="/hafalan"', rendered)
+
+        quran_response = self.client.get("/static/data/quran.json")
+        self.assertEqual(quran_response.status_code, 200)
+        quran = quran_response.get_json()
+        quran_response.close()
+        self.assertEqual(len(quran), 114)
+        self.assertEqual(sum(len(surah["ayahs"]) for surah in quran), 6236)
+        self.assertEqual(
+            {ayah["juz"] for surah in quran for ayah in surah["ayahs"]},
+            set(range(1, 31)),
+        )
+        self.assertEqual(quran[0]["name"], "Al-Fatihah")
+        self.assertIn("arab", quran[0]["ayahs"][0])
 
         alfiyah_response = self.client.get("/hafalan/data/alfiyah")
         self.assertEqual(alfiyah_response.status_code, 200)
@@ -251,6 +280,26 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(imrity_response.status_code, 200)
         self.assertEqual(len(imrity_response.get_json()), 254)
         self.assertEqual(self.client.get("/hafalan/data/unknown").status_code, 404)
+
+    def test_hafalan_navigation_revision_renames_only_the_existing_label(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content.pop("_hafalan_navigation_revision", None)
+        hafalan_item = next(item for item in content["site"]["navigation"] if item["id"] == "hafalan")
+        hafalan_item["label"] = "Sambung Nadzom"
+        original_url = hafalan_item["url"]
+        original_navigation_ids = [item["id"] for item in content["site"]["navigation"]]
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        response = self.client.get("/hafalan")
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn('class="nav-link is-active" href="/hafalan"', rendered)
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        updated = next(item for item in saved["site"]["navigation"] if item["id"] == "hafalan")
+        self.assertEqual(updated["label"], "Hafalan")
+        self.assertEqual(updated["url"], original_url)
+        self.assertEqual([item["id"] for item in saved["site"]["navigation"]], original_navigation_ids)
+        self.assertEqual(saved["_hafalan_navigation_revision"], "hafalan-navigation-2026-v1")
 
     def test_main_routes_render(self):
         for path in (

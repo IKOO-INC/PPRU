@@ -52,7 +52,7 @@ ADMIN_COMPONENTS = (
     ("faq", "FAQ"),
     ("contact", "Kontak"),
     ("admission", "PSB"),
-    ("hafalan", "Sambung Nadzom"),
+    ("hafalan", "Hafalan"),
     ("users", "Kelola User Admin"),
 )
 ADMIN_COMPONENT_IDS = {component_id for component_id, _ in ADMIN_COMPONENTS}
@@ -79,6 +79,7 @@ ACADEMIC_PROGRAM_DETAILS_REVISION = "madrasah-diniyah-details-2026-v2"
 CONTACT_ADDRESS_REVISION = "contact-address-2026-v1"
 HOME_STATS_REVISION = "home-stats-santri-alumni-2026-v1"
 SOCIAL_LINKS_REVISION = "official-social-links-2026-v1"
+HAFALAN_NAVIGATION_REVISION = "hafalan-navigation-2026-v1"
 SOCIAL_PLATFORMS = ("facebook", "instagram", "youtube", "tiktok")
 PROFILE_PROGRAM_ALIASES = {
     "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
@@ -809,6 +810,39 @@ def _apply_social_links_revision(content, seed_content):
     return True
 
 
+def _apply_hafalan_navigation_revision(content, seed_content):
+    """Rename the existing Hafalan navigation entry without changing its URL or position."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_hafalan_navigation_revision") == HAFALAN_NAVIGATION_REVISION:
+        return False
+    site = content.setdefault("site", {})
+    if not isinstance(site, dict):
+        site = content["site"] = {}
+    navigation = site.get("navigation")
+    if not isinstance(navigation, list):
+        navigation = []
+    target = next(
+        (item for item in navigation if isinstance(item, dict) and item.get("id") == "hafalan"),
+        None,
+    )
+    if target is None:
+        seed_site = seed_content.get("site")
+        seed_navigation = seed_site.get("navigation", []) if isinstance(seed_site, dict) else []
+        seed_item = next(
+            (item for item in seed_navigation if isinstance(item, dict) and item.get("id") == "hafalan"),
+            None,
+        )
+        if seed_item is not None:
+            target = copy.deepcopy(seed_item)
+            navigation.append(target)
+            site["navigation"] = navigation
+    if target is not None:
+        target["label"] = "Hafalan"
+    content["_hafalan_navigation_revision"] = HAFALAN_NAVIGATION_REVISION
+    return True
+
+
 def _unique_news_slug(items, requested_slug, current_slug=None):
     base_slug = slugify(requested_slug)
     existing = {item.get("slug") for item in items if item.get("slug") != current_slug}
@@ -914,6 +948,7 @@ def create_app(test_config=None):
         needs_save = _apply_contact_address_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_home_stats_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_social_links_revision(content, profile_seed_content) or needs_save
+        needs_save = _apply_hafalan_navigation_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
         if isinstance(site, dict):
             if site.get("login_url") in (None, "", "/masuk"):

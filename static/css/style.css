@@ -873,6 +873,121 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
   .hafalan-certificate h2 { font-size: 25pt; }
 }
 
+/* Hafalan chooser, Al-Qur’an modes, and landscape certificate exports */
+.hafalan-chooser { position: relative; z-index: 2; max-width: 1020px; margin: 0 auto; padding: clamp(22px, 4vw, 38px); background: #fff; border: 1px solid #e7eee9; border-radius: 18px; box-shadow: 0 15px 36px rgba(21,45,34,.09); }
+.hafalan-chooser-heading { margin-bottom: 22px; text-align: center; }
+.hafalan-chooser-heading .section-eyebrow { display: block; margin-bottom: 5px; }
+.hafalan-chooser-heading h2 { margin: 0 0 6px; color: #21372b; font-size: clamp(20px, 3vw, 27px); font-weight: 850; letter-spacing: -.035em; }
+.hafalan-chooser-heading p { margin: 0; color: #77867d; font-size: 11px; line-height: 1.7; }
+.hafalan-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+.hafalan-choice-card { display: flex; min-width: 0; min-height: 252px; align-items: flex-start; flex-direction: column; padding: clamp(20px, 4vw, 30px); color: #24382c; background: linear-gradient(145deg,#fbfefc,#f0f8f3); border: 1px solid #dfece4; border-radius: 15px; text-align: left; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.hafalan-choice-card:hover, .hafalan-choice-card:focus-visible { transform: translateY(-3px); border-color: #8ac5a0; box-shadow: 0 13px 27px rgba(20,91,59,.12); outline: 0; }
+.hafalan-choice-card--quran { background: linear-gradient(145deg,#fffdf8,#fbf4e4); border-color: #efe2bd; }
+.hafalan-choice-card--quran:hover, .hafalan-choice-card--quran:focus-visible { border-color: #d4b865; box-shadow: 0 13px 27px rgba(150,110,34,.12); }
+.hafalan-choice-icon { display: grid; width: 49px; height: 49px; place-items: center; margin-bottom: 18px; color: #08704f; background: #e2f4e9; border-radius: 14px; font-size: 21px; }
+.hafalan-choice-card--quran .hafalan-choice-icon { color: #946f1f; background: #f8edcc; }
+.hafalan-choice-tag { margin-bottom: 5px; color: #16815b; font-size: 8px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.hafalan-choice-card--quran .hafalan-choice-tag { color: #8d6c20; }
+.hafalan-choice-title { color: #20382b; font-size: clamp(19px, 2.3vw, 24px); font-weight: 850; letter-spacing: -.03em; }
+.hafalan-choice-copy { max-width: 430px; margin-top: 8px; color: #718076; font-size: 10px; line-height: 1.75; }
+.hafalan-choice-link { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 19px; color: #08704f; font-size: 9px; font-weight: 850; }
+.hafalan-choice-card--quran .hafalan-choice-link { color: #8d6c20; }
+.hafalan-chooser-note { display: flex; justify-content: center; align-items: center; gap: 7px; margin: 18px 0 0; color: #77867d; font-size: 9px; line-height: 1.6; text-align: center; }
+.hafalan-chooser-note i { color: #b18225; }
+.hafalan-exercise[hidden], .hafalan-chooser[hidden], #quran-surah-controls[hidden], #quran-juz-controls[hidden] { display: none !important; }
+.hafalan-back { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 8px 0; color: #687a6e; background: transparent; border: 0; font-size: 9px; font-weight: 750; cursor: pointer; }
+.hafalan-back:hover { color: #08704f; }
+.quran-mode-fieldset { min-width: 0; margin: 0 0 14px; padding: 0; border: 0; }
+.quran-mode-fieldset legend { margin-bottom: 7px; padding: 0; }
+.quran-mode-options { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.quran-mode-option { display: flex; min-width: 0; gap: 8px; align-items: flex-start; padding: 11px 10px; background: #fbfcfb; border: 1px solid #e2eae4; border-radius: 9px; cursor: pointer; }
+.quran-mode-option:has(input:checked) { background: #edf8f1; border-color: #74bd95; box-shadow: 0 0 0 2px rgba(26,148,102,.08); }
+.quran-mode-option input { flex: 0 0 auto; margin: 2px 0 0; accent-color: #08704f; }
+.quran-mode-option span { display: grid; gap: 4px; }
+.quran-mode-option strong { color: #31463a; font-size: 8px; line-height: 1.4; }
+.quran-mode-option small { color: #7a887f; font-size: 7px; line-height: 1.55; }
+.quran-range-hint { margin-top: 2px; margin-bottom: 15px; }
+.quran-ayah-prompt { min-height: 136px; padding: 22px 26px; font-size: clamp(22px, 3.5vw, 35px); line-height: 2; }
+.hafalan-export-actions { margin-top: 10px; }
+.hafalan-result-actions .button--green:disabled, .hafalan-result-actions .button--orange:disabled { cursor: wait; opacity: .64; }
+.certificate-action-status { min-height: 16px; margin: 9px 0 0; color: #687a6e; font-size: 8px; line-height: 1.5; }
+.hafalan-certificate.is-exporting { position: fixed; z-index: 10000; inset: 0; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 18px; background: rgba(11,22,16,.74); }
+.hafalan-certificate.is-exporting .hafalan-certificate-frame { flex: 0 0 auto; }
+.hafalan-certificate-frame { box-sizing: border-box; width: 1123px; height: 794px; min-height: 794px; place-items: center; padding: 24px; color: #26382d; background: #fcfdfb; border: 9px double #b78b2e; aspect-ratio: 1123 / 794; }
+.hafalan-certificate-inner { box-sizing: border-box; display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; flex-direction: column; justify-content: center; padding: 26px 42px; border: 1px solid #d7bf83; text-align: center; }
+.certificate-brand { display: flex; align-items: center; gap: 13px; color: #17553c; text-align: left; }
+.certificate-logo { display: block; width: 62px; height: 62px; object-fit: contain; }
+.certificate-brand span { display: grid; gap: 3px; }
+.certificate-brand strong { font-size: 12px; font-weight: 850; }
+.certificate-brand small { color: #7a887f; font-size: 8px; }
+.certificate-ornament { margin: 9px 0 3px; font-size: 19px; }
+.certificate-kicker { color: #8a6b23; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.hafalan-certificate h1 { font-size: 35px; }
+.certificate-subtitle { margin: 4px 0 14px; font-size: 10px; }
+.certificate-awarded { font-size: 9px; }
+.hafalan-certificate h2 { margin: 4px 0 8px; font-size: 27px; }
+.certificate-description { margin: 0 0 5px; font-size: 9px; }
+.certificate-book { font-size: 16px; }
+.certificate-range { margin: 4px 0 9px; font-size: 8px; }
+.certificate-score { gap: 7px; padding: 5px 13px; }
+.certificate-score span { font-size: 9px; }
+.certificate-score strong { font-size: 17px; }
+.certificate-encouragement { max-width: 790px; margin: 10px 0 12px; font-size: 8px; line-height: 1.55; }
+.certificate-footer { margin-top: 7px; padding-top: 7px; font-size: 7px; }
+.hafalan-chooser-heading p, .hafalan-card-heading p { font-size: 12px; }
+.hafalan-choice-tag { font-size: 9px; }
+.hafalan-choice-copy { font-size: 12px; }
+.hafalan-choice-link { font-size: 10px; }
+.hafalan-chooser-note { font-size: 10px; }
+.hafalan-setup .field-label { font-size: 11px; }
+.hafalan-setup .field-input { min-height: 46px; font-size: 13px; }
+.hafalan-range-hint { font-size: 10px; }
+.hafalan-setup .form-status { font-size: 10px; }
+.hafalan-guide .section-eyebrow { font-size: 9px; }
+.hafalan-guide h2 { font-size: 18px; }
+.hafalan-book-list strong { font-size: 11px; }
+.hafalan-book-list span, .hafalan-guide ol, .hafalan-guide-note { font-size: 10px; }
+.hafalan-quiz-topline strong { font-size: 12px; }
+.hafalan-question-counter { font-size: 10px; }
+.hafalan-prompt-caption { font-size: 10px; }
+.hafalan-quiz-controls > span { font-size: 10px; }
+.hafalan-no-feedback { font-size: 9px; }
+.hafalan-results > .section-eyebrow { font-size: 9px; }
+.hafalan-score-card span { font-size: 11px; }
+.hafalan-result-meta { font-size: 10px; }
+.hafalan-result-actions .button { font-size: 10px; }
+.hafalan-review h3 { font-size: 14px; }
+.hafalan-motivation, .hafalan-perfect-message { font-size: 11px; }
+.hafalan-mistake-item h4, .hafalan-review-line { font-size: 10px; }
+.quran-mode-option strong { font-size: 10px; }
+.quran-mode-option small { font-size: 9px; }
+.certificate-action-status { font-size: 10px; }
+@media (max-width: 760px) {
+  .hafalan-choice-grid { grid-template-columns: 1fr; }
+  .hafalan-choice-card { min-height: 215px; }
+  .quran-mode-options { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .hafalan-chooser { padding: 21px 15px; border-radius: 13px; }
+  .hafalan-chooser-note { align-items: flex-start; }
+  .hafalan-count-row { grid-template-columns: 1fr; gap: 0; }
+  .quran-ayah-prompt { min-height: 120px; padding: 17px 13px; }
+  .hafalan-certificate.is-exporting { justify-content: flex-start; }
+}
+@page { size: A4 landscape; margin: 0; }
+@media print {
+  html, body { width: 100%; height: 100%; margin: 0 !important; overflow: hidden; background: #fff !important; }
+  body > * { visibility: hidden !important; }
+  #hafalan-certificate.is-printing, #hafalan-certificate.is-printing * { visibility: visible !important; }
+  #hafalan-certificate.is-printing { position: fixed !important; inset: 0 !important; display: flex !important; width: 100vw !important; height: 100vh !important; align-items: center !important; justify-content: center !important; margin: 0 !important; padding: 7mm !important; overflow: hidden !important; background: #fff !important; box-sizing: border-box !important; }
+  #hafalan-certificate.is-printing .hafalan-certificate-frame { width: 100% !important; height: 100% !important; min-height: 0 !important; padding: 7mm !important; border-width: 7px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #hafalan-certificate.is-printing .hafalan-certificate-inner { width: 100% !important; height: 100% !important; min-height: 0 !important; padding: 5mm 8mm !important; }
+  #hafalan-certificate.is-printing .hafalan-certificate h1 { font-size: 30pt !important; }
+  #hafalan-certificate.is-printing .hafalan-certificate h2 { font-size: 23pt !important; }
+  #hafalan-certificate.is-printing .certificate-logo { width: 18mm !important; height: 18mm !important; }
+  #hafalan-certificate.is-printing .certificate-encouragement { max-width: 230mm !important; }
+}
+
 /* Gallery image lightbox */
 .gallery-lightbox { width: min(980px, calc(100vw - 28px)); max-width: 980px; max-height: 92vh; margin: auto; padding: 0; color: #2d4035; background: transparent; border: 0; overflow: visible; }
 .gallery-lightbox::backdrop { background: rgba(6, 18, 12, .82); backdrop-filter: blur(4px); }
