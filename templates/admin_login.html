@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=10">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
 {% block content %}
 <section class="admin-login-wrap"><div class="admin-login-card">
   <a class="admin-login-brand" href="/"><img src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="48" height="48"><span><strong>{{ site.short_name }}</strong><small>ADMIN PORTAL</small></span></a>
@@ -10,8 +10,8 @@
   <form method="post" action="{{ url_for('admin_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label class="admin-field"><span>Nama pengguna Admin Akademik <small>(kosongkan untuk Admin Utama)</small></span><input type="text" name="username" autocomplete="username" placeholder="admin-akademik"></label>
     <label class="admin-field"><span>Kata sandi admin</span><input type="password" name="password" autocomplete="current-password" placeholder="Masukkan kata sandi" required autofocus></label>
-    <button class="admin-save-button" type="submit">Masuk ke Admin <span aria-hidden="true">→</span></button>
+    <button class="admin-save-button" type="submit">Masuk ke Admin <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
   </form>
-  <a class="admin-back-link" href="/">← Kembali ke website</a>
+  <a class="admin-back-link" href="/"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke website</a>
 </div></section>
 {% endblock %}

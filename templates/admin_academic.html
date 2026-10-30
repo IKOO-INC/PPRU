@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Admin Pendidikan & Akademik · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=11">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script>{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page">
   <div class="container admin-container">
     <header class="admin-page-heading">
       <div><span class="admin-kicker">Panel khusus · Pendidikan</span><h1>Admin Pendidikan &amp; Akademik</h1><p>Masuk sebagai {{ admin_username }} · {{ storage_backend|replace('-', ' ')|title }}</p></div>
-      <div class="admin-heading-actions"><a class="admin-preview-link" href="/akademik" target="_blank" rel="noopener">Lihat halaman akademik ↗</a><form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="admin-logout-button" type="submit">Keluar</button></form></div>
+      <div class="admin-heading-actions"><a class="admin-preview-link" href="/akademik" target="_blank" rel="noopener">Lihat halaman akademik <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a><form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="admin-logout-button" type="submit">Keluar</button></form></div>
     </header>
     {% if saved %}<div class="admin-alert admin-alert--success" role="status">Perubahan berhasil disimpan.</div>{% endif %}
     {% if storage_backend == 'read-only' %}<div class="admin-alert admin-alert--error" role="alert">Mode baca saja: perubahan memerlukan MongoDB Atlas; file JSON deployment bukan penyimpanan persisten.</div>{% elif storage_backend == 'json-fallback' %}<div class="admin-alert admin-alert--error" role="alert">MongoDB Atlas bermasalah. Perubahan sementara hanya ada di JSON lokal dan belum tersinkron ke Atlas.</div>{% endif %}
-    {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close>×</button><span class="admin-kicker">Penyimpanan sementara</span><h2 id="storage-notice-title">mongo eror sementara pakai preferensi.json</h2><p>MongoDB Atlas sedang tidak dapat dihubungi. File JSON lokal dipakai sementara; perubahan baru belum tersinkron ke MongoDB Atlas.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
+    {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><span class="admin-kicker">Penyimpanan sementara</span><h2 id="storage-notice-title">mongo eror sementara pakai preferensi.json</h2><p>MongoDB Atlas sedang tidak dapat dihubungi. File JSON lokal dipakai sementara; perubahan baru belum tersinkron ke MongoDB Atlas.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
 
     <nav class="academic-admin-nav" aria-label="Menu admin pendidikan">
       <a href="{{ url_for('admin_academic', tab='formal') }}"{% if tab == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
@@ -22,7 +22,7 @@
 
     {% if tab in ['formal', 'non_formal'] %}
     <section class="admin-panel academic-admin-panel">
-      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Kurikulum &amp; kelas</span><h2>Program Pendidikan {{ 'Formal' if tab == 'formal' else 'Non Formal' }}</h2><p>Kelola kelas {{ 'pendidikan formal' if tab == 'formal' else 'pendidikan non formal' }}: judul, logo atau ikon, keterangan, daftar materi/kitab, dan tautan informasi.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_program_new', education_type=tab) }}">+ Tambah program</a></div>
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Kurikulum &amp; kelas</span><h2>Program Pendidikan {{ 'Formal' if tab == 'formal' else 'Non Formal' }}</h2><p>Kelola kelas {{ 'pendidikan formal' if tab == 'formal' else 'pendidikan non formal' }}: judul, logo atau ikon, keterangan, daftar materi/kitab, dan tautan informasi.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_program_new', education_type=tab) }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah program</a></div>
       <div class="academic-admin-list">
         {% for item in programs %}
         <article class="academic-admin-item">
@@ -34,7 +34,7 @@
     </section>
     {% elif tab == 'calendar' %}
     <section class="admin-panel academic-admin-panel">
-      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Jadwal pesantren</span><h2>Kalender Akademik</h2><p>Tambah jadwal kegiatan, ujian, libur, dan agenda akademik lainnya.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_calendar_new') }}">+ Tambah kegiatan</a></div>
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Jadwal pesantren</span><h2>Kalender Akademik</h2><p>Tambah jadwal kegiatan, ujian, libur, dan agenda akademik lainnya.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_calendar_new') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah kegiatan</a></div>
       <div class="academic-admin-list">
         {% for item in academic_events %}
         <article class="academic-admin-item academic-admin-event-item"><time class="academic-admin-date" datetime="{{ item.date }}">{{ item.date_label }}</time><div class="academic-admin-item-main"><span class="program-category">{{ item.category|default('Akademik') }}</span><h3>{{ item.title }}</h3>{% if item.description %}<p>{{ item.description }}</p>{% endif %}</div><div class="academic-admin-actions"><a href="{{ url_for('admin_academic_calendar_edit', item_id=item.admin_id) }}">Edit</a><form method="post" action="{{ url_for('admin_academic_calendar_delete', item_id=item.admin_id) }}" data-confirm-delete><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Hapus</button></form></div></article>
@@ -43,7 +43,7 @@
     </section>
     {% else %}
     <section class="admin-panel academic-admin-panel">
-      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Informasi santri &amp; wali</span><h2>Pengumuman / Berita</h2><p>Kelola pengumuman pendidikan. Artikel yang diterbitkan juga tampil pada halaman Berita.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_announcement_new') }}">+ Tulis pengumuman</a></div>
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Informasi santri &amp; wali</span><h2>Pengumuman / Berita</h2><p>Kelola pengumuman pendidikan. Artikel yang diterbitkan juga tampil pada halaman Berita.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_announcement_new') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tulis pengumuman</a></div>
       <div class="admin-news-list">
         {% for post in announcements %}
         <article class="admin-news-row">

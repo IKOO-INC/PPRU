@@ -8,7 +8,7 @@ import secrets
 import threading
 from datetime import date
 from pathlib import Path, PurePosixPath
-from urllib.parse import parse_qs, urlsplit, urlunsplit
+from urllib.parse import parse_qs, quote_plus, urlsplit, urlunsplit
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
 from markupsafe import Markup
@@ -75,7 +75,10 @@ ACADEMIC_PROGRAM_TYPE_SLUGS = {
     "non_formal": "non-formal",
 }
 PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v2"
-ACADEMIC_PROGRAM_DETAILS_REVISION = "madrasah-diniyah-details-2026-v1"
+ACADEMIC_PROGRAM_DETAILS_REVISION = "madrasah-diniyah-details-2026-v2"
+CONTACT_ADDRESS_REVISION = "contact-address-2026-v1"
+HOME_STATS_REVISION = "home-stats-santri-alumni-2026-v1"
+SOCIAL_PLATFORMS = ("facebook", "instagram", "youtube", "tiktok")
 PROFILE_PROGRAM_ALIASES = {
     "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
     "Madrasah Diniyah": {"Diniyah Takmiliyah"},
@@ -287,6 +290,41 @@ def _safe_public_link(value, current="/kontak"):
     return candidate
 
 
+def _safe_social_url(value, current=""):
+    """Accept a blank social profile or a valid HTTPS URL without credentials."""
+    candidate = str(value or "").strip()
+    fallback = str(current or "")
+    if not candidate:
+        return ""
+    try:
+        parsed = urlsplit(candidate)
+        port = parsed.port
+    except ValueError:
+        return fallback
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or port not in (None, 443)
+        or any(ord(char) < 32 for char in candidate)
+    ):
+        return fallback
+    return candidate[:500]
+
+
+def _google_maps_urls(address):
+    """Build no-key Google Maps search and embed URLs from the current address."""
+    query = str(address or "").strip().rstrip(".").strip()
+    if not query:
+        return "", ""
+    encoded_query = quote_plus(query)
+    return (
+        f"https://www.google.com/maps?q={encoded_query}&output=embed",
+        f"https://www.google.com/maps/search/?api=1&query={encoded_query}",
+    )
+
+
 def _without_admin_users(content):
     """Keep private credential hashes out of all rendered page contexts."""
     return {key: value for key, value in content.items() if key != "admin_users"}
@@ -336,6 +374,17 @@ def _apply_admin_form(content, form, component):
             _form_value(form, "fallback_image_path", site.get("placeholder_image", "")),
             site.get("placeholder_image", "/static/images/pondok-campus.jpg"),
         )
+        social_links = site.get("social_links")
+        if not isinstance(social_links, dict):
+            social_links = {}
+        for platform in SOCIAL_PLATFORMS:
+            field_name = f"social_{platform}"
+            if field_name in form:
+                social_links[platform] = _safe_social_url(
+                    form.get(field_name, ""),
+                    social_links.get(platform, ""),
+                )
+        site["social_links"] = social_links
 
     elif component == "navigation":
         for index, item in enumerate(site.get("navigation", [])):
@@ -437,10 +486,7 @@ def _apply_admin_form(content, form, component):
         contact = content.setdefault("contact", {})
         for key in ("title", "subtitle", "address", "phone", "email"):
             contact[key] = _form_value(form, f"contact_{key}", contact.get(key, ""))
-        contact["map_image"] = _safe_image_url(
-            _form_value(form, "contact_map_image", contact.get("map_image", "")),
-            contact.get("map_image", site.get("placeholder_image", "")),
-        )
+        site["address"] = contact.get("address", "")
 
     elif component == "admission":
         admission = content.setdefault("admission", {})
@@ -620,10 +666,11 @@ def _format_program_class_details(value):
 
 
 def _apply_academic_program_details_revision(content, seed_content):
-    """Seed the first Madrasah Diniyah class-and-book details once, leaving later edits alone."""
+    """Seed Madrasah Diniyah details and add the verified senior Syawir end time once."""
     if not isinstance(content, dict) or not isinstance(seed_content, dict):
         return False
-    if content.get("_academic_program_details_revision") == ACADEMIC_PROGRAM_DETAILS_REVISION:
+    current_revision = content.get("_academic_program_details_revision")
+    if current_revision == ACADEMIC_PROGRAM_DETAILS_REVISION:
         return False
     seed_programs = seed_content.get("programs")
     if not isinstance(seed_programs, list):
@@ -653,10 +700,84 @@ def _apply_academic_program_details_revision(content, seed_content):
     )
     if target is None:
         return False
-    for field in ("description", "class_details"):
-        if field in seed_program:
-            target[field] = copy.deepcopy(seed_program[field])
+
+    if current_revision == "madrasah-diniyah-details-2026-v1":
+        current_details = target.get("class_details")
+        if not isinstance(current_details, list):
+            current_details = []
+            target["class_details"] = current_details
+        seeded_details = seed_program.get("class_details", [])
+        seeded_by_name = {
+            _normalize_profile_program_title(item.get("name")): item
+            for item in seeded_details
+            if isinstance(item, dict)
+        }
+        for class_name in ("Tsanawi", "Aliyah"):
+            normalized_name = _normalize_profile_program_title(class_name)
+            current_item = next(
+                (
+                    item for item in current_details
+                    if isinstance(item, dict)
+                    and _normalize_profile_program_title(item.get("name")) == normalized_name
+                ),
+                None,
+            )
+            if current_item is None:
+                seed_item = seeded_by_name.get(normalized_name)
+                if seed_item:
+                    current_details.append(copy.deepcopy(seed_item))
+                continue
+            description = str(current_item.get("description", "")).strip()
+            if not re.search(r"\b23[.:]00\b", description):
+                schedule = "Syawir dilaksanakan selepas salat Isya hingga pukul 23.00."
+                current_item["description"] = (
+                    f"{description.rstrip('.; ')}; {schedule}" if description else schedule
+                )
+    else:
+        for field in ("description", "class_details"):
+            if field in seed_program:
+                target[field] = copy.deepcopy(seed_program[field])
+
     content["_academic_program_details_revision"] = ACADEMIC_PROGRAM_DETAILS_REVISION
+    return True
+
+
+def _apply_contact_address_revision(content, seed_content):
+    """Apply the user-confirmed contact address without replacing other contact data."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_contact_address_revision") == CONTACT_ADDRESS_REVISION:
+        return False
+    seed_site = seed_content.get("site")
+    seed_contact = seed_content.get("contact")
+    address = seed_contact.get("address") if isinstance(seed_contact, dict) else ""
+    if not address and isinstance(seed_site, dict):
+        address = seed_site.get("address", "")
+    if not address:
+        return False
+    site = content.setdefault("site", {})
+    contact = content.setdefault("contact", {})
+    if not isinstance(site, dict):
+        site = content["site"] = {}
+    if not isinstance(contact, dict):
+        contact = content["contact"] = {}
+    site["address"] = address
+    contact["address"] = address
+    content["_contact_address_revision"] = CONTACT_ADDRESS_REVISION
+    return True
+
+
+def _apply_home_stats_revision(content, seed_content):
+    """Replace the previous homepage counters with the requested four-stat layout once."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_home_stats_revision") == HOME_STATS_REVISION:
+        return False
+    seed_stats = seed_content.get("stats")
+    if not isinstance(seed_stats, list):
+        return False
+    content["stats"] = copy.deepcopy(seed_stats)
+    content["_home_stats_revision"] = HOME_STATS_REVISION
     return True
 
 
@@ -762,6 +883,8 @@ def create_app(test_config=None):
         needs_save = _migrate_legacy_hafalan_preferences(content)
         needs_save = _apply_profile_content_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_academic_program_details_revision(content, profile_seed_content) or needs_save
+        needs_save = _apply_contact_address_revision(content, profile_seed_content) or needs_save
+        needs_save = _apply_home_stats_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
         if isinstance(site, dict):
             if site.get("login_url") in (None, "", "/masuk"):
@@ -770,6 +893,17 @@ def create_app(test_config=None):
             if site.get("login_label") in (None, "", "Masuk"):
                 site["login_label"] = "Masuk Portal Santri"
                 needs_save = True
+            stored_social_links = site.get("social_links")
+            if stored_social_links is not None:
+                social_links = stored_social_links if isinstance(stored_social_links, dict) else {}
+                normalized_social_links = {
+                    platform: safe_url
+                    for platform in SOCIAL_PLATFORMS
+                    if (safe_url := _safe_social_url(social_links.get(platform, "")))
+                }
+                if stored_social_links != normalized_social_links:
+                    site["social_links"] = normalized_social_links
+                    needs_save = True
         profile = content.get("profile")
         if isinstance(profile, dict):
             profile["video_embed_url"] = _youtube_embed_url(profile.get("video_embed_url", ""))
@@ -866,10 +1000,17 @@ def create_app(test_config=None):
         for program in content.get("programs", []):
             if isinstance(program, dict) and program.get("class_details"):
                 program["detail_url"] = f"/akademik/program/{slugify(program.get('title', ''))}"
+        contact = content.get("contact") if isinstance(content.get("contact"), dict) else {}
+        site = content.get("site") if isinstance(content.get("site"), dict) else {}
+        map_embed_url, map_search_url = _google_maps_urls(
+            contact.get("address") or site.get("address", "")
+        )
         return {
-            "site": content.get("site", {}),
+            "site": site,
             "data": content,
             "active_page": active_page,
+            "map_embed_url": map_embed_url,
+            "map_search_url": map_search_url,
             **extra,
         }
 

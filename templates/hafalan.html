@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ data.hafalan.title }} · {{ site.name }}{% endblock %}
-{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/hafalan.js') }}?v=1"></script>{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/hafalan.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="hafalan-banner">
   <div class="container">
@@ -33,7 +33,7 @@
         </div>
         <label class="field-label" for="participant-name">Nama peserta untuk sertifikat</label>
         <input class="field-input" id="participant-name" name="name" type="text" maxlength="80" placeholder="Masukkan nama lengkap" required>
-        <button class="button button--orange button--form" id="hafalan-start" type="submit">Mulai Tantangan <span aria-hidden="true">→</span></button>
+        <button class="button button--orange button--form" id="hafalan-start" type="submit">Mulai Tantangan <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></button>
         <p class="form-status" id="hafalan-status" role="status" aria-live="polite"></p>
         <script type="application/json" id="hafalan-book-catalog">{{ book_catalog|tojson }}</script>
       </form>
@@ -57,7 +57,7 @@
       </section>
 
       <section class="hafalan-card hafalan-results" id="hafalan-results" hidden aria-labelledby="results-heading">
-        <div class="hafalan-result-mark" aria-hidden="true">✓</div>
+        <div class="hafalan-result-mark" aria-hidden="true"><i class="fa-solid fa-check" aria-hidden="true"></i></div>
         <span class="section-eyebrow">Tantangan selesai</span>
         <h2 id="results-heading">Hasil Sambung Nadzom</h2>
         <div class="hafalan-score-card"><strong id="score-value">0%</strong><span id="score-summary"></span></div>
@@ -75,7 +75,7 @@
     </div>
 
     <aside class="hafalan-guide">
-      <div class="hafalan-guide-icon" aria-hidden="true">✦</div>
+      <div class="hafalan-guide-icon" aria-hidden="true"><i class="fa-solid fa-star" aria-hidden="true"></i></div>
       <span class="section-eyebrow">Bank nadzom</span>
       <h2>Kitab yang tersedia</h2>
       <div class="hafalan-book-list">
@@ -100,7 +100,7 @@
   <div class="hafalan-certificate-frame">
     <div class="hafalan-certificate-inner">
       <span class="certificate-kicker">Pondok Pesantren Roudlotul Ulum</span>
-      <div class="certificate-ornament" aria-hidden="true">✦</div>
+      <div class="certificate-ornament" aria-hidden="true"><i class="fa-solid fa-star" aria-hidden="true"></i></div>
       <h1>Sertifikat Penyelesaian</h1>
       <p class="certificate-subtitle">Tantangan Sambung Nadzom · Ilmu Nahwu</p>
       <p class="certificate-awarded">Diberikan kepada</p>

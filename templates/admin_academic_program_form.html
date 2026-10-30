@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import image_url_field %}
 {% block title %}{{ 'Edit program pendidikan' if item_id else 'Tambah program pendidikan' }} · Admin Akademik{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=11">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page"><div class="container admin-container"><div class="admin-academic-form-wrap">
-  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · {{ 'Pendidikan Formal' if item.get('education_type') == 'formal' else 'Pendidikan Non Formal' }}</span><h1>{{ 'Edit program' if item_id else 'Tambah program' }} {{ 'formal' if item.get('education_type') == 'formal' else 'non formal' }}</h1><p>Isi data program dan tambahkan logo opsional. Tanpa logo, kartu program memakai ikon Font Awesome pilihan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab=item.get('education_type', 'formal')) }}">← Kembali ke menu pendidikan</a></header>
+  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · {{ 'Pendidikan Formal' if item.get('education_type') == 'formal' else 'Pendidikan Non Formal' }}</span><h1>{{ 'Edit program' if item_id else 'Tambah program' }} {{ 'formal' if item.get('education_type') == 'formal' else 'non formal' }}</h1><p>Isi data program dan tambahkan logo opsional. Tanpa logo, kartu program memakai ikon Font Awesome pilihan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab=item.get('education_type', 'formal')) }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke menu pendidikan</a></header>
   <form class="admin-news-form-card" method="post" action="{{ url_for('admin_academic_program_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="item_id" value="{{ item_id }}">
     {% if error %}<div class="admin-alert admin-alert--error" role="alert">{{ error }}</div>{% endif %}
     <label class="admin-field"><span>Jenis pendidikan *</span><select name="education_type" required><option value="formal"{% if item.get('education_type') == 'formal' %} selected{% endif %}>Pendidikan Formal</option><option value="non_formal"{% if item.get('education_type') == 'non_formal' %} selected{% endif %}>Pendidikan Non Formal</option></select></label>

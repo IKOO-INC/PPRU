@@ -10,7 +10,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from app import _safe_image_url, _split_paragraphs, _youtube_embed_url, create_app, now_jakarta
+from app import _google_maps_urls, _safe_image_url, _safe_social_url, _split_paragraphs, _youtube_embed_url, create_app, now_jakarta
 from cloudinary_service import upload_image, upload_local_image
 from content_store import MongoPortalStore
 from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
@@ -292,20 +292,140 @@ class PortalRoutesTestCase(unittest.TestCase):
         updated_admission = json.loads(self.content_file.read_text(encoding="utf-8"))["admission"]
         self.assertNotIn("programs", updated_admission)
 
-    def test_footer_uses_local_bootstrap_icons(self):
-        rendered = self.client.get("/").get_data(as_text=True)
-        footer = rendered.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
-        self.assertIn("/static/vendor/bootstrap-icons/font/bootstrap-icons.min.css?v=1.13.2", rendered)
-        icons_css = self.client.get("/static/vendor/bootstrap-icons/font/bootstrap-icons.min.css")
-        icons_font = self.client.get("/static/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff2")
+    def test_footer_uses_local_fontawesome_icons_and_only_configured_social_links(self):
+        initial_html = self.client.get("/").get_data(as_text=True)
+        initial_footer = initial_html.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
+        self.assertNotIn('<div class="social-links"', initial_footer)
+        self.assertIn("/static/vendor/fontawesome-free/css/brands.min.css?v=6.7.2", initial_html)
+        self.assertNotIn("bootstrap-icons", initial_html)
+
+        icons_css = self.client.get("/static/vendor/fontawesome-free/css/brands.min.css")
+        icons_font = self.client.get("/static/vendor/fontawesome-free/webfonts/fa-brands-400.woff2")
         self.assertEqual(icons_css.status_code, 200)
         self.assertEqual(icons_font.status_code, 200)
         icons_css.close()
         icons_font.close()
-        for icon in ("facebook", "instagram", "youtube", "tiktok", "geo-alt-fill", "telephone-fill", "envelope-fill"):
-            with self.subTest(icon=icon):
-                self.assertIn(f"bi-{icon}", footer)
-        self.assertNotIn("aria-label=\"Facebook\">f</a>", footer)
+
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content["site"]["social_links"] = {
+            "facebook": "https://www.facebook.com/ppru.test",
+            "instagram": "https://www.instagram.com/ppru.test",
+            "youtube": "https://www.youtube.com/@ppru-test",
+            "tiktok": "",
+        }
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+        rendered = self.client.get("/").get_data(as_text=True)
+        footer = rendered.split('<footer class="site-footer">', 1)[1].split("</footer>", 1)[0]
+        for platform, icon in (("facebook", "fa-facebook-f"), ("instagram", "fa-instagram"), ("youtube", "fa-youtube")):
+            with self.subTest(platform=platform):
+                self.assertIn(f'href="https://www.{platform}.com/', footer)
+                self.assertIn(icon, footer)
+        self.assertNotIn("fa-tiktok", footer)
+        self.assertNotIn('href="#footer"', footer)
+        self.assertIn('class="footer-icon fa-solid fa-location-dot"', footer)
+
+    def test_template_icons_use_fontawesome_not_unicode_or_bootstrap_glyphs(self):
+        forbidden_icons = "↗←→↓↑⌄×ⓘ◉✓▶✳✦◷⌕⌖✉◎▤⬇‹›¶•"
+        for template in Path(ROOT / "templates").rglob("*.html"):
+            content = template.read_text(encoding="utf-8")
+            with self.subTest(template=template.name):
+                self.assertNotIn("bi-", content)
+                self.assertFalse(set(forbidden_icons).intersection(content))
+
+    def test_contact_page_embeds_google_map_for_the_confirmed_address(self):
+        expected_address = "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352."
+        page = self.client.get("/kontak")
+        rendered = page.get_data(as_text=True)
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(expected_address, rendered)
+        self.assertIn('<iframe src="https://www.google.com/maps?q=Dk.+Krajan+RT+05+%2F+RW+01%2C+Desa+Karangtanjung%2C+Kecamatan+Alian%2C+Kabupaten+Kebumen%2C+Jawa+Tengah+54352&amp;output=embed"', rendered)
+        self.assertIn('title="Peta Pondok Pesantren Roudlotul Ulum, Karangtanjung, Kebumen"', rendered)
+        self.assertIn("https://www.google.com/maps/search/?api=1&amp;query=", rendered)
+        self.assertIn("fa-location-dot", rendered)
+        self.assertNotIn("map_image or", rendered)
+        self.assertEqual(
+            _google_maps_urls("Dk. Krajan RT 05 / RW 01, Kebumen."),
+            (
+                "https://www.google.com/maps?q=Dk.+Krajan+RT+05+%2F+RW+01%2C+Kebumen&output=embed",
+                "https://www.google.com/maps/search/?api=1&query=Dk.+Krajan+RT+05+%2F+RW+01%2C+Kebumen",
+            ),
+        )
+
+    def test_contact_address_migration_updates_only_address_and_syncs_site_location(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content.pop("_contact_address_revision", None)
+        content["site"]["address"] = "Alamat lama"
+        content["contact"]["address"] = "Alamat lama"
+        original_phone = content["contact"]["phone"]
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        rendered = self.client.get("/kontak").get_data(as_text=True)
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        expected_address = "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352."
+        self.assertIn(expected_address, rendered)
+        self.assertEqual(saved["site"]["address"], expected_address)
+        self.assertEqual(saved["contact"]["address"], expected_address)
+        self.assertEqual(saved["contact"]["phone"], original_phone)
+        self.assertEqual(saved["_contact_address_revision"], "contact-address-2026-v1")
+
+    def test_home_stats_revision_replaces_old_counters_with_requested_metrics(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content.pop("_home_stats_revision", None)
+        content["stats"] = [
+            {"value": "4", "label": "Program takhassus"},
+            {"value": "30", "label": "Prestasi"},
+        ]
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        rendered = self.client.get("/").get_data(as_text=True)
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(
+            saved["stats"],
+            [
+                {"value": "—", "label": "Santri aktif"},
+                {"value": "—", "label": "Alumni"},
+                {"value": "1983", "label": "Tahun berdiri"},
+                {"value": "2", "label": "Unit pendidikan formal"},
+            ],
+        )
+        self.assertEqual(saved["_home_stats_revision"], "home-stats-santri-alumni-2026-v1")
+        self.assertIn("Santri aktif", rendered)
+        self.assertIn("Alumni", rendered)
+        self.assertIn("Tahun berdiri", rendered)
+        self.assertIn("Unit pendidikan formal", rendered)
+
+    def test_social_url_admin_fields_accept_https_and_reject_unsafe_links(self):
+        self.assertEqual(_safe_social_url("https://www.instagram.com/pondok/"), "https://www.instagram.com/pondok/")
+        self.assertEqual(_safe_social_url("javascript:alert(1)"), "")
+        self.assertEqual(_safe_social_url("http://instagram.com/pondok"), "")
+        self.assertEqual(_safe_social_url("javascript:alert(1)", "https://www.instagram.com/existing"), "https://www.instagram.com/existing")
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "social-csrf-token"
+        response = self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "social-csrf-token",
+                "component": "brand",
+                "social_facebook": "https://www.facebook.com/official.test",
+                "social_instagram": "javascript:alert(1)",
+                "social_youtube": "",
+                "social_tiktok": "",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(saved["site"]["social_links"]["facebook"], "https://www.facebook.com/official.test")
+        self.assertEqual(saved["site"]["social_links"]["instagram"], "")
+        self.assertNotIn("social_facebook", saved["site"])
+        rendered = self.client.get("/kontak").get_data(as_text=True)
+        self.assertIn('href="https://www.facebook.com/official.test"', rendered)
+        self.assertIn("fa-facebook-f", rendered)
+        self.assertNotIn("href=\"javascript:alert(1)\"", rendered)
+        admin_html = self.client.get("/admin?tab=brand").get_data(as_text=True)
+        self.assertIn('name="social_facebook"', admin_html)
+        self.assertIn('name="social_tiktok"', admin_html)
 
     def test_home_upcoming_events_are_the_next_three_academic_calendar_items(self):
         today = now_jakarta().date()
@@ -425,10 +545,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("Ta’limul Muta’allim", detail_html)
         self.assertIn("06.30–08.30", detail_html)
         self.assertIn("Tafsir Al-Qur’an", detail_html)
+        self.assertIn("Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.", detail_html)
         self.assertIn('href="/akademik/program/madrasah-diniyah"', self.client.get("/psb").get_data(as_text=True))
 
         migrated = json.loads(self.content_file.read_text(encoding="utf-8"))
-        self.assertEqual(migrated["_academic_program_details_revision"], "madrasah-diniyah-details-2026-v1")
+        self.assertEqual(migrated["_academic_program_details_revision"], "madrasah-diniyah-details-2026-v2")
         migrated_madrasah = next(item for item in migrated["programs"] if item["title"] == "Madrasah Diniyah")
         self.assertEqual(len(migrated_madrasah["class_details"]), 4)
         self.assertIn("06.30–08.30", migrated_madrasah["description"])
@@ -465,6 +586,38 @@ class PortalRoutesTestCase(unittest.TestCase):
         saved_detail = self.client.get("/akademik/program/madrasah-diniyah")
         self.assertIn("Contoh yang diedit di Admin Akademik", saved_detail.get_data(as_text=True))
         self.assertIn("Safinatun Najah", saved_detail.get_data(as_text=True))
+
+    def test_madrasah_schedule_revision_preserves_prior_admin_class_edits(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content["_academic_program_details_revision"] = "madrasah-diniyah-details-2026-v1"
+        madrasah = next(item for item in content["programs"] if item["title"] == "Madrasah Diniyah")
+        tsanawi = next(item for item in madrasah["class_details"] if item["name"] == "Tsanawi")
+        aliyah = next(item for item in madrasah["class_details"] if item["name"] == "Aliyah")
+        tsanawi["description"] = "Catatan jadwal khusus dari Admin Akademik."
+        tsanawi["kitabs"] = ["Kitab pilihan admin"]
+        aliyah["description"] = "Syawir selepas Isya sampai 23.00."
+        madrasah["class_details"].append({
+            "name": "Kelas tambahan admin",
+            "description": "Rincian tambahan yang harus tetap ada.",
+            "kitabs_label": "Kitab pilihan",
+            "kitabs": ["Kitab Admin"],
+        })
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        page = self.client.get("/akademik/program/madrasah-diniyah")
+        self.assertEqual(page.status_code, 200)
+        migrated = json.loads(self.content_file.read_text(encoding="utf-8"))
+        migrated_madrasah = next(item for item in migrated["programs"] if item["title"] == "Madrasah Diniyah")
+        migrated_tsanawi = next(item for item in migrated_madrasah["class_details"] if item["name"] == "Tsanawi")
+        migrated_aliyah = next(item for item in migrated_madrasah["class_details"] if item["name"] == "Aliyah")
+        self.assertEqual(
+            migrated_tsanawi["description"],
+            "Catatan jadwal khusus dari Admin Akademik; Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.",
+        )
+        self.assertEqual(migrated_tsanawi["kitabs"], ["Kitab pilihan admin"])
+        self.assertEqual(migrated_aliyah["description"], "Syawir selepas Isya sampai 23.00.")
+        self.assertIn("Kelas tambahan admin", [item["name"] for item in migrated_madrasah["class_details"]])
+        self.assertEqual(migrated["_academic_program_details_revision"], "madrasah-diniyah-details-2026-v2")
 
     def test_profile_admin_saves_single_history_textarea_and_real_youtube_embed(self):
         with self.client.session_transaction() as admin_session:

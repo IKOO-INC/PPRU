@@ -46,10 +46,11 @@
     "admission_label": "Daftar PSB",
     "admission_url": "/psb",
     "footer_note": "Menjaga tradisi salafiyah, mengembangkan keilmuan, dan membina santri agar berilmu, berakhlak, serta bermanfaat bagi masyarakat.",
-    "address": "Dukuh Krajan, Karangtanjung, Alian, Kebumen",
+    "address": "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352.",
     "phone": "",
     "email": "",
-    "logo_path": "/static/images/mark.svg"
+    "logo_path": "/static/images/mark.svg",
+    "social_links": {}
   },
   "hero": {
     "eyebrow": "Pesantren Salafiyah · Karangtanjung, Kebumen",
@@ -65,20 +66,20 @@
   },
   "stats": [
     {
+      "value": "—",
+      "label": "Santri aktif"
+    },
+    {
+      "value": "—",
+      "label": "Alumni"
+    },
+    {
       "value": "1983",
       "label": "Tahun berdiri"
     },
     {
       "value": "2",
-      "label": "Satuan pendidikan formal"
-    },
-    {
-      "value": "4",
-      "label": "Program takhassus"
-    },
-    {
-      "value": "30",
-      "label": "Prestasi (2017–2023)"
+      "label": "Unit pendidikan formal"
     }
   ],
   "program_intro": {
@@ -139,7 +140,7 @@
         },
         {
           "name": "Tsanawi",
-          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar.",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar; Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.",
           "kitabs_label": "Kitab bandungan",
           "kitabs": [
             "Al-Hikam",
@@ -149,7 +150,7 @@
         },
         {
           "name": "Aliyah",
-          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar.",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar; Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.",
           "kitabs_label": "Kitab bandungan",
           "kitabs": [
             "Al-Hikam",
@@ -413,7 +414,7 @@
     "title": "Silaturahmi & Informasi",
     "subtitle": "Kami siap membantu menjawab pertanyaan Anda seputar Pondok Pesantren Roudlotul Ulum.",
     "address_label": "Alamat",
-    "address": "Dukuh Krajan, RT 05/RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah",
+    "address": "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352.",
     "phone_label": "Telepon / WhatsApp",
     "phone": "Informasi nomor kontak menyusul",
     "email_label": "Email",
@@ -422,5 +423,7 @@
   },
   "academic_events": [],
   "_profile_content_revision": "musyawarah-profil-2026-v2",
-  "_academic_program_details_revision": "madrasah-diniyah-details-2026-v1"
+  "_academic_program_details_revision": "madrasah-diniyah-details-2026-v2",
+  "_contact_address_revision": "contact-address-2026-v1",
+  "_home_stats_revision": "home-stats-santri-alumni-2026-v1"
 }

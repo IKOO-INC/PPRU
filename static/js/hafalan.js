@@ -288,7 +288,7 @@
       status.textContent = error.message || "Soal belum dapat dimuat. Silakan coba lagi.";
     } finally {
       startButton.disabled = false;
-      startButton.innerHTML = 'Mulai Tantangan <span aria-hidden="true">→</span>';
+      startButton.innerHTML = 'Mulai Tantangan <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>';
     }
   });
 

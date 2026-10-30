@@ -8,19 +8,19 @@
     {% set featured = data.news|first %}
     <article class="featured-news" data-news-card data-category="{{ featured.category|lower }}" data-search="{{ (featured.title ~ ' ' ~ featured.excerpt ~ ' ' ~ featured.category)|lower }}">
       <a class="featured-news-image" href="/berita/{{ featured.slug }}"><img src="{{ featured.image }}" alt="{{ featured.image_alt }}" fetchpriority="high"><span class="image-category">{{ featured.category }}</span><span class="feature-gradient"></span><span class="featured-title">{{ featured.title }}</span></a>
-      <div class="featured-meta"><span>◷ {{ featured.date }}</span><span>✦ Redaksi {{ site.short_name }}</span></div>
+      <div class="featured-meta"><span><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ featured.date }}</span><span><i class="fa-solid fa-star" aria-hidden="true"></i> Redaksi {{ site.short_name }}</span></div>
     </article>
     <div class="news-grid news-grid--listing" id="news-list">
       {% for post in data.news[1:] %}{% include "partials/news_card.html" %}{% endfor %}
     </div>
-    <div class="pagination"><button type="button" aria-label="Halaman sebelumnya">‹</button><button type="button" class="is-current">1</button><button type="button" aria-label="Halaman berikutnya">›</button></div>
+    <div class="pagination"><button type="button" aria-label="Halaman sebelumnya"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" class="is-current">1</button><button type="button" aria-label="Halaman berikutnya"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></div>
     <p class="empty-state" hidden>Tidak ada kabar yang cocok dengan pencarian.</p>
     {% else %}
     <p class="empty-state">Belum ada berita yang dipublikasikan.</p>
     {% endif %}
   </div>
   <aside class="news-sidebar">
-    <section class="sidebar-box"><h2><span class="sidebar-accent sidebar-accent--orange"></span>Pencarian</h2><label class="search-field"><span class="visually-hidden">Cari artikel</span><input type="search" id="news-search" placeholder="Cari artikel..."><span aria-hidden="true">⌕</span></label></section>
+    <section class="sidebar-box"><h2><span class="sidebar-accent sidebar-accent--orange"></span>Pencarian</h2><label class="search-field"><span class="visually-hidden">Cari artikel</span><input type="search" id="news-search" placeholder="Cari artikel..."><span aria-hidden="true"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span></label></section>
     <section class="sidebar-box"><h2><span class="sidebar-accent"></span>Kategori</h2><div class="category-list">{% for category in ['Kegiatan', 'Karya Santri', 'Pendidikan', 'Prestasi'] %}<button type="button" data-news-filter="{{ category|lower }}">{{ category }}<span>{{ data.news|selectattr('category', 'equalto', category)|list|length }}</span></button>{% endfor %}<button type="button" data-news-filter="all" class="filter-reset">Semua kategori<span>{{ data.news|length }}</span></button></div></section>
     <section class="sidebar-box"><h2><span class="sidebar-accent sidebar-accent--dark"></span>Tags Populer</h2><div class="tag-list">{% for tag in ['#Tahfidz', '#Santri', '#Prestasi', '#Kajian', '#Pendidikan'] %}<button type="button" data-news-tag="{{ tag[1:]|lower }}">{{ tag }}</button>{% endfor %}</div></section>
   </aside>

@@ -6,5 +6,5 @@
   <h3>{{ program.title }}</h3>
   <p>{{ program.description }}</p>
   <div class="program-kitabs"><strong>{{ program.get('kitabs_label', 'Kitab yang dipelajari') }}</strong><ul>{% for kitab in program.kitabs|default([]) %}<li>{{ kitab }}</li>{% else %}<li>Informasi materi akan diumumkan.</li>{% endfor %}</ul></div>
-  <a class="button button--green button--small program-info-link" href="{{ program.detail_url or program.info_url|default('/kontak') }}">Informasi lebih lanjut <span aria-hidden="true">↗</span></a>
+  <a class="button button--green button--small program-info-link" href="{{ program.detail_url or program.info_url|default('/kontak') }}">Informasi lebih lanjut <span aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span></a>
 </article>

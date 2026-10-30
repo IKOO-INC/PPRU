@@ -7,10 +7,10 @@
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}?v=1.13.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=12">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/brands.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=13">
   {% block extra_head %}{% endblock %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
   {% block extra_scripts %}{% endblock %}
@@ -23,14 +23,14 @@
         <img class="brand-mark" src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="42" height="42">
         <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
       </a>
-      <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span></button>
+      <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="site-navigation"><i class="fa-solid fa-bars nav-toggle-open" aria-hidden="true"></i><i class="fa-solid fa-xmark nav-toggle-close" aria-hidden="true"></i></button>
       <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
         <div class="nav-links">
           {% for item in site.navigation %}
             {% if item.id == 'programs' %}
               <div class="nav-dropdown" data-nav-dropdown>
                 <button class="nav-link nav-dropdown-toggle{% if active_page == 'programs' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="academic-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'programs' %} aria-current="page"{% endif %}>
-                  {{ item.label }} <span class="nav-caret" aria-hidden="true">⌄</span>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
                 </button>
                 <div class="nav-dropdown-menu" id="academic-dropdown-menu" data-nav-dropdown-menu>
                   <a href="{{ item.url }}"{% if active_page == 'programs' and not selected_education_type|default('') %} aria-current="page"{% endif %}>Semua Program</a>
@@ -41,7 +41,7 @@
             {% elif item.id == 'profile' %}
               <div class="nav-dropdown" data-nav-dropdown>
                 <button class="nav-link nav-dropdown-toggle{% if active_page == 'profile' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="profile-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'profile' %} aria-current="page"{% endif %}>
-                  {{ item.label }} <span class="nav-caret" aria-hidden="true">⌄</span>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
                 </button>
                 <div class="nav-dropdown-menu" id="profile-dropdown-menu" data-nav-dropdown-menu>
                   <a href="{{ item.url }}#sejarah">Sejarah</a>
@@ -56,7 +56,7 @@
         </div>
         <div class="header-actions">
           <a class="login-link" href="{{ site.login_url }}">{{ site.login_label }}</a>
-          <a class="button button--orange button--small" href="{{ site.admission_url }}">{{ site.admission_label }} <span aria-hidden="true">↗</span></a>
+          <a class="button button--orange button--small" href="{{ site.admission_url }}">{{ site.admission_label }} <span aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span></a>
         </div>
       </nav>
     </div>
@@ -72,19 +72,17 @@
           <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
         </a>
         <p>{{ site.footer_note }}</p>
-        <div class="social-links" aria-label="Media sosial">
-          <a href="#footer" aria-label="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a><a href="#footer" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a><a href="#footer" aria-label="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a><a href="#footer" aria-label="TikTok"><i class="bi bi-tiktok" aria-hidden="true"></i></a>
-        </div>
+        {% include "partials/social_icons.html" %}
       </div>
       <div class="footer-links">
         <h2 class="footer-title">Jelajahi</h2>
-        {% for item in site.navigation %}<a href="{{ item.url }}">{{ item.label }}</a>{% endfor %}
+        {% for item in site.navigation %}<a href="{{ item.url }}"><i class="fa-solid fa-angle-right footer-link-icon" aria-hidden="true"></i>{{ item.label }}</a>{% endfor %}
       </div>
       <div class="footer-contact">
         <h2 class="footer-title">Hubungi Kami</h2>
-        <p><i class="footer-icon bi bi-geo-alt-fill" aria-hidden="true"></i>{{ data.contact.address }}</p>
-        <p><i class="footer-icon bi bi-telephone-fill" aria-hidden="true"></i>{{ data.contact.phone }}</p>
-        <p><i class="footer-icon bi bi-envelope-fill" aria-hidden="true"></i>{{ data.contact.email }}</p>
+        <p><i class="footer-icon fa-solid fa-location-dot" aria-hidden="true"></i>{{ data.contact.address }}</p>
+        <p><i class="footer-icon fa-solid fa-phone" aria-hidden="true"></i>{{ data.contact.phone }}</p>
+        <p><i class="footer-icon fa-solid fa-envelope" aria-hidden="true"></i>{{ data.contact.email }}</p>
       </div>
       <div class="footer-newsletter">
         <h2 class="footer-title">Buletin</h2>
@@ -92,7 +90,7 @@
         <form class="newsletter-form" data-demo-form>
           <label class="visually-hidden" for="newsletter-email">Email Anda</label>
           <input id="newsletter-email" type="email" placeholder="Email Anda" required>
-          <button type="submit" aria-label="Daftar buletin"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          <button type="submit" aria-label="Daftar buletin"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
         </form>
         <p class="form-status" aria-live="polite"></p>
       </div>
@@ -104,13 +102,13 @@
   </footer>
   <dialog class="gallery-lightbox" id="gallery-lightbox" aria-labelledby="gallery-lightbox-title">
     <div class="gallery-lightbox-shell">
-      <button class="gallery-lightbox-close" id="gallery-lightbox-close" type="button" aria-label="Tutup foto">×</button>
+      <button class="gallery-lightbox-close" id="gallery-lightbox-close" type="button" aria-label="Tutup foto"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       <div class="gallery-lightbox-image-wrap"><img id="gallery-lightbox-image" src="" alt=""></div>
       <div class="gallery-lightbox-details">
         <div><h2 id="gallery-lightbox-title"></h2><p id="gallery-lightbox-caption"></p></div>
         <div class="gallery-lightbox-actions">
-          <a class="gallery-lightbox-download" id="gallery-lightbox-download" href="" download>⬇ Unduh</a>
-          <button class="gallery-lightbox-share" id="gallery-lightbox-share" type="button">↗ Bagikan</button>
+          <a class="gallery-lightbox-download" id="gallery-lightbox-download" href="" download><i class="fa-solid fa-download" aria-hidden="true"></i> Unduh</a>
+          <button class="gallery-lightbox-share" id="gallery-lightbox-share" type="button"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Bagikan</button>
         </div>
         <p class="gallery-lightbox-status" id="gallery-lightbox-status" role="status" aria-live="polite"></p>
       </div>

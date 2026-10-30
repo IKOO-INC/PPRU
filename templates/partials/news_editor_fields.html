@@ -21,10 +21,10 @@
   <span class="toolbar-separator" aria-hidden="true"></span>
   <button type="button" data-editor-command="formatBlock" data-editor-value="h2" title="Judul bagian">H2</button>
   <button type="button" data-editor-command="formatBlock" data-editor-value="h3" title="Subjudul">H3</button>
-  <button type="button" data-editor-command="formatBlock" data-editor-value="p" title="Paragraf">¶</button>
+  <button type="button" data-editor-command="formatBlock" data-editor-value="p" title="Paragraf"><i class="fa-solid fa-paragraph" aria-hidden="true"></i></button>
   <span class="toolbar-separator" aria-hidden="true"></span>
-  <button type="button" data-editor-command="insertUnorderedList" title="Daftar bullet">• Daftar</button>
-  <button type="button" data-editor-command="insertOrderedList" title="Daftar nomor">1. Daftar</button>
+  <button type="button" data-editor-command="insertUnorderedList" title="Daftar bullet"><i class="fa-solid fa-list-ul" aria-hidden="true"></i> Daftar</button>
+  <button type="button" data-editor-command="insertOrderedList" title="Daftar nomor"><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Daftar nomor</button>
   <button type="button" data-editor-command="formatBlock" data-editor-value="blockquote" title="Kutipan">Kutipan</button>
   <button type="button" data-editor-command="createLink" title="Tambah tautan">Tautan</button>
   <button type="button" data-editor-command="removeFormat" title="Hapus format">Hapus format</button>
@@ -33,6 +33,6 @@
 <textarea name="body_html" id="article-body-html" hidden></textarea>
 <small class="admin-editor-hint">Format dasar: tebal, miring, garis bawah, heading, daftar, kutipan, dan tautan. Format berbahaya dibersihkan saat disimpan.</small>
 <div class="admin-news-form-actions">
-  <span class="admin-news-views">{% if is_edit %}◉ {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
+  <span class="admin-news-views">{% if is_edit %}<i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
   <div><a class="admin-cancel-button" href="{{ cancel_url }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan pengumuman' if academic else 'Simpan berita' }}</button></div>
 </div>

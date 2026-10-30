@@ -12,12 +12,12 @@
 <section class="section academic-page-section"><div class="container academic-program-groups">
   {% for group in education_groups %}
   <section class="academic-program-group" id="{{ group.slug }}">
-    <header class="academic-program-group-heading"><div><span class="section-eyebrow">Program pendidikan</span><h2>{{ group.label }}</h2></div>{% if not selected_education_type %}<a class="text-link" href="/akademik/{{ group.slug }}">Lihat menu <span aria-hidden="true">→</span></a>{% endif %}</header>
+    <header class="academic-program-group-heading"><div><span class="section-eyebrow">Program pendidikan</span><h2>{{ group.label }}</h2></div>{% if not selected_education_type %}<a class="text-link" href="/akademik/{{ group.slug }}">Lihat menu <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a>{% endif %}</header>
     <div class="program-grid program-grid--page">{% for program in group.programs %}{% include "partials/program_card.html" %}{% else %}<p class="empty-state">Informasi {{ group.label|lower }} akan segera diperbarui.</p>{% endfor %}</div>
   </section>
   {% endfor %}
 </div></section>
-<section class="academic-note"><div class="container"><p>Kenali juga perjalanan pendidikan kami dan kegiatan santri.</p><a class="button button--green" href="/profil">Tentang pesantren <span aria-hidden="true">↗</span></a></div></section>
+<section class="academic-note"><div class="container"><p>Kenali juga perjalanan pendidikan kami dan kegiatan santri.</p><a class="button button--green" href="/profil">Tentang pesantren <span aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span></a></div></section>
 <section class="section academic-calendar-section" id="kalender-akademik">
   <div class="container">
     <div class="section-heading-row academic-calendar-heading"><div><span class="section-eyebrow">Jadwal pembelajaran &amp; kegiatan</span><h2>Kalender Akademik</h2><p>Catat tanggal penting kegiatan pendidikan di pesantren.</p></div></div>
