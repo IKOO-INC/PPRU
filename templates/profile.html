@@ -2,7 +2,7 @@
 {% block title %}Sejarah & Profil · {{ site.name }}{% endblock %}
 {% block content %}
 <section class="page-banner page-banner--profile">
-  <div class="container page-banner-content"><span class="light-eyebrow">Tentang Kami</span><h1>{{ data.profile.title }}</h1><p>{{ data.profile.subtitle }}</p></div>
+  <div class="container page-banner-content"><span class="light-eyebrow">{{ data.profile.get('eyebrow', 'Profil Pesantren') }}</span><h1>{{ data.profile.title }}</h1><p>{{ data.profile.subtitle }}</p></div>
 </section>
 <section class="profile-content-section">
   <div class="container profile-content-wrap">
@@ -35,7 +35,7 @@
 </section>
 <section class="masyayikh-section" id="masyayikh">
   <div class="container">
-    <div class="section-title section-title--center"><span class="section-eyebrow">Guru &amp; teladan</span><h2>Masyayikh</h2><p>Dengan takzim, kami mengenang para masyayikh dan guru yang mewariskan ilmu, adab, dan teladan bagi generasi santri.</p></div>
+    <div class="section-title section-title--center"><span class="section-eyebrow">Warisan keilmuan</span><h2>{{ data.profile.get('leadership_title', 'Pendiri & Pengasuh') }}</h2><p>{{ data.profile.get('leadership_note', '') }}</p></div>
   </div>
 </section>
 {% endblock %}

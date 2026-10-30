@@ -346,11 +346,61 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn('data-nav-dropdown', rendered)
         self.assertIn('href="/profil#sejarah">Sejarah</a>', rendered)
         self.assertIn('href="/profil#visi-misi">Visi misi</a>', rendered)
-        self.assertIn('href="/profil#masyayikh">Masyayikh</a>', rendered)
+        self.assertIn('href="/profil#masyayikh">Pendiri &amp; Pengasuh</a>', rendered)
         self.assertIn('href="https://siapik.com">Masuk Portal Santri</a>', rendered)
         migrated_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
         self.assertEqual(migrated_preferences["site"]["login_url"], "https://siapik.com")
         self.assertEqual(migrated_preferences["site"]["login_label"], "Masuk Portal Santri")
+
+    def test_musyawarah_profile_copy_migrates_once_and_preserves_admin_media(self):
+        seed = json.loads((ROOT / "data" / "site.json").read_text(encoding="utf-8"))
+        legacy = copy.deepcopy(seed)
+        legacy.pop("_profile_content_revision", None)
+        legacy["site"]["description"] = "Deskripsi lama"
+        legacy["hero"]["title"] = "Judul lama"
+        legacy["stats"] = [{"value": "1095", "label": "Santri Aktif"}]
+        legacy["history"]["intro"] = "Ringkasan sejarah lama"
+        legacy["profile"]["vision"] = "Visi lama"
+        legacy["profile"]["history_paragraphs"] = ["Sejarah lama"]
+        legacy["profile"]["image"] = "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/profile"
+        legacy["history"]["image"] = "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/history"
+        legacy["faq"][1]["answer"] = "Jawaban program lama"
+        preserved_logo = "https://res.cloudinary.com/demo/image/upload/c_limit,h_1600,q_auto:good,w_1600,f_auto/v123/ppru/programs/smp-logo"
+        legacy["programs"] = [
+            {"id": "legacy-formal", "number": "02", "title": "SPM (Muadalah)", "category": "Formal", "description": "Lama", "education_type": "formal", "icon": "school", "color": "orange", "logo": preserved_logo, "kitabs": ["Kurikulum"]},
+            {"id": "legacy-diniyah", "number": "03", "title": "Diniyah Takmiliyah", "category": "Nonformal", "description": "Lama", "education_type": "non_formal", "icon": "book", "color": "blue", "logo": "", "kitabs": ["Kitab"]},
+            {"id": "legacy-tahfidz", "number": "01", "title": "Tahfidzul Qur’an", "category": "Tahfidz", "description": "Lama", "education_type": "non_formal", "icon": "quran", "color": "green", "logo": "", "kitabs": ["Al-Qur’an"]},
+            {"id": "custom-program", "title": "Program Tambahan Admin", "category": "Nonformal", "description": "Konten khusus pengelola", "education_type": "non_formal", "kitabs": ["Materi khusus"]},
+        ]
+        self.content_file.write_text(json.dumps(legacy, ensure_ascii=False), encoding="utf-8")
+
+        response = self.client.get("/profil")
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn("Pada 27 Sya‘ban 1404 H (1983 M)", rendered)
+        self.assertIn("Menjadi lembaga pendidikan dan pengajaran agama Islam", rendered)
+        self.assertIn("K.H. Bahaudin Al Yasir", rendered)
+        self.assertIn("Musabaqah Qira’atil Kutub", rendered)
+
+        migrated = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(migrated["_profile_content_revision"], "musyawarah-profil-2026-v1")
+        self.assertEqual(migrated["site"]["description"], seed["site"]["description"])
+        self.assertEqual(migrated["hero"]["title"], seed["hero"]["title"])
+        self.assertEqual(migrated["stats"], seed["stats"])
+        self.assertEqual(migrated["faq"][1]["answer"], seed["faq"][1]["answer"])
+        self.assertEqual(migrated["profile"]["image"], legacy["profile"]["image"])
+        self.assertEqual(migrated["history"]["image"], legacy["history"]["image"])
+        formal_program = next(item for item in migrated["programs"] if item["title"] == "Pendidikan Formal SMP & SMK")
+        self.assertEqual(formal_program["id"], "legacy-formal")
+        self.assertEqual(formal_program["logo"], preserved_logo)
+        self.assertEqual(len({item["id"] for item in migrated["programs"]}), len(migrated["programs"]))
+        self.assertIn("Program Tambahan Admin", [item["title"] for item in migrated["programs"]])
+
+        migrated["profile"]["vision"] = "Perubahan admin setelah pembaruan."
+        self.content_file.write_text(json.dumps(migrated, ensure_ascii=False), encoding="utf-8")
+        later_response = self.client.get("/profil")
+        self.assertEqual(later_response.status_code, 200)
+        self.assertIn("Perubahan admin setelah pembaruan.", later_response.get_data(as_text=True))
 
     def test_profile_admin_saves_single_history_textarea_and_real_youtube_embed(self):
         with self.client.session_transaction() as admin_session:
@@ -367,6 +417,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("\n\n", html.unescape(history_textarea.group(1)))
         self.assertNotIn('name="history_paragraph_0"', admin_html)
         self.assertIn('name="video_embed_url"', admin_html)
+        self.assertIn('name="profile_leadership_title"', admin_html)
+        self.assertIn('name="profile_leadership_note"', admin_html)
         default_profile = self.client.get("/profil").get_data(as_text=True)
         self.assertIn("Video profil belum tersedia.", default_profile)
         self.assertNotIn("play-button", default_profile)
@@ -377,6 +429,8 @@ class PortalRoutesTestCase(unittest.TestCase):
                 "csrf_token": "profile-csrf-token",
                 "component": "profile",
                 "profile_title": "Profil Pesantren",
+                "profile_leadership_title": "Penerus Kepemimpinan",
+                "profile_leadership_note": "Keterangan kepemimpinan yang diperbarui.",
                 "history_paragraphs": "Sejarah pertama dengan\nbaris lanjutan.\n\nSejarah kedua.",
                 "video_embed_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             },
@@ -391,6 +445,7 @@ class PortalRoutesTestCase(unittest.TestCase):
             saved_preferences["profile"]["video_embed_url"],
             "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
         )
+        self.assertEqual(saved_preferences["profile"]["leadership_note"], "Keterangan kepemimpinan yang diperbarui.")
 
         profile_page = self.client.get("/profil")
         profile_html = profile_page.get_data(as_text=True)
@@ -398,6 +453,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn('id="sejarah"', profile_html)
         self.assertIn('id="visi-misi"', profile_html)
         self.assertIn('id="masyayikh"', profile_html)
+        self.assertIn("Penerus Kepemimpinan", profile_html)
+        self.assertIn("Keterangan kepemimpinan yang diperbarui.", profile_html)
         self.assertNotIn("play-button", profile_html)
 
         self.client.post(
@@ -751,8 +808,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         rendered = html.unescape(response.get_data(as_text=True))
-        for program in self.content["programs"]:
+        for program in self.content["programs"][:3]:
             self.assertIn(program["title"], rendered)
+        academic_rendered = html.unescape(self.client.get("/akademik").get_data(as_text=True))
+        for program in self.content["programs"]:
+            self.assertIn(program["title"], academic_rendered)
 
     def test_home_shows_only_three_newest_published_stories(self):
         news = list(reversed(json.loads(self.news_file.read_text(encoding="utf-8"))))
@@ -917,9 +977,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         saved_programs = json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
         types_by_title = {program["title"]: program["education_type"] for program in saved_programs}
-        self.assertEqual(types_by_title["SPM (Muadalah)"], "formal")
-        self.assertEqual(types_by_title["Tahfidzul Qur’an"], "non_formal")
-        self.assertEqual(types_by_title["Diniyah Takmiliyah"], "non_formal")
+        self.assertEqual(types_by_title["Pendidikan Formal SMP & SMK"], "formal")
+        self.assertEqual(types_by_title["Takhassus Tahfidzul Qur’an"], "non_formal")
+        self.assertEqual(types_by_title["Madrasah Diniyah"], "non_formal")
 
     def test_academic_program_menus_separate_formal_and_nonformal_programs(self):
         overview = self.client.get("/akademik")
@@ -933,16 +993,16 @@ class PortalRoutesTestCase(unittest.TestCase):
         formal_page = self.client.get("/akademik/formal")
         self.assertEqual(formal_page.status_code, 200)
         formal_html = formal_page.get_data(as_text=True)
-        self.assertIn("SPM (Muadalah)", formal_html)
-        self.assertNotIn("Tahfidzul Qur’an", formal_html)
-        self.assertNotIn("Diniyah Takmiliyah", formal_html)
+        self.assertIn("Pendidikan Formal SMP &amp; SMK", formal_html)
+        self.assertNotIn("Takhassus Tahfidzul Qur’an", formal_html)
+        self.assertNotIn("Madrasah Diniyah", formal_html)
 
         nonformal_page = self.client.get("/akademik/non-formal")
         self.assertEqual(nonformal_page.status_code, 200)
         nonformal_html = nonformal_page.get_data(as_text=True)
-        self.assertIn("Tahfidzul Qur’an", nonformal_html)
-        self.assertIn("Diniyah Takmiliyah", nonformal_html)
-        self.assertNotIn("SPM (Muadalah)", nonformal_html)
+        self.assertIn("Takhassus Tahfidzul Qur’an", nonformal_html)
+        self.assertIn("Madrasah Diniyah", nonformal_html)
+        self.assertNotIn("Pendidikan Formal SMP &amp; SMK", nonformal_html)
         self.assertEqual(self.client.get("/akademik/unknown").status_code, 404)
 
         with self.client.session_transaction() as admin_session:
@@ -950,16 +1010,18 @@ class PortalRoutesTestCase(unittest.TestCase):
             admin_session["admin_role"] = "main"
         formal_admin = self.client.get("/admin/akademik?tab=formal")
         self.assertEqual(formal_admin.status_code, 200)
-        self.assertIn(b"SPM (Muadalah)", formal_admin.data)
-        self.assertNotIn("Tahfidzul Qur’an".encode(), formal_admin.data)
+        self.assertIn(b"Pendidikan Formal SMP &amp; SMK", formal_admin.data)
+        self.assertNotIn("Takhassus Tahfidzul Qur’an".encode(), formal_admin.data)
         nonformal_admin = self.client.get("/admin/akademik?tab=non_formal")
         self.assertEqual(nonformal_admin.status_code, 200)
-        self.assertIn("Tahfidzul Qur’an".encode(), nonformal_admin.data)
-        self.assertNotIn(b"SPM (Muadalah)", nonformal_admin.data)
+        self.assertIn("Takhassus Tahfidzul Qur’an".encode(), nonformal_admin.data)
+        self.assertNotIn(b"Pendidikan Formal SMP &amp; SMK", nonformal_admin.data)
 
         new_nonformal = self.client.get("/admin/akademik/program/baru?education_type=non_formal")
         self.assertEqual(new_nonformal.status_code, 200)
         self.assertIn(b'<option value="non_formal" selected>', new_nonformal.data)
+        self.assertIn(b'name="kitabs_label"', new_nonformal.data)
+        self.assertIn("Kitab, materi, atau jenjang program".encode(), new_nonformal.data)
         token = re.search(r'name="csrf_token" value="([^"]+)"', new_nonformal.get_data(as_text=True)).group(1)
         saved_nonformal = self.client.post(
             "/admin/akademik/program/simpan",
@@ -1095,6 +1157,7 @@ class PortalRoutesTestCase(unittest.TestCase):
                 "title": "Kelas Tsanawiyah",
                 "category": "Pendidikan formal",
                 "description": "Pembelajaran bertahap di lingkungan pesantren.",
+                "kitabs_label": "Materi pembelajaran",
                 "kitabs": "Safinatun Najah\nJurumiyah, Amtsilati",
                 "info_url": "/psb",
             },
@@ -1105,6 +1168,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         saved_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
         added_program = next(item for item in saved_preferences["programs"] if item["title"] == "Kelas Tsanawiyah")
         self.assertEqual(added_program["kitabs"], ["Safinatun Najah", "Jurumiyah", "Amtsilati"])
+        self.assertEqual(added_program["kitabs_label"], "Materi pembelajaran")
         academic_page = self.client.get("/akademik")
         self.assertEqual(academic_page.status_code, 200)
         academic_html = academic_page.get_data(as_text=True)
@@ -1146,6 +1210,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(updated_item["info_url"], "/kontak")
         self.assertEqual(updated_item["title"], "Kelas Tsanawiyah Terpadu")
         self.assertEqual(updated_item["education_type"], "formal")
+        self.assertEqual(updated_item["kitabs_label"], "Materi pembelajaran")
 
         calendar_form = self.client.get("/admin/akademik/kalender/baru")
         self.assertEqual(calendar_form.status_code, 200)

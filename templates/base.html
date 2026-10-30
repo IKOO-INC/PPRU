@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}?v=1.13.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=10">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=11">
   {% block extra_head %}{% endblock %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
   {% block extra_scripts %}{% endblock %}
@@ -46,7 +46,7 @@
                 <div class="nav-dropdown-menu" id="profile-dropdown-menu" data-nav-dropdown-menu>
                   <a href="{{ item.url }}#sejarah">Sejarah</a>
                   <a href="{{ item.url }}#visi-misi">Visi misi</a>
-                  <a href="{{ item.url }}#masyayikh">Masyayikh</a>
+                  <a href="{{ item.url }}#masyayikh">Pendiri &amp; Pengasuh</a>
                 </div>
               </div>
             {% else %}

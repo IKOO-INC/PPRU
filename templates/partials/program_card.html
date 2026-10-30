@@ -5,6 +5,6 @@
   <span class="program-category">{{ program.category|default('Program pendidikan') }}</span>
   <h3>{{ program.title }}</h3>
   <p>{{ program.description }}</p>
-  <div class="program-kitabs"><strong>Kitab yang dipelajari</strong><ul>{% for kitab in program.kitabs|default([]) %}<li>{{ kitab }}</li>{% else %}<li>Daftar kitab akan diinformasikan.</li>{% endfor %}</ul></div>
+  <div class="program-kitabs"><strong>{{ program.get('kitabs_label', 'Kitab yang dipelajari') }}</strong><ul>{% for kitab in program.kitabs|default([]) %}<li>{{ kitab }}</li>{% else %}<li>Informasi materi akan diumumkan.</li>{% endfor %}</ul></div>
   <a class="button button--green button--small program-info-link" href="{{ program.info_url|default('/kontak') }}">Informasi lebih lanjut <span aria-hidden="true">↗</span></a>
 </article>

@@ -1,5 +1,7 @@
 """Flask application for the PPRU public portal and MongoDB-backed admin."""
+import copy
 import hmac
+import json
 import os
 import re
 import secrets
@@ -71,6 +73,12 @@ ACADEMIC_PROGRAM_ICON_OPTIONS = {
 ACADEMIC_PROGRAM_TYPE_SLUGS = {
     "formal": "formal",
     "non_formal": "non-formal",
+}
+PROFILE_CONTENT_REVISION = "musyawarah-profil-2026-v1"
+PROFILE_PROGRAM_ALIASES = {
+    "Pendidikan Formal SMP & SMK": {"SPM (Muadalah)"},
+    "Madrasah Diniyah": {"Diniyah Takmiliyah"},
+    "Takhassus Tahfidzul Qur’an": {"Tahfidzul Qur’an"},
 }
 ADMIN_PREVIEW_PAGES = {
     "brand": ("index.html", "home", "/"),
@@ -348,8 +356,13 @@ def _apply_admin_form(content, form, component):
     elif component == "profile":
         profile = content.setdefault("profile", {})
         history = content.setdefault("history", {})
-        for key in ("title", "subtitle", "history_title", "vision_title", "vision"):
+        for key in ("title", "subtitle", "history_title", "vision_title", "vision", "leadership_title"):
             profile[key] = _form_value(form, f"profile_{key}", profile.get(key, ""))
+        profile["leadership_note"] = _form_value(
+            form,
+            "profile_leadership_note",
+            profile.get("leadership_note", ""),
+        )
         history_text = _form_value(
             form,
             "history_paragraphs",
@@ -451,6 +464,111 @@ def _apply_admin_form(content, form, component):
             hafalan[key] = _form_value(form, f"hafalan_{key}", hafalan.get(key, ""))
 
 
+def _normalize_profile_program_title(value):
+    normalized = str(value or "").casefold().replace("’", "'").replace("‘", "'")
+    return re.sub(r"[^a-z0-9]+", " ", normalized).strip()
+
+
+def _merge_profile_programs(current_programs, seed_programs):
+    """Refresh profile-owned program copy while retaining admin IDs, logos and extra entries."""
+    current_programs = current_programs if isinstance(current_programs, list) else []
+    if not isinstance(seed_programs, list):
+        return current_programs
+
+    consumed = set()
+    merged = []
+    for seed_program in seed_programs:
+        if not isinstance(seed_program, dict):
+            continue
+        seed_title = str(seed_program.get("title", ""))
+        aliases = PROFILE_PROGRAM_ALIASES.get(seed_title, set())
+        match_titles = {_normalize_profile_program_title(seed_title)}
+        match_titles.update(_normalize_profile_program_title(alias) for alias in aliases)
+        match_index = next(
+            (
+                index for index, old_program in enumerate(current_programs)
+                if index not in consumed
+                and isinstance(old_program, dict)
+                and _normalize_profile_program_title(old_program.get("title")) in match_titles
+            ),
+            None,
+        )
+        updated_program = copy.deepcopy(seed_program)
+        if match_index is not None:
+            existing = current_programs[match_index]
+            consumed.add(match_index)
+            for key in ("id", "number", "color", "icon", "logo", "info_url"):
+                if key in existing and existing[key] not in (None, ""):
+                    updated_program[key] = copy.deepcopy(existing[key])
+        merged.append(updated_program)
+
+    for index, old_program in enumerate(current_programs):
+        if index not in consumed and isinstance(old_program, dict):
+            merged.append(copy.deepcopy(old_program))
+    for index, program in enumerate(merged, start=1):
+        if not program.get("id"):
+            program["id"] = secrets.token_urlsafe(10)
+        program.setdefault("number", f"{index:02d}")
+    return merged
+
+
+def _apply_profile_content_revision(content, seed_content):
+    """Apply the supplied institutional profile copy once, preserving user-managed media."""
+    if not isinstance(content, dict) or not isinstance(seed_content, dict):
+        return False
+    if content.get("_profile_content_revision") == PROFILE_CONTENT_REVISION:
+        return False
+
+    section_fields = {
+        "site": ("description", "footer_note", "address"),
+        "hero": ("eyebrow", "title", "description", "image_note"),
+        "history": ("eyebrow", "title", "intro", "body", "quote"),
+        "profile": (
+            "eyebrow", "title", "subtitle", "history_title", "history_paragraphs",
+            "vision_title", "vision", "mission", "leadership_title", "leadership_note",
+        ),
+        "contact": ("address",),
+    }
+    for section_name, fields in section_fields.items():
+        source = seed_content.get(section_name)
+        if not isinstance(source, dict):
+            continue
+        target = content.setdefault(section_name, {})
+        if not isinstance(target, dict):
+            target = content[section_name] = {}
+        for field in fields:
+            if field in source:
+                target[field] = copy.deepcopy(source[field])
+
+    for section_name in ("stats", "program_intro"):
+        if section_name in seed_content:
+            content[section_name] = copy.deepcopy(seed_content[section_name])
+
+    if "programs" in seed_content:
+        content["programs"] = _merge_profile_programs(
+            content.get("programs"),
+            seed_content.get("programs"),
+        )
+
+    existing_faq = content.get("faq")
+    seed_faq = seed_content.get("faq")
+    if isinstance(existing_faq, list) and isinstance(seed_faq, list):
+        seed_answers = {
+            str(item.get("question", "")).strip(): item.get("answer", "")
+            for item in seed_faq if isinstance(item, dict)
+        }
+        for item in existing_faq:
+            if isinstance(item, dict):
+                question = str(item.get("question", "")).strip()
+                if question in seed_answers:
+                    item["answer"] = copy.deepcopy(seed_answers[question])
+    elif isinstance(seed_faq, list):
+        content["faq"] = copy.deepcopy(seed_faq)
+
+    content["_profile_content_revision"] = PROFILE_CONTENT_REVISION
+    return True
+
+
 def _unique_news_slug(items, requested_slug, current_slug=None):
     base_slug = slugify(requested_slug)
     existing = {item.get("slug") for item in items if item.get("slug") != current_slug}
@@ -540,11 +658,18 @@ def create_app(test_config=None):
         store = ReadOnlyPortalStore(JsonPortalStore(**store_options))
     else:
         store = JsonPortalStore(**store_options)
+    try:
+        profile_seed_content = json.loads(
+            Path(app.config["SEED_CONTENT_FILE"]).read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        profile_seed_content = {}
     content_lock = threading.RLock()
 
     def load_content():
         content = store.load()
         needs_save = _migrate_legacy_hafalan_preferences(content)
+        needs_save = _apply_profile_content_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
         if isinstance(site, dict):
             if site.get("login_url") in (None, "", "/masuk"):
@@ -567,6 +692,10 @@ def create_app(test_config=None):
             if not isinstance(kitabs, list):
                 kitabs = _split_list_lines(kitabs)
             program["kitabs"] = [str(kitab).strip() for kitab in kitabs if str(kitab).strip()]
+            kitabs_label = str(program.get("kitabs_label", "Kitab yang dipelajari") or "Kitab yang dipelajari").strip()
+            if program.get("kitabs_label") != kitabs_label or "kitabs_label" not in program:
+                program["kitabs_label"] = kitabs_label
+                needs_save = True
             program["info_url"] = _safe_public_link(program.get("info_url", "/kontak"))
             logo = _safe_program_logo(program.get("logo", ""))
             if program.get("logo") != logo:
@@ -1338,6 +1467,7 @@ def create_app(test_config=None):
                 "title": "",
                 "category": "Program pendidikan",
                 "description": "",
+                "kitabs_label": "Materi utama",
                 "kitabs": [],
                 "info_url": "/kontak",
                 "education_type": education_type,
@@ -1384,6 +1514,8 @@ def create_app(test_config=None):
         category = request.form.get("category", "Program pendidikan").strip() or "Program pendidikan"
         description = request.form.get("description", "").strip()
         kitabs = _split_list_lines(request.form.get("kitabs", ""))
+        kitabs_label_field_provided = "kitabs_label" in request.form
+        kitabs_label = request.form.get("kitabs_label", "").strip() or "Kitab yang dipelajari"
         submitted_education_type = request.form.get("education_type", "").strip()
         education_type = (
             submitted_education_type
@@ -1403,7 +1535,7 @@ def create_app(test_config=None):
         elif not description:
             error = "Keterangan program wajib diisi."
         elif not kitabs:
-            error = "Tambahkan minimal satu judul kitab, satu per baris."
+            error = "Tambahkan minimal satu kitab, materi, atau jenjang program."
         elif submitted_education_type and submitted_education_type not in ACADEMIC_PROGRAM_TYPE_LABELS:
             error = "Pilih Pendidikan Formal atau Pendidikan Non Formal."
         elif icon_field_provided and icon not in ACADEMIC_PROGRAM_ICON_OPTIONS:
@@ -1419,6 +1551,7 @@ def create_app(test_config=None):
             "category": category,
             "education_type": education_type,
             "description": description,
+            "kitabs_label": kitabs_label,
             "kitabs": kitabs,
             "info_url": info_url,
             "icon": icon,
@@ -1446,6 +1579,8 @@ def create_app(test_config=None):
             if item_id and existing_index is None:
                 abort(404)
             existing = programs[existing_index] if existing_index is not None else {}
+            if existing_index is not None and not kitabs_label_field_provided:
+                item["kitabs_label"] = existing.get("kitabs_label", "Kitab yang dipelajari")
             if existing_index is not None and not icon_field_provided:
                 item["icon"] = existing.get("icon", "book")
             if existing_index is not None and not logo_field_provided:
