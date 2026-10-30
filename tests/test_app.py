@@ -1,4 +1,5 @@
 import copy
+from datetime import timedelta
 import html
 import json
 import re
@@ -9,7 +10,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from app import _safe_image_url, _split_paragraphs, _youtube_embed_url, create_app
+from app import _safe_image_url, _split_paragraphs, _youtube_embed_url, create_app, now_jakarta
 from cloudinary_service import upload_image, upload_local_image
 from content_store import MongoPortalStore
 from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
@@ -260,6 +261,33 @@ class PortalRoutesTestCase(unittest.TestCase):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b"Pondok Pesantren", response.data)
+
+    def test_home_upcoming_events_are_the_next_three_academic_calendar_items(self):
+        today = now_jakarta().date()
+        upcoming_dates = [today + timedelta(days=days) for days in (20, 4, -1, 10, 40)]
+        preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        preferences["academic_events"] = [
+            {"date": event_date.isoformat(), "title": title, "category": "Kalender", "description": title}
+            for event_date, title in zip(
+                upcoming_dates,
+                ("Ketiga", "Paling Dekat", "Sudah Lewat", "Kedua", "Di Luar Tiga Terdekat"),
+            )
+        ]
+        self.content_file.write_text(json.dumps(preferences, ensure_ascii=False), encoding="utf-8")
+
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        rendered = response.get_data(as_text=True)
+        self.assertIn('href="/akademik#kalender-akademik"', rendered)
+        self.assertIn("Paling Dekat", rendered)
+        self.assertIn("Kedua", rendered)
+        self.assertIn("Ketiga", rendered)
+        self.assertNotIn("Sudah Lewat", rendered)
+        self.assertNotIn("Di Luar Tiga Terdekat", rendered)
+        self.assertNotIn("Peringatan Hari Santri Nasional", rendered)
+        self.assertEqual(rendered.count('class="event-card"'), 3)
+        self.assertLess(rendered.index("Paling Dekat"), rendered.index("Kedua"))
+        self.assertLess(rendered.index("Kedua"), rendered.index("Ketiga"))
 
     def test_profile_navigation_dropdown_and_siapik_portal_link(self):
         legacy_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))

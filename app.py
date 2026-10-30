@@ -780,7 +780,28 @@ def create_app(test_config=None):
 
     @app.get("/")
     def home():
-        return render_template("index.html", **page_context("home"))
+        context = page_context("home")
+        today = now_jakarta().date()
+        upcoming_events = []
+        for event in context["data"].get("academic_events", []):
+            try:
+                event_date = date.fromisoformat(str(event.get("date", "")))
+            except (TypeError, ValueError):
+                continue
+            if event_date < today:
+                continue
+            upcoming_events.append((
+                event_date,
+                {
+                    **event,
+                    "day": f"{event_date.day:02d}",
+                    "month": INDONESIAN_MONTHS[event_date.month - 1][:3],
+                },
+            ))
+        context["data"]["academic_events"] = [
+            event for _, event in sorted(upcoming_events, key=lambda item: item[0])[:3]
+        ]
+        return render_template("index.html", **context)
 
     @app.get("/profil")
     def profile():

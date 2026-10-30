@@ -110,12 +110,12 @@
   <div class="container">
     <div class="section-heading-row">
       <div><span class="section-eyebrow">Catat tanggalnya</span><h2>Kegiatan Mendatang</h2></div>
-      <a class="text-link" href="/kontak">Lihat kalender lengkap <span aria-hidden="true">→</span></a>
+      <a class="text-link" href="/akademik#kalender-akademik">Lihat kalender akademik lengkap <span aria-hidden="true">→</span></a>
     </div>
     <div class="event-grid">
-      {% for event in data.events %}
-      <article class="event-card"><div class="event-date"><strong>{{ event.day }}</strong><span>{{ event.month }}</span></div><div class="event-copy"><span>{{ event.category }}</span><h3>{{ event.title }}</h3><p>{{ event.description }}</p></div><span class="event-arrow" aria-hidden="true">↗</span></article>
-      {% endfor %}
+      {% for event in data.academic_events %}
+      <article class="event-card"><time class="event-date" datetime="{{ event.date }}"><strong>{{ event.day }}</strong><span>{{ event.month }}</span></time><div class="event-copy"><span>{{ event.category|default('Akademik') }}</span><h3>{{ event.title }}</h3>{% if event.description %}<p>{{ event.description }}</p>{% endif %}</div><span class="event-arrow" aria-hidden="true">↗</span></article>
+      {% else %}<p class="academic-calendar-empty">Belum ada kegiatan akademik mendatang. Jadwal akan ditampilkan setelah ditambahkan ke kalender akademik.</p>{% endfor %}
     </div>
   </div>
 </section>
