@@ -200,7 +200,8 @@
 
   document.querySelectorAll("form[data-confirm-delete]").forEach((form) => {
     form.addEventListener("submit", (event) => {
-      if (!window.confirm("Hapus berita ini? Tindakan ini tidak dapat dibatalkan.")) event.preventDefault();
+      const message = form.dataset.confirmMessage || "Hapus berita ini? Tindakan ini tidak dapat dibatalkan.";
+      if (!window.confirm(message)) event.preventDefault();
     });
   });
 

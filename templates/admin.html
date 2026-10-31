@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
 {% block title %}Kelola Website · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=15">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-page">
@@ -107,15 +107,33 @@
         </section>
 
         <section class="admin-panel" data-admin-panel="users" data-preview-path="/"{% if active_component != 'users' %} hidden{% endif %}>
-          <div class="admin-panel-heading"><div><span class="admin-kicker">Akses admin</span><h2>Kelola User Admin</h2><p>Atur akun khusus untuk pengelolaan Pendidikan/Akademik. Login tetap melalui halaman <code>/admin</code>.</p></div></div>
+          <div class="admin-panel-heading"><div><span class="admin-kicker">Akses admin</span><h2>Kelola User Admin</h2><p>Admin Utama tetap masuk tanpa nama pengguna, hanya dengan kata sandi. Tambahkan akun terpisah untuk pengelola Pendidikan/Akademik; semua akun masuk melalui <code>/admin</code>.</p></div></div>
           {% if user_error %}<div class="admin-alert admin-alert--error" role="alert">{{ user_error }}</div>{% endif %}
-          <div class="admin-user-status{% if academic_admin.get('active') %} is-active{% endif %}"><span class="admin-user-status-dot" aria-hidden="true"></span><div><strong>{% if academic_admin.get('active') %}Akun Admin Akademik aktif{% elif academic_admin.get('password_hash') %}Akun Admin Akademik nonaktif{% else %}Akun Admin Akademik belum dibuat{% endif %}</strong><small>{% if academic_admin.get('username') %}Nama pengguna: {{ academic_admin.username }}{% else %}Buat akun agar pengelola pendidikan dapat masuk.{% endif %}</small></div>{% if academic_admin.get('active') %}<a href="{{ url_for('admin_academic') }}">Buka panel Akademik <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>{% endif %}</div>
-          <form method="post" action="{{ url_for('admin_users_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="admin-fields-grid">
-            <label class="admin-field"><span>Nama pengguna</span><input type="text" name="username" value="{{ academic_admin.get('username', 'admin-akademik') }}" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label>
-            <label class="admin-field"><span>Kata sandi baru</span><input type="password" name="password" minlength="12" autocomplete="new-password" placeholder="{% if academic_admin.get('password_hash') %}Kosongkan jika tidak diubah{% else %}Minimal 12 karakter{% endif %}"></label>
-            <label class="admin-field"><span>Konfirmasi kata sandi</span><input type="password" name="password_confirm" minlength="12" autocomplete="new-password" placeholder="Ulangi kata sandi baru"></label>
-            <label class="admin-field admin-user-toggle"><input type="checkbox" name="active" value="1"{% if not academic_admin.get('password_hash') or academic_admin.get('active') %} checked{% endif %}><span>Izinkan akun ini masuk ke panel Pendidikan/Akademik</span></label>
-          </div><div class="admin-form-actions"><span>Kata sandi disimpan sebagai hash dan tidak ditampilkan kembali. Nonaktifkan centang untuk mencabut akses.</span><button class="admin-save-button" type="submit">Simpan akun akademik</button></div></form>
+          <div class="admin-users-list">
+            {% for academic_admin in academic_admins %}
+            <article class="admin-repeat-card admin-user-card">
+              <span class="admin-repeat-index">Akun Admin Akademik {{ '%02d'|format(loop.index) }}</span>
+              <div class="admin-user-status{% if academic_admin.active %} is-active{% endif %}"><span class="admin-user-status-dot" aria-hidden="true"></span><div><strong>{% if academic_admin.active %}Akun aktif{% else %}Akun nonaktif{% endif %}</strong><small>Nama pengguna: {{ academic_admin.username }}</small></div>{% if academic_admin.active %}<a href="{{ url_for('admin_academic') }}">Buka panel Akademik <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>{% endif %}</div>
+              <form method="post" action="{{ url_for('admin_users_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="account_id" value="{{ academic_admin.id }}"><div class="admin-fields-grid">
+                <label class="admin-field"><span>Nama pengguna</span><input type="text" name="username" value="{{ academic_admin.username }}" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]+" required autocomplete="username"></label>
+                <label class="admin-field"><span>Kata sandi baru</span><input type="password" name="password" minlength="12" autocomplete="new-password" placeholder="{% if academic_admin.has_password %}Kosongkan jika tidak diubah{% else %}Minimal 12 karakter{% endif %}"{% if not academic_admin.has_password %} required{% endif %}></label>
+                <label class="admin-field"><span>Konfirmasi kata sandi</span><input type="password" name="password_confirm" minlength="12" autocomplete="new-password" placeholder="Ulangi kata sandi baru"></label>
+                <label class="admin-field admin-user-toggle"><input type="checkbox" name="active" value="1"{% if academic_admin.active %} checked{% endif %}><span>Izinkan akun ini masuk ke panel Pendidikan/Akademik</span></label>
+              </div><div class="admin-form-actions"><span>Kata sandi disimpan sebagai hash. Kosongkan kata sandi jika tidak ingin menggantinya.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div></form>
+              <div class="admin-news-actions admin-user-card-actions"><form method="post" action="{{ url_for('admin_users_delete') }}" data-confirm-delete data-confirm-message="Hapus akun admin {{ academic_admin.username }}? Akun ini langsung kehilangan akses."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="account_id" value="{{ academic_admin.id }}"><button type="submit">Hapus akun</button></form></div>
+            </article>
+            {% else %}
+            <div class="admin-news-empty">Belum ada akun Admin Akademik. Buat akun di formulir berikut.</div>
+            {% endfor %}
+          </div>
+          <article class="admin-repeat-card admin-user-add-card"><span class="admin-repeat-index">Akun baru</span><h3 class="admin-subheading">Tambah akun Admin Pendidikan/Akademik</h3>
+            <form method="post" action="{{ url_for('admin_users_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="account_id" value=""><div class="admin-fields-grid">
+              <label class="admin-field"><span>Nama pengguna</span><input type="text" name="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]+" required autocomplete="username" placeholder="contoh: admin-pendidikan"></label>
+              <label class="admin-field"><span>Kata sandi</span><input type="password" name="password" minlength="12" required autocomplete="new-password" placeholder="Minimal 12 karakter"></label>
+              <label class="admin-field"><span>Konfirmasi kata sandi</span><input type="password" name="password_confirm" minlength="12" required autocomplete="new-password" placeholder="Ulangi kata sandi"></label>
+              <label class="admin-field admin-user-toggle"><input type="checkbox" name="active" value="1" checked><span>Izinkan akun ini masuk ke panel Pendidikan/Akademik</span></label>
+            </div><div class="admin-form-actions"><span>Nama pengguna harus unik. Kata sandi disimpan sebagai hash dan tidak ditampilkan kembali.</span><button class="admin-save-button" type="submit">Tambah akun admin</button></div></form>
+          </article>
         </section>
         </div>
       </div>

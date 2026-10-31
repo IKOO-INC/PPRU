@@ -17,6 +17,7 @@ from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_c
 from news_service import news_summary, sanitize_rich_text
 from pymongo.errors import PyMongoError
 from werkzeug.datastructures import FileStorage, MultiDict
+from werkzeug.security import generate_password_hash
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1408,12 +1409,18 @@ class PortalRoutesTestCase(unittest.TestCase):
             login_page_html = login_page.get_data(as_text=True)
             token = re.search(r'name="csrf_token" value="([^"]+)"', login_page_html).group(1)
             self.assertIn("Admin Pendidikan/Akademik", login_page_html)
+            named_main_login = main_client.post(
+                "/admin/login",
+                data={"csrf_token": token, "username": "admin-utama", "password": "main-admin-secret"},
+            )
+            self.assertEqual(named_main_login.status_code, 401)
             main_client.post("/admin/login", data={"csrf_token": token, "password": "main-admin-secret"})
 
             users_page = main_client.get("/admin?tab=users")
             users_html = users_page.get_data(as_text=True)
             self.assertIn("Kelola User Admin", users_html)
-            self.assertIn("Akun Admin Akademik belum dibuat", users_html)
+            self.assertIn("Admin Utama tetap masuk tanpa nama pengguna", users_html)
+            self.assertIn("Belum ada akun Admin Akademik", users_html)
             self.assertNotIn('data-admin-tab="programs"', users_html)
             token = re.search(r'name="csrf_token" value="([^"]+)"', users_html).group(1)
             password = "education-admin-password"
@@ -1429,14 +1436,52 @@ class PortalRoutesTestCase(unittest.TestCase):
                 follow_redirects=True,
             )
             self.assertEqual(saved_users.status_code, 200)
-            self.assertIn(b"Akun Admin Akademik aktif", saved_users.data)
+            self.assertIn(b"Akun aktif", saved_users.data)
             saved_preferences = json.loads(preferences_path.read_text(encoding="utf-8"))
-            account = saved_preferences["admin_users"]["academic"]
+            account = saved_preferences["admin_users"]["academic_accounts"][0]
             self.assertNotIn(account["password_hash"].encode(), saved_users.data)
             self.assertNotEqual(account["password_hash"], password)
             self.assertTrue(account["password_hash"].startswith("scrypt:"))
             self.assertNotIn(password, preferences_path.read_text(encoding="utf-8"))
             self.assertNotIn(account["password_hash"].encode(), main_client.get("/").data)
+
+            users_page = main_client.get("/admin?tab=users")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', users_page.get_data(as_text=True)).group(1)
+            second_password = "another-education-password"
+            second_account = main_client.post(
+                "/admin/users/save",
+                data={
+                    "csrf_token": token,
+                    "account_id": "",
+                    "username": "admin-pendidikan-2",
+                    "password": second_password,
+                    "password_confirm": second_password,
+                    "active": "1",
+                },
+                follow_redirects=True,
+            )
+            self.assertEqual(second_account.status_code, 200)
+            self.assertIn(b"Akun Admin Akademik 02", second_account.data)
+            saved_preferences = json.loads(preferences_path.read_text(encoding="utf-8"))
+            academic_accounts = saved_preferences["admin_users"]["academic_accounts"]
+            self.assertEqual(len(academic_accounts), 2)
+            self.assertEqual({item["username"] for item in academic_accounts}, {"admin-pendidikan", "admin-pendidikan-2"})
+            self.assertNotIn(second_password, preferences_path.read_text(encoding="utf-8"))
+
+            duplicate_username = main_client.post(
+                "/admin/users/save",
+                data={
+                    "csrf_token": token,
+                    "account_id": "",
+                    "username": "ADMIN-PENDIDIKAN",
+                    "password": "third-education-password",
+                    "password_confirm": "third-education-password",
+                    "active": "1",
+                },
+                follow_redirects=True,
+            )
+            self.assertIn("Nama pengguna tersebut sudah digunakan", duplicate_username.get_data(as_text=True))
+            self.assertEqual(len(json.loads(preferences_path.read_text(encoding="utf-8"))["admin_users"]["academic_accounts"]), 2)
 
             logout_page = main_client.get("/admin?tab=users")
             token = re.search(r'name="csrf_token" value="([^"]+)"', logout_page.get_data(as_text=True)).group(1)
@@ -1455,6 +1500,18 @@ class PortalRoutesTestCase(unittest.TestCase):
             )
             self.assertEqual(login_response.status_code, 302)
             self.assertEqual(login_response.location, "/admin/akademik")
+
+            second_client = app.test_client()
+            second_login_page = second_client.get("/admin")
+            second_token = re.search(r'name="csrf_token" value="([^"]+)"', second_login_page.get_data(as_text=True)).group(1)
+            second_login = second_client.post(
+                "/admin/login",
+                data={"csrf_token": second_token, "username": "admin-pendidikan-2", "password": second_password},
+            )
+            self.assertEqual(second_login.status_code, 302)
+            self.assertEqual(second_login.location, "/admin/akademik")
+            self.assertEqual(second_client.get("/admin/akademik").status_code, 200)
+
             dashboard = academic_client.get("/admin/akademik")
             self.assertEqual(dashboard.status_code, 200)
             self.assertIn(b"Program Pendidikan", dashboard.data)
@@ -1500,6 +1557,81 @@ class PortalRoutesTestCase(unittest.TestCase):
             revoked = academic_client.get("/admin/akademik")
             self.assertEqual(revoked.status_code, 302)
             self.assertEqual(revoked.location, "/admin")
+            self.assertEqual(second_client.get("/admin/akademik").status_code, 200)
+
+            users_page = root_client.get("/admin?tab=users")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', users_page.get_data(as_text=True)).group(1)
+            second_account_id = next(
+                item["id"]
+                for item in json.loads(preferences_path.read_text(encoding="utf-8"))["admin_users"]["academic_accounts"]
+                if item["username"] == "admin-pendidikan-2"
+            )
+            deleted = root_client.post(
+                "/admin/users/delete",
+                data={"csrf_token": token, "account_id": second_account_id},
+                follow_redirects=True,
+            )
+            self.assertEqual(deleted.status_code, 200)
+            self.assertNotIn(b"admin-pendidikan-2", deleted.data)
+            self.assertEqual(second_client.get("/admin/akademik").location, "/admin")
+
+    def test_legacy_single_academic_account_remains_valid_and_migrates_when_saved(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            preferences_path = root / "preferensi.json"
+            shutil.copyfile(ROOT / "data" / "site.json", preferences_path)
+            content = json.loads(preferences_path.read_text(encoding="utf-8"))
+            content["admin_users"] = {
+                "academic": {
+                    "username": "legacy-admin",
+                    "password_hash": generate_password_hash("legacy-admin-password"),
+                    "active": True,
+                    "session_token": "legacy-admin-session-token",
+                }
+            }
+            preferences_path.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+            app = create_app({
+                "TESTING": True,
+                "CONTENT_FILE": preferences_path,
+                "NEWS_FILE": root / "berita.json",
+                "GALLERY_FILE": root / "gallery.json",
+                "ADMIN_PASSWORD": "main-admin-secret",
+                "SECRET_KEY": "test-secret-key",
+            })
+
+            academic_client = app.test_client()
+            login_page = academic_client.get("/admin")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', login_page.get_data(as_text=True)).group(1)
+            response = academic_client.post(
+                "/admin/login",
+                data={"csrf_token": token, "username": "legacy-admin", "password": "legacy-admin-password"},
+            )
+            self.assertEqual(response.location, "/admin/akademik")
+            self.assertEqual(academic_client.get("/admin/akademik").status_code, 200)
+
+            main_client = app.test_client()
+            main_page = main_client.get("/admin")
+            token = re.search(r'name="csrf_token" value="([^"]+)"', main_page.get_data(as_text=True)).group(1)
+            main_client.post("/admin/login", data={"csrf_token": token, "password": "main-admin-secret"})
+            users_page = main_client.get("/admin?tab=users")
+            users_html = users_page.get_data(as_text=True)
+            self.assertIn("legacy-admin", users_html)
+            token = re.search(r'name="csrf_token" value="([^"]+)"', users_html).group(1)
+            account_id = re.search(r'name="account_id" value="([^"]+)"', users_html).group(1)
+            saved = main_client.post(
+                "/admin/users/save",
+                data={
+                    "csrf_token": token,
+                    "account_id": account_id,
+                    "username": "legacy-admin-updated",
+                    "active": "1",
+                },
+            )
+            self.assertEqual(saved.status_code, 302)
+            saved_users = json.loads(preferences_path.read_text(encoding="utf-8"))["admin_users"]
+            self.assertNotIn("academic", saved_users)
+            self.assertEqual(saved_users["academic_accounts"][0]["username"], "legacy-admin-updated")
+            self.assertEqual(academic_client.get("/admin/akademik").location, "/admin")
 
     def test_legacy_academic_program_categories_are_normalized_into_types(self):
         legacy_content = json.loads(self.content_file.read_text(encoding="utf-8"))

@@ -242,6 +242,11 @@
 .admin-user-toggle { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 10px; background: #f8faf9; border: 1px solid #e8efea; border-radius: 6px; }
 .admin-user-toggle input { width: 16px; min-height: 16px; accent-color: #08704f; }
 .admin-user-toggle span { line-height: 1.5; }
+.admin-users-list { display: grid; gap: 11px; margin-bottom: 15px; }
+.admin-user-card { padding-bottom: 12px; }
+.admin-user-card-actions { justify-content: flex-end; margin-top: 9px; }
+.admin-user-add-card { margin-top: 16px; padding-bottom: 12px; }
+.admin-user-add-card .admin-subheading { margin-top: 3px; }
 
 /* Separate education/academic administration workspace */
 .academic-admin-page { min-height: 680px; }

@@ -332,6 +332,35 @@ def _without_admin_users(content):
     return {key: value for key, value in content.items() if key != "admin_users"}
 
 
+def _academic_admin_accounts(admin_users):
+    """Return normalized education-admin accounts, including the legacy single-account shape."""
+    if not isinstance(admin_users, dict):
+        return []
+
+    stored_accounts = admin_users.get("academic_accounts")
+    if isinstance(stored_accounts, list):
+        accounts = []
+        used_ids = set()
+        for index, item in enumerate(stored_accounts):
+            if not isinstance(item, dict):
+                continue
+            account = copy.deepcopy(item)
+            account_id = str(account.get("id") or f"academic-legacy-{index + 1}").strip()
+            while not account_id or account_id in used_ids:
+                account_id = f"academic-legacy-{index + 1}-{len(used_ids) + 1}"
+            account["id"] = account_id
+            used_ids.add(account_id)
+            accounts.append(account)
+        return accounts
+
+    legacy_account = admin_users.get("academic")
+    if isinstance(legacy_account, dict) and legacy_account:
+        account = copy.deepcopy(legacy_account)
+        account["id"] = str(account.get("id") or "academic-legacy")
+        return [account]
+    return []
+
+
 def _academic_item_id(item, index):
     return str(item.get("id") or item.get("number") or index)
 
@@ -1223,14 +1252,26 @@ def create_app(test_config=None):
             abort(403)
         if role == "academic":
             users = load_content().get("admin_users", {})
-            account = users.get("academic", {}) if isinstance(users, dict) else {}
-            if not isinstance(account, dict):
-                account = {}
-            saved_token = str(account.get("session_token", ""))
+            accounts = _academic_admin_accounts(users)
+            account_id = str(session.get("admin_user_id", ""))
             session_token = str(session.get("admin_token", ""))
-            if not account.get("active") or not saved_token or not session_token or not hmac.compare_digest(saved_token, session_token):
+            account = next(
+                (
+                    item for item in accounts
+                    if item.get("active")
+                    and str(item.get("session_token", ""))
+                    and session_token
+                    and hmac.compare_digest(str(item.get("session_token", "")), session_token)
+                    and (not account_id or str(item.get("id", "")) == account_id)
+                ),
+                None,
+            )
+            if account is None:
                 session.clear()
                 return redirect(url_for("admin"))
+            # Upgrade existing single-account sessions without forcing a logout.
+            if not account_id:
+                session["admin_user_id"] = str(account.get("id", ""))
         return None
 
     def render_admin_news_form(post, is_edit, error=None, status_code=200, academic=False):
@@ -1562,14 +1603,15 @@ def create_app(test_config=None):
         for item in news_items:
             item["excerpt"] = news_summary(item)
         stored_admin_users = content.get("admin_users", {})
-        academic_account = stored_admin_users.get("academic", {}) if isinstance(stored_admin_users, dict) else {}
-        if not isinstance(academic_account, dict):
-            academic_account = {}
-        academic_admin_view = {
-            "username": academic_account.get("username", ""),
-            "active": bool(academic_account.get("active")),
-            "password_hash": bool(academic_account.get("password_hash")),
-        }
+        academic_admins_view = [
+            {
+                "id": str(account.get("id", "")),
+                "username": str(account.get("username", "")),
+                "active": bool(account.get("active")),
+                "has_password": bool(account.get("password_hash")),
+            }
+            for account in _academic_admin_accounts(stored_admin_users)
+        ]
         visible_content = _without_admin_users(content)
         history_paragraphs = content.get("profile", {}).get("history_paragraphs", [])
         if not isinstance(history_paragraphs, list):
@@ -1590,7 +1632,7 @@ def create_app(test_config=None):
             saved=request.args.get("saved") == "1",
             news_items=news_items,
             gallery_items=content.get("gallery", []),
-            academic_admin=academic_admin_view,
+            academic_admins=academic_admins_view,
             admission_title=_format_admission_title(admission_content.get("title", ""), admission_year),
             admission_year=admission_year,
             admission_programs=_selected_admission_programs(visible_content),
@@ -1843,42 +1885,101 @@ def create_app(test_config=None):
         if access_response is not None:
             return access_response
         validate_csrf()
-        content = load_content()
-        users = content.get("admin_users")
-        if not isinstance(users, dict):
-            users = {}
-            content["admin_users"] = users
-        existing = users.get("academic", {})
-        if not isinstance(existing, dict):
-            existing = {}
+        requested_account_id = request.form.get("account_id", "").strip()
+        account_id_field_present = "account_id" in request.form
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         password_confirm = request.form.get("password_confirm", "")
         active = request.form.get("active") == "1"
 
         error = ""
-        if not re.fullmatch(r"[A-Za-z0-9_.-]{3,64}", username):
-            error = "Nama pengguna harus 3–64 karakter dan hanya berisi huruf, angka, titik, garis bawah, atau tanda hubung."
-        elif password and len(password) < 12:
-            error = "Kata sandi admin akademik minimal 12 karakter."
-        elif password and password != password_confirm:
-            error = "Konfirmasi kata sandi tidak cocok."
-        elif active and not (password or existing.get("password_hash")):
-            error = "Tetapkan kata sandi sebelum mengaktifkan akun admin akademik."
+        with content_lock:
+            content = load_content()
+            users = content.get("admin_users")
+            if not isinstance(users, dict):
+                users = {}
+                content["admin_users"] = users
+            accounts = _academic_admin_accounts(users)
+            account_index = None
+            if requested_account_id:
+                account_index = next(
+                    (index for index, item in enumerate(accounts) if item.get("id") == requested_account_id),
+                    None,
+                )
+                if account_index is None:
+                    error = "Akun admin tidak ditemukan. Muat ulang halaman lalu coba lagi."
+            elif not account_id_field_present:
+                # Preserve the old form/API behavior: a submission for an existing username edits it.
+                matching_indices = [
+                    index for index, item in enumerate(accounts)
+                    if str(item.get("username", "")).casefold() == username.casefold()
+                ]
+                if len(matching_indices) == 1:
+                    account_index = matching_indices[0]
+
+            existing = accounts[account_index] if account_index is not None else {}
+            is_new_account = account_index is None
+            if not error and not re.fullmatch(r"[A-Za-z0-9_.-]{3,64}", username):
+                error = "Nama pengguna harus 3–64 karakter dan hanya berisi huruf, angka, titik, garis bawah, atau tanda hubung."
+            elif not error and any(
+                index != account_index
+                and str(item.get("username", "")).casefold() == username.casefold()
+                for index, item in enumerate(accounts)
+            ):
+                error = "Nama pengguna tersebut sudah digunakan akun admin lain."
+            elif not error and is_new_account and not password:
+                error = "Kata sandi wajib diisi saat membuat akun admin baru."
+            elif not error and password and len(password) < 12:
+                error = "Kata sandi admin minimal 12 karakter."
+            elif not error and password and password != password_confirm:
+                error = "Konfirmasi kata sandi tidak cocok."
+            elif not error and active and not (password or existing.get("password_hash")):
+                error = "Tetapkan kata sandi sebelum mengaktifkan akun admin."
+
+            if not error:
+                account = {
+                    **existing,
+                    "id": str(existing.get("id") or secrets.token_urlsafe(12)),
+                    "username": username,
+                    "active": active,
+                    "session_token": secrets.token_urlsafe(32),
+                    "updated_at": now_jakarta().isoformat(timespec="minutes"),
+                }
+                if password:
+                    account["password_hash"] = generate_password_hash(password)
+                if account_index is None:
+                    accounts.append(account)
+                else:
+                    accounts[account_index] = account
+                users["academic_accounts"] = accounts
+                users.pop("academic", None)
+                store.save(content)
+
         if error:
             return redirect(url_for("admin", tab="users", user_error=error))
+        return redirect(url_for("admin", tab="users", saved="1"))
 
-        account = {
-            **existing,
-            "username": username,
-            "active": active,
-            "session_token": secrets.token_urlsafe(32),
-            "updated_at": now_jakarta().isoformat(timespec="minutes"),
-        }
-        if password:
-            account["password_hash"] = generate_password_hash(password)
-        users["academic"] = account
-        store.save(content)
+    @app.post("/admin/users/delete")
+    def admin_users_delete():
+        access_response = require_main_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        account_id = request.form.get("account_id", "").strip()
+        if not account_id:
+            abort(400, description="Akun admin yang akan dihapus tidak ditentukan.")
+        with content_lock:
+            content = load_content()
+            users = content.get("admin_users")
+            if not isinstance(users, dict):
+                abort(404)
+            accounts = _academic_admin_accounts(users)
+            remaining_accounts = [item for item in accounts if str(item.get("id", "")) != account_id]
+            if len(remaining_accounts) == len(accounts):
+                abort(404)
+            users["academic_accounts"] = remaining_accounts
+            users.pop("academic", None)
+            store.save(content)
         return redirect(url_for("admin", tab="users", saved="1"))
 
     @app.get("/admin/akademik")
@@ -2444,35 +2545,40 @@ def create_app(test_config=None):
         entered_password = request.form.get("password", "")
         entered_username = request.form.get("username", "").strip()
         admin_password = str(app.config["ADMIN_PASSWORD"])
-        main_matches = bool(entered_password) and hmac.compare_digest(entered_password, admin_password)
+        # The primary Admin Utama login intentionally remains password-only.
+        main_matches = not entered_username and bool(entered_password) and hmac.compare_digest(entered_password, admin_password)
         stored_admin_users = content.get("admin_users", {})
-        academic_account = stored_admin_users.get("academic", {}) if isinstance(stored_admin_users, dict) else {}
-        academic_matches = False
-        password_hash = academic_account.get("password_hash") if isinstance(academic_account, dict) else None
-        username_matches = (
-            bool(entered_username)
-            and entered_username.casefold() == str(academic_account.get("username", "")).casefold()
-            if isinstance(academic_account, dict)
-            else False
-        )
-        if not main_matches and username_matches and entered_password and password_hash and academic_account.get("active"):
-            try:
-                academic_matches = check_password_hash(password_hash, entered_password)
-            except (TypeError, ValueError):
-                academic_matches = False
+        academic_accounts = _academic_admin_accounts(stored_admin_users)
+        academic_account = None
+        if entered_username and entered_password:
+            for candidate in academic_accounts:
+                if (
+                    not candidate.get("active")
+                    or entered_username.casefold() != str(candidate.get("username", "")).casefold()
+                    or not candidate.get("password_hash")
+                ):
+                    continue
+                try:
+                    if check_password_hash(candidate["password_hash"], entered_password):
+                        academic_account = candidate
+                        break
+                except (TypeError, ValueError):
+                    continue
+        academic_matches = academic_account is not None
         if not main_matches and not academic_matches:
             return render_template(
                 "admin_login.html",
                 site=visible_content.get("site", {}),
                 data=visible_content,
                 active_page=None,
-                error="Kata sandi admin tidak sesuai.",
+                error="Nama pengguna atau kata sandi admin tidak sesuai.",
             ), 401
         session.clear()
         session["admin_authenticated"] = True
         session["admin_role"] = "main" if main_matches else "academic"
         session["admin_username"] = "Admin Utama" if main_matches else academic_account.get("username", "Admin Akademik")
         if academic_matches:
+            session["admin_user_id"] = str(academic_account.get("id", ""))
             session["admin_token"] = str(academic_account.get("session_token", ""))
         csrf_value()
         if academic_matches:
