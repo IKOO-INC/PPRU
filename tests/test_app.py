@@ -1,5 +1,5 @@
 import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 import html
 import json
 import re
@@ -321,6 +321,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("Program Akademik Utama", psb_html)
         self.assertNotIn("Program Duplikat", psb_html)
         self.assertIn('href="/akademik/non-formal"', psb_html)
+        self.assertIn('href="https://bit.ly/spmb-ppru"', psb_html)
+        program_cards = psb_html.split('class="admission-programs">', 1)[1].split("</div></div></section>", 1)[0]
+        self.assertEqual(program_cards.count("<article>"), 3)
 
         with self.client.session_transaction() as admin_session:
             admin_session["admin_authenticated"] = True
@@ -340,6 +343,80 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(saved.status_code, 302)
         updated_admission = json.loads(self.content_file.read_text(encoding="utf-8"))["admission"]
         self.assertNotIn("programs", updated_admission)
+        updated_psb_html = self.client.get("/psb").get_data(as_text=True)
+        self.assertRegex(updated_psb_html, r"PSB Terbaru Tahun Ajaran 14\d{2}/14\d{2}")
+        self.assertNotIn("1447/1448", updated_psb_html)
+
+    def test_admin_academic_can_choose_three_distinct_psb_program_slots(self):
+        preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        programs_by_number = {item["number"]: item for item in preferences["programs"]}
+        selected_numbers = ["04", "02", "06"]
+        self.assertTrue(all(number in programs_by_number for number in selected_numbers))
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+
+        slot_page = self.client.get("/admin/akademik?tab=psb")
+        self.assertEqual(slot_page.status_code, 200)
+        slot_html = slot_page.get_data(as_text=True)
+        self.assertIn("Pilih Program PSB", slot_html)
+        self.assertIn('name="program_slot_0"', slot_html)
+        self.assertIn('name="program_slot_1"', slot_html)
+        self.assertIn('name="program_slot_2"', slot_html)
+        self.assertIn("Kajian Sorogan &amp; Bandungan", slot_html)
+        csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', slot_html).group(1)
+
+        saved = self.client.post(
+            "/admin/akademik/psb/simpan",
+            data={
+                "csrf_token": csrf_token,
+                "program_slot_0": selected_numbers[0],
+                "program_slot_1": selected_numbers[1],
+                "program_slot_2": selected_numbers[2],
+            },
+        )
+        self.assertEqual(saved.status_code, 302)
+        self.assertIn("tab=psb", saved.location)
+        persisted = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(persisted["admission"]["program_slots"], selected_numbers)
+
+        psb_html = self.client.get("/psb").get_data(as_text=True)
+        program_cards = psb_html.split('class="admission-programs">', 1)[1].split("</div></div></section>", 1)[0]
+        self.assertEqual(program_cards.count("<article>"), 3)
+        expected_titles = [html.escape(programs_by_number[number]["title"]) for number in selected_numbers]
+        self.assertEqual(
+            [program_cards.index(title) for title in expected_titles],
+            sorted(program_cards.index(title) for title in expected_titles),
+        )
+        self.assertNotIn(programs_by_number["01"]["title"], program_cards)
+
+        duplicate = self.client.post(
+            "/admin/akademik/psb/simpan",
+            data={
+                "csrf_token": csrf_token,
+                "program_slot_0": "02",
+                "program_slot_1": "02",
+                "program_slot_2": "04",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(duplicate.status_code, 200)
+        self.assertIn("Pilih program yang tersedia dan berbeda", duplicate.get_data(as_text=True))
+        unchanged = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(unchanged["admission"]["program_slots"], selected_numbers)
+
+    def test_psb_hijri_academic_year_updates_automatically(self):
+        with patch("app.now_jakarta", return_value=datetime(2026, 10, 31, 12, 0)):
+            current_year_page = self.client.get("/psb")
+        self.assertEqual(current_year_page.status_code, 200)
+        current_year_html = current_year_page.get_data(as_text=True)
+        self.assertIn("Penerimaan Santri Baru Tahun Ajaran 1448/1449", current_year_html)
+        self.assertNotIn("1447/1448", current_year_html)
+
+        with patch("app.now_jakarta", return_value=datetime(2027, 7, 1, 12, 0)):
+            next_year_page = self.client.get("/psb")
+        self.assertIn("Penerimaan Santri Baru Tahun Ajaran 1449/1450", next_year_page.get_data(as_text=True))
 
     def test_footer_uses_local_fontawesome_icons_and_user_supplied_social_urls(self):
         rendered = self.client.get("/").get_data(as_text=True)
@@ -1376,6 +1453,19 @@ class PortalRoutesTestCase(unittest.TestCase):
         program = next(item for item in saved_programs if item["title"] == "Kajian Kitab Logo")
         self.assertEqual(program["logo"], uploaded_logo)
         self.assertEqual(program["icon"], "graduation-cap")
+
+        psb_slots_form = self.client.get("/admin/akademik?tab=psb").get_data(as_text=True)
+        psb_slots_token = re.search(r'name="csrf_token" value="([^"]+)"', psb_slots_form).group(1)
+        psb_slots_saved = self.client.post(
+            "/admin/akademik/psb/simpan",
+            data={
+                "csrf_token": psb_slots_token,
+                "program_slot_0": program["number"],
+                "program_slot_1": "",
+                "program_slot_2": "",
+            },
+        )
+        self.assertEqual(psb_slots_saved.status_code, 302)
 
         academic_html = self.client.get("/akademik").get_data(as_text=True)
         self.assertIn(f'<img class="program-logo-image" src="{uploaded_logo}"', academic_html)

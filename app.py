@@ -336,6 +336,113 @@ def _academic_item_id(item, index):
     return str(item.get("id") or item.get("number") or index)
 
 
+def _hijri_year_for_date(gregorian_date):
+    """Convert a Gregorian date to the tabular Islamic-calendar year."""
+    year = gregorian_date.year
+    month = gregorian_date.month
+    day = gregorian_date.day
+    adjustment = (14 - month) // 12
+    adjusted_year = year + 4800 - adjustment
+    adjusted_month = month + 12 * adjustment - 3
+    julian_day = (
+        day
+        + (153 * adjusted_month + 2) // 5
+        + 365 * adjusted_year
+        + adjusted_year // 4
+        - adjusted_year // 100
+        + adjusted_year // 400
+        - 32045
+    )
+
+    offset = julian_day - 1948440 + 10632
+    cycle = (offset - 1) // 10631
+    offset = offset - 10631 * cycle + 354
+    year_in_cycle = (
+        ((10985 - offset) // 5316) * ((50 * offset) // 17719)
+        + (offset // 5670) * ((43 * offset) // 15238)
+    )
+    return 30 * cycle + year_in_cycle - 30
+
+
+def _hijri_academic_year(reference_date=None):
+    """Return the current Hijri year and its successor, e.g. 1448/1449."""
+    reference_date = reference_date or now_jakarta().date()
+    hijri_year = _hijri_year_for_date(reference_date)
+    return f"{hijri_year}/{hijri_year + 1}"
+
+
+def _format_admission_title(title, academic_year):
+    """Keep the editable PSB title while replacing its Hijri academic year dynamically."""
+    title = str(title or "").strip() or "Penerimaan Santri Baru"
+    if "{{academic_year}}" in title:
+        return title.replace("{{academic_year}}", academic_year)
+    if "{academic_year}" in title:
+        return title.replace("{academic_year}", academic_year)
+    year_pattern = re.compile(r"\b\d{3,4}\s*/\s*\d{3,4}\b")
+    if year_pattern.search(title):
+        return year_pattern.sub(academic_year, title, count=1)
+    year_phrase = re.compile(r"\bTahun\s+Ajaran\b", re.IGNORECASE)
+    if year_phrase.search(title):
+        return year_phrase.sub(lambda match: f"{match.group(0)} {academic_year}", title, count=1)
+    return f"{title} Tahun Ajaran {academic_year}"
+
+
+def _admission_program_options(content):
+    """Add stable option keys to the academic program list for the three PSB slots."""
+    programs = content.get("programs", [])
+    if not isinstance(programs, list):
+        return []
+    options = []
+    used_keys = set()
+    for index, program in enumerate(programs):
+        if not isinstance(program, dict):
+            continue
+        base_key = str(program.get("number") or program.get("id") or index)
+        option_key = base_key
+        if option_key in used_keys:
+            option_key = f"{base_key}-{index + 1}"
+            suffix = 2
+            while option_key in used_keys:
+                option_key = f"{base_key}-{index + 1}-{suffix}"
+                suffix += 1
+        used_keys.add(option_key)
+        options.append({**program, "admission_key": option_key})
+    return options
+
+
+def _admission_program_slot_values(content, options=None):
+    """Return exactly three valid, unique slot keys, defaulting legacy data to its first three."""
+    options = options if options is not None else _admission_program_options(content)
+    available_keys = {item["admission_key"] for item in options}
+    admission = content.get("admission", {})
+    if not isinstance(admission, dict):
+        admission = {}
+    saved_slots = admission.get("program_slots")
+    if isinstance(saved_slots, list):
+        submitted_slots = saved_slots[:3]
+    else:
+        submitted_slots = [item["admission_key"] for item in options[:3]]
+
+    slots = []
+    used_keys = set()
+    for value in submitted_slots:
+        key = str(value or "").strip()
+        if key not in available_keys or key in used_keys:
+            slots.append("")
+            continue
+        slots.append(key)
+        used_keys.add(key)
+    return (slots + [""] * 3)[:3]
+
+
+def _selected_admission_programs(content, options=None):
+    """Resolve the selected PSB slots in their configured display order."""
+    options = options if options is not None else _admission_program_options(content)
+    programs_by_key = {item["admission_key"]: item for item in options}
+    slots = _admission_program_slot_values(content, options)
+    return [programs_by_key[key] for key in slots if key in programs_by_key]
+
+
 def _normalize_academic_program_type(value, category=""):
     """Normalize legacy and current program types to formal/non-formal buckets."""
     for candidate in (value, category):
@@ -1408,7 +1515,18 @@ def create_app(test_config=None):
 
     @app.get("/psb")
     def admission():
-        return render_template("admission.html", **page_context("admission"))
+        context = page_context("admission")
+        admission = context["data"].get("admission", {})
+        if not isinstance(admission, dict):
+            admission = {}
+        academic_year = _hijri_academic_year()
+        return render_template(
+            "admission.html",
+            **context,
+            admission_title=_format_admission_title(admission.get("title", ""), academic_year),
+            admission_year=academic_year,
+            admission_programs=_selected_admission_programs(context["data"]),
+        )
 
     @app.get("/masuk")
     def login():
@@ -1453,6 +1571,10 @@ def create_app(test_config=None):
         history_paragraphs = content.get("profile", {}).get("history_paragraphs", [])
         if not isinstance(history_paragraphs, list):
             history_paragraphs = [str(history_paragraphs)] if history_paragraphs else []
+        admission_content = content.get("admission")
+        if not isinstance(admission_content, dict):
+            admission_content = {}
+        admission_year = _hijri_academic_year()
         return render_template(
             "admin.html",
             site=visible_content.get("site", {}),
@@ -1466,6 +1588,9 @@ def create_app(test_config=None):
             news_items=news_items,
             gallery_items=content.get("gallery", []),
             academic_admin=academic_admin_view,
+            admission_title=_format_admission_title(admission_content.get("title", ""), admission_year),
+            admission_year=admission_year,
+            admission_programs=_selected_admission_programs(visible_content),
             user_error=request.args.get("user_error", ""),
             **admin_storage_context(),
         )
@@ -1488,6 +1613,16 @@ def create_app(test_config=None):
             "data": preview_data,
             "active_page": active_page,
         }
+        if component == "admission":
+            admission = preview_data.get("admission", {})
+            if not isinstance(admission, dict):
+                admission = {}
+            academic_year = _hijri_academic_year()
+            template_context.update({
+                "admission_title": _format_admission_title(admission.get("title", ""), academic_year),
+                "admission_year": academic_year,
+                "admission_programs": _selected_admission_programs(preview_data),
+            })
         if component == "hafalan":
             template_context["book_catalog"] = build_book_catalog()
         return render_template(template_name, **template_context)
@@ -1752,9 +1887,12 @@ def create_app(test_config=None):
         tab = request.args.get("tab", "formal")
         if tab == "programs":
             tab = "formal"
-        if tab not in {"formal", "non_formal", "calendar", "announcements"}:
+        if tab not in {"formal", "non_formal", "calendar", "announcements", "psb"}:
             tab = "formal"
         programs = content.get("programs", [])
+        psb_program_options = _admission_program_options(content)
+        psb_program_slots = _admission_program_slot_values(content, psb_program_options)
+        psb_program_count = len(_selected_admission_programs(content, psb_program_options))
         academic_events = sorted(
             content.get("academic_events", []),
             key=lambda item: str(item.get("date", "9999-12-31")),
@@ -1790,10 +1928,43 @@ def create_app(test_config=None):
             education_type_labels=ACADEMIC_PROGRAM_TYPE_LABELS,
             academic_events=event_items,
             announcements=announcements,
+            psb_program_options=psb_program_options,
+            psb_program_slots=psb_program_slots,
+            psb_program_count=psb_program_count,
+            psb_error=request.args.get("slot_error") == "1",
             saved=request.args.get("saved") == "1",
             admin_username=session.get("admin_username", "Admin Akademik"),
             **admin_storage_context(),
         )
+
+    @app.post("/admin/akademik/psb/simpan")
+    def admin_academic_psb_save():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        submitted_slots = [
+            request.form.get(f"program_slot_{index}", "").strip()
+            for index in range(3)
+        ]
+
+        with content_lock:
+            content = load_content()
+            options = _admission_program_options(content)
+            available_keys = {item["admission_key"] for item in options}
+            selected_keys = [key for key in submitted_slots if key]
+            if (
+                any(key not in available_keys for key in selected_keys)
+                or len(selected_keys) != len(set(selected_keys))
+            ):
+                return redirect(url_for("admin_academic", tab="psb", slot_error="1"))
+            admission = content.get("admission")
+            if not isinstance(admission, dict):
+                admission = {}
+                content["admission"] = admission
+            admission["program_slots"] = submitted_slots
+            store.save(content)
+        return redirect(url_for("admin_academic", tab="psb", saved="1"))
 
     @app.get("/admin/akademik/program/baru")
     def admin_academic_program_new():

@@ -245,7 +245,7 @@
 
 /* Separate education/academic administration workspace */
 .academic-admin-page { min-height: 680px; }
-.academic-admin-nav { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; margin: 0 0 18px; }
+.academic-admin-nav { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 9px; margin: 0 0 18px; }
 .academic-admin-nav a { display: flex; min-height: 54px; justify-content: space-between; align-items: center; gap: 10px; padding: 0 15px; color: #53665a; background: #fff; border: 1px solid #e5ede7; border-radius: 8px; font-size: 9px; font-weight: 800; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
 .academic-admin-nav a:hover, .academic-admin-nav a[aria-current="page"] { color: #086249; background: #e9f7ee; border-color: #cfe9d8; }
 .academic-admin-nav a span { display: grid; min-width: 25px; height: 25px; place-items: center; color: #08704f; background: #f3faf5; border-radius: 99px; font-size: 8px; }
@@ -278,13 +278,18 @@
 .academic-admin-form-wrap .admin-news-form-header { align-items: center; }
 .academic-admin-form-wrap .admin-news-form-card { padding: 23px; }
 .academic-admin-form-wrap .admin-field small { color: #829087; font-size: 7px; font-weight: 450; line-height: 1.55; }
+.academic-psb-slots { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.academic-psb-slots .admin-field { margin: 0; }
+.academic-psb-form .admin-field-note { margin: 12px 0 0; }
+.academic-psb-form .admin-form-actions { margin-top: 15px; }
 
 @media (max-width: 650px) {
   .admin-user-status { align-items: flex-start; flex-wrap: wrap; }
   .admin-user-status > a { margin-left: 19px; }
-  .academic-admin-nav { overflow-x: auto; grid-template-columns: repeat(4, minmax(150px,1fr)); gap: 6px; }
+  .academic-admin-nav { overflow-x: auto; grid-template-columns: repeat(5, minmax(150px,1fr)); gap: 6px; }
   .academic-admin-nav a { min-height: 47px; padding: 0 10px; font-size: 8px; }
   .academic-admin-panel { padding: 15px; }
+  .academic-psb-slots { grid-template-columns: 1fr; gap: 8px; }
   .admin-academic-heading { align-items: stretch; flex-direction: column; }
   .admin-academic-heading .admin-save-button { align-self: stretch; }
   .academic-admin-item, .academic-admin-event-item { grid-template-columns: 1fr; gap: 11px; }

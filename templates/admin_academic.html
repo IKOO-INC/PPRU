@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin Pendidikan & Akademik · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=13">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script>{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page">
@@ -16,6 +16,7 @@
     <nav class="academic-admin-nav" aria-label="Menu admin pendidikan">
       <a href="{{ url_for('admin_academic', tab='formal') }}"{% if tab == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
       <a href="{{ url_for('admin_academic', tab='non_formal') }}"{% if tab == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal <span>{{ education_type_counts.non_formal }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='psb') }}"{% if tab == 'psb' %} aria-current="page"{% endif %}>Program PSB <span>{{ psb_program_count }}</span></a>
       <a href="{{ url_for('admin_academic', tab='calendar') }}"{% if tab == 'calendar' %} aria-current="page"{% endif %}>Kalender Akademik <span>{{ academic_events|length }}</span></a>
       <a href="{{ url_for('admin_academic', tab='announcements') }}"{% if tab == 'announcements' %} aria-current="page"{% endif %}>Pengumuman / Berita <span>{{ announcements|length }}</span></a>
     </nav>
@@ -31,6 +32,29 @@
         </article>
         {% else %}<div class="admin-news-empty">Belum ada program di menu {{ 'Pendidikan Formal' if tab == 'formal' else 'Pendidikan Non Formal' }}. Tambahkan kelas melalui tombol di atas.</div>{% endfor %}
       </div>
+    </section>
+    {% elif tab == 'psb' %}
+    <section class="admin-panel academic-admin-panel academic-psb-panel">
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Penerimaan Santri Baru</span><h2>Pilih Program PSB</h2><p>Pilih hingga tiga program pendidikan dari menu Akademik. Urutan slot menentukan urutan program di halaman PSB.</p></div></div>
+      {% if psb_error %}<div class="admin-alert admin-alert--error" role="alert">Pilih program yang tersedia dan berbeda untuk setiap slot.</div>{% endif %}
+      <form class="academic-psb-form" method="post" action="{{ url_for('admin_academic_psb_save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="academic-psb-slots">
+          {% for slot_number in range(3) %}
+          {% set selected_program_key = psb_program_slots[slot_number] %}
+          <label class="admin-field" for="program-slot-{{ slot_number }}">Slot {{ '%02d'|format(slot_number + 1) }}
+            <select id="program-slot-{{ slot_number }}" name="program_slot_{{ slot_number }}">
+              <option value="">Tidak ditampilkan</option>
+              {% for item in psb_program_options %}
+              <option value="{{ item.admission_key }}"{% if item.admission_key == selected_program_key %} selected{% endif %}>{{ item.title }} — {{ education_type_labels.get(item.education_type, 'Pendidikan') }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="admin-field-note">Slot boleh dikosongkan. Setiap program hanya dapat dipilih satu kali; perubahan akan langsung digunakan di halaman PSB.</p>
+        <div class="admin-form-actions"><span>{{ psb_program_count }} dari 3 slot terisi.</span><button class="admin-save-button" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Simpan slot PSB</button></div>
+      </form>
     </section>
     {% elif tab == 'calendar' %}
     <section class="admin-panel academic-admin-panel">
