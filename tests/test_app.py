@@ -14,6 +14,7 @@ from app import _google_maps_urls, _safe_image_url, _safe_social_url, _split_par
 from cloudinary_service import upload_image, upload_local_image
 from content_store import MongoPortalStore
 from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
+from news_service import news_summary, sanitize_rich_text
 from pymongo.errors import PyMongoError
 from werkzeug.datastructures import FileStorage
 
@@ -700,6 +701,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         with self.client.session_transaction() as admin_session:
             admin_session["admin_authenticated"] = True
             admin_session["admin_role"] = "main"
+        madrasah_panel = self.client.get("/admin/akademik?tab=non_formal")
+        self.assertEqual(madrasah_panel.status_code, 200)
+        self.assertIn("Edit kelas Madrasah", madrasah_panel.get_data(as_text=True))
         programs = migrated["programs"]
         madrasah_index = next(index for index, item in enumerate(programs) if item["title"] == "Madrasah Diniyah")
         item_id = str(migrated_madrasah.get("id") or migrated_madrasah.get("number") or madrasah_index)
@@ -707,6 +711,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(edit_response.status_code, 200)
         edit_html = edit_response.get_data(as_text=True)
         self.assertIn('name="class_details"', edit_html)
+        self.assertIn("Kelas Madrasah Diniyah dan kitabnya", edit_html)
+        self.assertIn("Satu kelas per baris", edit_html)
         csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', edit_html).group(1)
         updated = self.client.post(
             "/admin/akademik/program/simpan",
@@ -1135,6 +1141,8 @@ class PortalRoutesTestCase(unittest.TestCase):
 
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
+        self.assertIn('class="theme-toggle"', response_text)
+        self.assertIn("css/theme.css?v=1", response_text)
         self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
         self.assertIn("mongo eror sementara pakai preferensi.json", response_text)
         self.assertIn("Perubahan belum tersimpan", response_text)
@@ -1174,6 +1182,34 @@ class PortalRoutesTestCase(unittest.TestCase):
         for program in self.content["programs"]:
             self.assertIn(program["title"], academic_rendered)
 
+    def test_home_program_cards_match_the_three_admin_selected_psb_slots(self):
+        preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
+        selected_numbers = ["04", "02", "06"]
+        preferences.setdefault("admission", {})["program_slots"] = selected_numbers
+        self.content_file.write_text(json.dumps(preferences, ensure_ascii=False), encoding="utf-8")
+        programs_by_number = {item["number"]: item for item in preferences["programs"]}
+
+        home_response = self.client.get("/")
+        psb_response = self.client.get("/psb")
+        self.assertEqual(home_response.status_code, 200)
+        self.assertEqual(psb_response.status_code, 200)
+        home_html = html.unescape(home_response.get_data(as_text=True))
+        home_program_section = home_html.split('<section class="section programs-section" id="akademik">', 1)[1].split("</section>", 1)[0]
+        psb_html = html.unescape(psb_response.get_data(as_text=True))
+        psb_program_section = psb_html.split('class="admission-programs">', 1)[1].split("</div></div></section>", 1)[0]
+
+        self.assertEqual(psb_program_section.count("<article>"), 3)
+        expected_titles = [programs_by_number[number]["title"] for number in selected_numbers]
+        for title in expected_titles:
+            with self.subTest(title=title):
+                self.assertIn(title, home_program_section)
+                self.assertIn(title, psb_program_section)
+        self.assertEqual(
+            [home_program_section.index(title) for title in expected_titles],
+            sorted(home_program_section.index(title) for title in expected_titles),
+        )
+        self.assertNotIn(programs_by_number["01"]["title"], home_program_section)
+
     def test_home_shows_only_three_newest_published_stories(self):
         news = list(reversed(json.loads(self.news_file.read_text(encoding="utf-8"))))
         draft = dict(news[0])
@@ -1197,12 +1233,50 @@ class PortalRoutesTestCase(unittest.TestCase):
             self.assertNotIn(post["title"], rendered)
         self.assertNotIn(draft["title"], rendered)
 
+    def test_news_summary_uses_article_text_and_appends_ellipsis_at_the_160_character_limit(self):
+        short_summary = news_summary({
+            "body_html": "<p>Kegiatan belajar santri berlangsung dengan tertib.</p>",
+            "excerpt": "Ringkasan lama yang seharusnya tidak dipakai.",
+        })
+        self.assertEqual(short_summary, "Kegiatan belajar santri berlangsung dengan tertib.")
+
+        long_body = "<p>" + ("Madrasah mengadakan kegiatan keilmuan bagi seluruh santri di lingkungan pesantren. " * 8) + "</p>"
+        long_summary = news_summary({"body_html": long_body, "excerpt": "Ringkasan manual lama."})
+        self.assertLessEqual(len(long_summary), 160)
+        self.assertTrue(long_summary.endswith("..."))
+        self.assertNotIn("Ringkasan manual lama", long_summary)
+
+    def test_news_rich_text_keeps_responsive_cloudinary_images_and_removes_unsafe_markup(self):
+        cloudinary_image = "https://res.cloudinary.com/demo/image/upload/v123/ppru/news/inline-photo.jpg"
+        sanitized = sanitize_rich_text(
+            '<p class="article-image" style="float:left"><img '
+            f'src="{cloudinary_image}" alt="Foto kegiatan" onerror="alert(1)"></p>'
+            '<script>alert(1)</script><img src="https://example.invalid/unsafe.jpg">'
+        )
+        self.assertIn('class="article-image"', sanitized)
+        self.assertIn(cloudinary_image, sanitized)
+        self.assertIn('alt="Foto kegiatan"', sanitized)
+        self.assertNotIn("style=", sanitized)
+        self.assertNotIn("onerror", sanitized)
+        self.assertNotIn("<script", sanitized)
+        self.assertNotIn("https://example.invalid/unsafe.jpg", sanitized)
+
     def test_article_detail_and_missing_article(self):
         slug = self.content["news"][0]["slug"]
         response = self.client.get(f"/berita/{slug}")
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.content["news"][0]["title"].encode(), response.data)
         self.assertIn("1 kali dilihat".encode(), response.data)
+        rendered = response.get_data(as_text=True)
+        self.assertIn('class="article-breadcrumbs"', rendered)
+        self.assertIn('class="article-main"', rendered)
+        self.assertIn('class="article-sidebar"', rendered)
+        self.assertLess(rendered.index('class="article-main"'), rendered.index('class="article-sidebar"'))
+        self.assertNotIn('class="page-banner', rendered)
+        self.assertIn('data-share-whatsapp', rendered)
+        self.assertIn('data-share-instagram', rendered)
+        self.assertIn('data-copy-article-link', rendered)
+        self.assertIn("Berita Terkini", rendered)
         saved_news = json.loads(self.news_file.read_text(encoding="utf-8"))
         viewed_post = next(item for item in saved_news if item["slug"] == slug)
         self.assertEqual(viewed_post["views"], 1)
@@ -1210,6 +1284,33 @@ class PortalRoutesTestCase(unittest.TestCase):
         missing = self.client.get("/berita/tidak-ada")
         self.assertEqual(missing.status_code, 404)
         self.assertIn("Halaman ini".encode(), missing.data)
+
+    def test_global_dark_mode_is_fixed_persistent_and_light_by_default(self):
+        response = self.client.get("/")
+        rendered = response.get_data(as_text=True)
+        self.assertIn('class="theme-toggle"', rendered)
+        self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
+        self.assertIn("css/theme.css?v=1", rendered)
+        self.assertIn("js/theme.js?v=1", rendered)
+        self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
+
+        theme_js = self.client.get("/static/js/theme.js")
+        theme_css = self.client.get("/static/css/theme.css")
+        self.assertEqual(theme_js.status_code, 200)
+        self.assertEqual(theme_css.status_code, 200)
+        theme_js_source = theme_js.get_data(as_text=True)
+        theme_css_source = theme_css.get_data(as_text=True)
+        self.assertIn('localStorage.setItem(storageKey, dark ? "dark" : "light")', theme_js_source)
+        self.assertIn('window.addEventListener("storage"', theme_js_source)
+        self.assertIn("position: fixed", theme_css_source)
+        self.assertIn("right: calc(18px + env(safe-area-inset-right))", theme_css_source)
+        self.assertIn("bottom: calc(18px + env(safe-area-inset-bottom))", theme_css_source)
+        self.assertIn(':root[data-theme="dark"]', theme_css_source)
+        self.assertIn("grid-template-columns: minmax(0, 1fr) 295px", theme_css_source)
+        self.assertIn("@media (max-width: 720px)", theme_css_source)
+        self.assertIn("max-width: 100%", theme_css_source)
+        theme_js.close()
+        theme_css.close()
 
     def test_unknown_route_renders_not_found_page(self):
         response = self.client.get("/halaman-tidak-ada")
@@ -1677,6 +1778,10 @@ class PortalRoutesTestCase(unittest.TestCase):
             new_form = client.get("/admin/berita/baru")
             self.assertEqual(new_form.status_code, 200)
             self.assertIn(b"data-editor-command=\"bold\"", new_form.data)
+            self.assertIn(b"data-editor-toggle", new_form.data)
+            self.assertIn(b"data-editor-value=\"blockquote\"", new_form.data)
+            self.assertIn(b"data-editor-insert-image", new_form.data)
+            self.assertIn(b"data-news-summary-preview", new_form.data)
             self.assertIn(b"data-cloudinary-upload-button", new_form.data)
             token = re.search(r'name="csrf_token" value="([^"]+)"', new_form.get_data(as_text=True)).group(1)
             create_response = client.post(
@@ -1699,6 +1804,7 @@ class PortalRoutesTestCase(unittest.TestCase):
             created_post = next(item for item in saved_news if item["slug"] == "berita-baru-aman")
             self.assertIn("<strong>berita</strong>", created_post["body_html"])
             self.assertNotIn("<script", created_post["body_html"])
+            self.assertEqual(created_post["excerpt"], "Isi berita.")
             detail_response = client.get("/berita/berita-baru-aman")
             self.assertEqual(detail_response.status_code, 200)
             self.assertIn(b"Isi <strong>berita</strong>.", detail_response.data)

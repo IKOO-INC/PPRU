@@ -37,7 +37,7 @@
       <p>{{ data.program_intro.description }}</p>
     </div>
     <div class="program-grid">
-      {% for program in data.programs[:3] %}{% include "partials/program_card.html" %}{% endfor %}
+      {% for program in home_programs %}{% include "partials/program_card.html" %}{% else %}<p class="empty-state">Program pendidikan akan segera diperbarui.</p>{% endfor %}
     </div>
     <div class="section-link-wrap"><a class="text-link" href="/akademik">Pelajari seluruh program <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span></a></div>
   </div>

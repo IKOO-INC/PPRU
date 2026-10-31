@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 from html import escape, unescape
 import re
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 import bleach
@@ -15,18 +16,59 @@ INDONESIAN_MONTHS = (
 )
 RICH_TEXT_TAGS = {
     "p", "br", "strong", "b", "em", "i", "u", "h2", "h3", "h4",
-    "ul", "ol", "li", "blockquote", "a", "div",
+    "ul", "ol", "li", "blockquote", "a", "div", "img",
 }
-RICH_TEXT_ATTRIBUTES = {"a": ["href", "title"]}
 RICH_TEXT_PROTOCOLS = ["http", "https", "mailto"]
+NEWS_SUMMARY_MAX_CHARS = 160
+
+
+def _trusted_news_image_url(value: str) -> bool:
+    """Allow inserted article images only from Cloudinary's HTTPS image delivery path."""
+    candidate = str(value or "").strip()
+    try:
+        parsed = urlsplit(candidate)
+        port = parsed.port
+    except ValueError:
+        return False
+    path_parts = [part for part in parsed.path.split("/") if part]
+    return (
+        parsed.scheme == "https"
+        and parsed.hostname == "res.cloudinary.com"
+        and not parsed.username
+        and not parsed.password
+        and port in (None, 443)
+        and len(path_parts) >= 4
+        and path_parts[1:3] == ["image", "upload"]
+    )
+
+
+def _rich_text_attribute_allowed(tag: str, name: str, value: str) -> bool:
+    if tag == "a":
+        return name in {"href", "title"}
+    if tag == "p" and name == "class":
+        return value == "article-image"
+    if tag == "img":
+        if name == "src":
+            return _trusted_news_image_url(value)
+        if name == "alt":
+            return len(value) <= 300
+        if name == "loading":
+            return value == "lazy"
+    return False
 
 
 def sanitize_rich_text(value: str) -> str:
-    """Allow only basic article formatting and safe links from the admin editor."""
-    return bleach.clean(
+    """Allow basic formatting and responsive Cloudinary images, stripping unsafe markup."""
+    source = re.sub(
+        r"<\s*(script|style)\b[^>]*>.*?<\s*/\s*\1\s*>",
+        "",
         value or "",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return bleach.clean(
+        source,
         tags=RICH_TEXT_TAGS,
-        attributes=RICH_TEXT_ATTRIBUTES,
+        attributes=_rich_text_attribute_allowed,
         protocols=RICH_TEXT_PROTOCOLS,
         strip=True,
     ).strip()
@@ -48,7 +90,33 @@ def legacy_article_html(post: dict) -> str:
 
 def rich_text_plain_text(value: str) -> str:
     clean = sanitize_rich_text(value)
-    return re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]*>", " ", clean))).strip()
+    text = re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]*>", " ", clean))).strip()
+    return re.sub(r"\s+([,.;:!?،؛؟])", r"\1", text)
+
+
+def news_summary(post: dict, max_chars: int = NEWS_SUMMARY_MAX_CHARS) -> str:
+    """Build one consistent card summary from article text, with an ASCII ellipsis on truncation."""
+    post = post if isinstance(post, dict) else {}
+    body_html = str(post.get("body_html", "") or "")
+    summary = rich_text_plain_text(body_html) if body_html else ""
+    if not summary:
+        legacy_html = legacy_article_html(post)
+        summary = rich_text_plain_text(legacy_html) if legacy_html else ""
+    if not summary:
+        fallback = bleach.clean(str(post.get("excerpt", "") or ""), tags=[], strip=True)
+        summary = re.sub(r"\s+", " ", unescape(fallback)).strip()
+
+    try:
+        max_chars = max(4, int(max_chars))
+    except (TypeError, ValueError):
+        max_chars = NEWS_SUMMARY_MAX_CHARS
+    if len(summary) <= max_chars:
+        return summary
+
+    excerpt = summary[:max_chars - 3]
+    if " " in excerpt:
+        excerpt = excerpt.rsplit(" ", 1)[0]
+    return f"{excerpt.rstrip(' ,;:-')}..."
 
 
 def slugify(value: str) -> str:
@@ -116,6 +184,7 @@ def public_content(content: dict) -> dict:
     visible.sort(key=published_at_value, reverse=True)
     for post in visible:
         post.setdefault("views", 0)
+        post["excerpt"] = news_summary(post)
         if post.get("published_at"):
             post["date"] = format_indonesian_date(published_at_value(post))
     result["news"] = visible

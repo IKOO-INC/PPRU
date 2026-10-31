@@ -28,10 +28,10 @@ from news_service import (
     format_indonesian_date,
     legacy_article_html,
     now_jakarta,
+    news_summary,
     parse_local_datetime,
     public_content,
     published_at_value,
-    rich_text_plain_text,
     sanitize_rich_text,
     slugify,
     to_local_input,
@@ -1244,6 +1244,7 @@ def create_app(test_config=None):
             active_page=None,
             post=post,
             editor_html=Markup(sanitize_rich_text(body_html)),
+            auto_excerpt=news_summary(post),
             published_at_input=to_local_input(post.get("published_at")),
             is_edit=is_edit,
             error=error,
@@ -1314,10 +1315,7 @@ def create_app(test_config=None):
             requested_slug = request.form.get("slug", "").strip() or title
             slug = _unique_news_slug(items, requested_slug, current_slug=original_slug or None)
             body_html = sanitize_rich_text(request.form.get("body_html", ""))
-            body_text = rich_text_plain_text(body_html)
-            excerpt = request.form.get("excerpt", "").strip() or body_text[:220]
-            if len(body_text) > 220 and not request.form.get("excerpt", "").strip():
-                excerpt = excerpt.rstrip() + "…"
+            excerpt = news_summary({**existing, "body_html": body_html})
             status = request.form.get("status", "published").strip()
             if status not in {"published", "draft"}:
                 status = "published"
@@ -1383,6 +1381,7 @@ def create_app(test_config=None):
     @app.get("/")
     def home():
         context = page_context("home")
+        context["home_programs"] = _selected_admission_programs(context["data"])
         today = now_jakarta().date()
         upcoming_events = []
         for event in context["data"].get("academic_events", []):
@@ -1480,12 +1479,14 @@ def create_app(test_config=None):
             abort(404)
         body_html = post.get("body_html") or legacy_article_html(post)
         post["rendered_body"] = Markup(sanitize_rich_text(body_html))
+        related_news = [item for item in content.get("news", []) if item.get("slug") != slug][:5]
         return render_template(
             "news_detail.html",
             site=content.get("site", {}),
             data=content,
             active_page="news",
             post=post,
+            related_news=related_news,
         )
 
     @app.get("/galeri")
@@ -1558,6 +1559,8 @@ def create_app(test_config=None):
         if component not in ADMIN_COMPONENT_IDS:
             component = "brand"
         news_items = sorted(content.get("news", []), key=published_at_value, reverse=True)
+        for item in news_items:
+            item["excerpt"] = news_summary(item)
         stored_admin_users = content.get("admin_users", {})
         academic_account = stored_admin_users.get("academic", {}) if isinstance(stored_admin_users, dict) else {}
         if not isinstance(academic_account, dict):
@@ -1902,6 +1905,8 @@ def create_app(test_config=None):
             key=published_at_value,
             reverse=True,
         )
+        for item in announcements:
+            item["excerpt"] = news_summary(item)
         program_items = [
             {**program, "admin_id": _academic_item_id(program, index)}
             for index, program in enumerate(programs)

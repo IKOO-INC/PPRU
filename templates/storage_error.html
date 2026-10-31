@@ -4,8 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#075c45">
+  <script>try { if (localStorage.getItem("ppru-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (_error) {}</script>
   <title>{{ title|default('Penyimpanan Belum Tersedia') }} · PPRU</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=14">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=1">
+  <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=1"></script>
 </head>
 <body class="storage-error-body">
   <main class="storage-error-overlay">
@@ -18,5 +23,9 @@
       <div class="storage-error-actions"><a class="button button--green" href="/admin">Kembali ke panel admin</a><a class="storage-error-home" href="/">Lihat website</a></div>
     </section>
   </main>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Aktifkan mode gelap" title="Aktifkan mode gelap">
+    <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
+    <span class="visually-hidden" data-theme-label>Aktifkan mode gelap</span>
+  </button>
 </body>
 </html>

@@ -1,7 +1,50 @@
 {% extends "base.html" %}
 {% block title %}{{ post.title }} · {{ site.name }}{% endblock %}
 {% block meta_description %}{{ post.excerpt }}{% endblock %}
+{% block extra_scripts %}{{ super() }}<script defer src="{{ url_for('static', filename='js/news_share.js') }}?v=1"></script>{% endblock %}
 {% block content %}
-<section class="page-banner page-banner--compact"><div class="container page-banner-content"><span class="light-eyebrow">{{ post.category }}</span><h1>{{ post.title }}</h1><p>{{ post.excerpt }}</p></div></section>
-<article class="article-page"><div class="container article-container"><a class="back-link" href="/berita"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke berita</a><div class="article-cover"><img src="{{ post.image or site.placeholder_image }}" alt="{{ post.image_alt|default(post.title) }}"></div><div class="article-meta-line"><span>{{ post.category }}</span><span>{{ post.date }}</span><span><i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat</span></div><div class="article-content">{{ post.rendered_body }}</div><div class="more-stories"><div class="section-heading-row"><div><span class="section-eyebrow">Kabar lainnya</span><h2>Berita Terkini</h2></div><a class="text-link" href="/berita">Semua berita <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div><div class="news-grid">{% for other_post in data.news[:4] if other_post.slug != post.slug %}{% set post = other_post %}{% include "partials/news_card.html" %}{% endfor %}</div></div></div></article>
+<section class="article-page">
+  <div class="container article-container">
+    <nav class="article-breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Beranda</a><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <a href="/berita">Berita</a><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span aria-current="page">{{ post.title }}</span>
+    </nav>
+    <div class="article-detail-layout">
+      <article class="article-main">
+        <header class="article-header">
+          <span class="article-category">{{ post.category }}</span>
+          <h1>{{ post.title }}</h1>
+          {% if post.excerpt %}<p class="article-dek">{{ post.excerpt }}</p>{% endif %}
+          <div class="article-meta-line">
+            <span class="article-author"><span class="article-author-icon" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span><span><strong>Redaksi {{ site.short_name }}</strong><small>{{ post.date }} · <i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat</small></span></span>
+          </div>
+          <div class="article-share-tools" data-article-share data-article-title="{{ post.title }}" data-article-url="{{ url_for('news_detail', slug=post.slug, _external=True) }}" aria-label="Bagikan artikel">
+            <span class="article-share-label">Bagikan</span>
+            <a class="article-share-button article-share-button--whatsapp" href="https://wa.me/" target="_blank" rel="noopener noreferrer" data-share-whatsapp><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>
+            <button class="article-share-button article-share-button--instagram" type="button" data-share-instagram><i class="fa-brands fa-instagram" aria-hidden="true"></i><span>Instagram</span></button>
+            <button class="article-share-button" type="button" data-copy-article-link><i class="fa-solid fa-link" aria-hidden="true"></i><span>Salin tautan</span></button>
+            <span class="article-share-status" data-share-status role="status" aria-live="polite"></span>
+          </div>
+        </header>
+        <figure class="article-cover"><img src="{{ post.image or site.placeholder_image }}" alt="{{ post.image_alt|default(post.title) }}"></figure>
+        <div class="article-content">{{ post.rendered_body }}</div>
+      </article>
+      <aside class="article-sidebar" aria-labelledby="article-related-title">
+        <section class="sidebar-box article-related-box">
+          <div class="article-sidebar-heading"><span class="sidebar-accent"></span><div><span class="section-eyebrow">Kabar lainnya</span><h2 id="article-related-title">Berita Terkini</h2></div></div>
+          <div class="article-related-list">
+            {% for other_post in related_news %}
+            <article class="article-related-card">
+              <a class="article-related-image" href="/berita/{{ other_post.slug }}" aria-label="Baca {{ other_post.title }}"><img src="{{ other_post.image or site.placeholder_image }}" alt="{{ other_post.image_alt|default(other_post.title) }}" loading="lazy"></a>
+              <div class="article-related-copy"><span>{{ other_post.category }} · {{ other_post.date }}</span><h3><a href="/berita/{{ other_post.slug }}">{{ other_post.title }}</a></h3></div>
+            </article>
+            {% else %}<p class="article-related-empty">Belum ada kabar lainnya.</p>{% endfor %}
+          </div>
+          <a class="article-related-all" href="/berita">Lihat semua berita <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </section>
+      </aside>
+    </div>
+  </div>
+</section>
 {% endblock %}
