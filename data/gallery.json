@@ -1,0 +1,56 @@
+[
+  {
+    "title": "Kebersamaan di pesantren",
+    "caption": "Belajar bersama dalam suasana yang hangat.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Lingkungan pesantren",
+    "shape": "large",
+    "position": "center"
+  },
+  {
+    "title": "Ruang belajar",
+    "caption": "Menjaga semangat belajar setiap hari.",
+    "category": "Santri",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Suasana belajar di pesantren",
+    "shape": "small",
+    "position": "center"
+  },
+  {
+    "title": "Kehidupan santri",
+    "caption": "Tumbuh dan berproses bersama.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Kegiatan di lingkungan pesantren",
+    "shape": "small",
+    "position": "center"
+  },
+  {
+    "title": "Lingkungan pesantren",
+    "caption": "Tempat menimba ilmu dan membiasakan kebaikan.",
+    "category": "Pesantren",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Bangunan dan pepohonan di pesantren",
+    "shape": "wide",
+    "position": "center"
+  },
+  {
+    "title": "Berbagi pengalaman",
+    "caption": "Bersama saling menguatkan dan menginspirasi.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Suasana kebersamaan",
+    "shape": "small",
+    "position": "center"
+  },
+  {
+    "title": "Alam yang menenangkan",
+    "caption": "Lingkungan yang mendukung proses belajar.",
+    "category": "Pesantren",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Area hijau di lingkungan pesantren",
+    "shape": "small",
+    "position": "center"
+  }
+]

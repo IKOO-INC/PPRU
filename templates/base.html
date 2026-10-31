@@ -5,14 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#075c45">
   <meta name="description" content="{% block meta_description %}{{ site.description }}{% endblock %}">
+  <script>try { if (localStorage.getItem("ppru-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (_error) {}</script>
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   <link rel="icon" href="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/brands.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=14">
   {% block extra_head %}{% endblock %}
-  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=2">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=6"></script>
+  <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=1"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
-<body>
+<body{% if site.placeholder_image %} style="--page-banner-image: url('{{ site.placeholder_image }}')"{% endif %}>
   <a class="skip-link" href="#main">Lewati ke konten utama</a>
   <header class="site-header">
     <div class="container header-inner">
@@ -20,16 +26,40 @@
         <img class="brand-mark" src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="" width="42" height="42">
         <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
       </a>
-      <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span></button>
+      <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="site-navigation"><i class="fa-solid fa-bars nav-toggle-open" aria-hidden="true"></i><i class="fa-solid fa-xmark nav-toggle-close" aria-hidden="true"></i></button>
       <nav class="site-nav" id="site-navigation" aria-label="Navigasi utama">
         <div class="nav-links">
           {% for item in site.navigation %}
-            <a class="nav-link{% if active_page == item.id %} is-active{% endif %}" href="{{ item.url }}"{% if active_page == item.id %} aria-current="page"{% endif %}>{{ item.label }}{% if item.id == 'profile' %}<span class="nav-caret" aria-hidden="true">⌄</span>{% endif %}</a>
+            {% if item.id == 'programs' %}
+              <div class="nav-dropdown" data-nav-dropdown>
+                <button class="nav-link nav-dropdown-toggle{% if active_page == 'programs' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="academic-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'programs' %} aria-current="page"{% endif %}>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                </button>
+                <div class="nav-dropdown-menu" id="academic-dropdown-menu" data-nav-dropdown-menu>
+                  <a href="{{ item.url }}"{% if active_page == 'programs' and not selected_education_type|default('') %} aria-current="page"{% endif %}>Semua Program</a>
+                  <a href="/akademik/formal"{% if active_page == 'programs' and selected_education_type|default('') == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal</a>
+                  <a href="/akademik/non-formal"{% if active_page == 'programs' and selected_education_type|default('') == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal</a>
+                </div>
+              </div>
+            {% elif item.id == 'profile' %}
+              <div class="nav-dropdown" data-nav-dropdown>
+                <button class="nav-link nav-dropdown-toggle{% if active_page == 'profile' %} is-active{% endif %}" type="button" aria-expanded="false" aria-controls="profile-dropdown-menu" data-nav-dropdown-toggle{% if active_page == 'profile' %} aria-current="page"{% endif %}>
+                  {{ item.label }} <span class="nav-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                </button>
+                <div class="nav-dropdown-menu" id="profile-dropdown-menu" data-nav-dropdown-menu>
+                  <a href="{{ item.url }}#sejarah">Sejarah</a>
+                  <a href="{{ item.url }}#visi-misi">Visi misi</a>
+                  <a href="{{ item.url }}#masyayikh">Pendiri &amp; Pengasuh</a>
+                </div>
+              </div>
+            {% else %}
+              <a class="nav-link{% if active_page == item.id %} is-active{% endif %}" href="{{ item.url }}"{% if active_page == item.id %} aria-current="page"{% endif %}>{{ item.label }}</a>
+            {% endif %}
           {% endfor %}
         </div>
         <div class="header-actions">
           <a class="login-link" href="{{ site.login_url }}">{{ site.login_label }}</a>
-          <a class="button button--orange button--small" href="{{ site.admission_url }}">{{ site.admission_label }} <span aria-hidden="true">↗</span></a>
+          <a class="button button--orange button--small" href="{{ site.admission_url }}">{{ site.admission_label }} <span aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span></a>
         </div>
       </nav>
     </div>
@@ -45,19 +75,17 @@
           <span class="brand-copy"><strong>{{ site.short_name }}</strong><small>{{ site.name }}</small></span>
         </a>
         <p>{{ site.footer_note }}</p>
-        <div class="social-links" aria-label="Media sosial">
-          <a href="#footer" aria-label="Facebook">f</a><a href="#footer" aria-label="Instagram">◎</a><a href="#footer" aria-label="YouTube">▶</a><a href="#footer" aria-label="TikTok">♪</a>
-        </div>
+        {% include "partials/social_icons.html" %}
       </div>
       <div class="footer-links">
         <h2 class="footer-title">Jelajahi</h2>
-        {% for item in site.navigation %}<a href="{{ item.url }}">{{ item.label }}</a>{% endfor %}
+        {% for item in site.navigation %}<a href="{{ item.url }}"><i class="fa-solid fa-angle-right footer-link-icon" aria-hidden="true"></i>{{ item.label }}</a>{% endfor %}
       </div>
       <div class="footer-contact">
         <h2 class="footer-title">Hubungi Kami</h2>
-        <p><span class="footer-icon" aria-hidden="true">⌖</span>{{ data.contact.address }}</p>
-        <p><span class="footer-icon" aria-hidden="true">◉</span>{{ data.contact.phone }}</p>
-        <p><span class="footer-icon" aria-hidden="true">✉</span>{{ data.contact.email }}</p>
+        <p><i class="footer-icon fa-solid fa-location-dot" aria-hidden="true"></i>{{ data.contact.address }}</p>
+        <p><i class="footer-icon fa-solid fa-phone" aria-hidden="true"></i>{{ data.contact.phone }}</p>
+        <p><i class="footer-icon fa-solid fa-envelope" aria-hidden="true"></i>{{ data.contact.email }}</p>
       </div>
       <div class="footer-newsletter">
         <h2 class="footer-title">Buletin</h2>
@@ -65,7 +93,7 @@
         <form class="newsletter-form" data-demo-form>
           <label class="visually-hidden" for="newsletter-email">Email Anda</label>
           <input id="newsletter-email" type="email" placeholder="Email Anda" required>
-          <button type="submit" aria-label="Daftar buletin">→</button>
+          <button type="submit" aria-label="Daftar buletin"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
         </form>
         <p class="form-status" aria-live="polite"></p>
       </div>
@@ -75,5 +103,23 @@
       <div><a href="/kontak">Kontak</a><a href="/psb">Penerimaan Santri Baru</a></div>
     </div>
   </footer>
+  <dialog class="gallery-lightbox" id="gallery-lightbox" aria-labelledby="gallery-lightbox-title">
+    <div class="gallery-lightbox-shell">
+      <button class="gallery-lightbox-close" id="gallery-lightbox-close" type="button" aria-label="Tutup foto"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      <div class="gallery-lightbox-image-wrap"><img id="gallery-lightbox-image" src="" alt=""></div>
+      <div class="gallery-lightbox-details">
+        <div><h2 id="gallery-lightbox-title"></h2><p id="gallery-lightbox-caption"></p></div>
+        <div class="gallery-lightbox-actions">
+          <a class="gallery-lightbox-download" id="gallery-lightbox-download" href="" download><i class="fa-solid fa-download" aria-hidden="true"></i> Unduh</a>
+          <button class="gallery-lightbox-share" id="gallery-lightbox-share" type="button"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Bagikan</button>
+        </div>
+        <p class="gallery-lightbox-status" id="gallery-lightbox-status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </dialog>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Aktifkan mode gelap" title="Aktifkan mode gelap">
+    <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
+    <span class="visually-hidden" data-theme-label>Aktifkan mode gelap</span>
+  </button>
 </body>
 </html>

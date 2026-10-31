@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#075c45">
+  <script>try { if (localStorage.getItem("ppru-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (_error) {}</script>
+  <title>{{ title|default('Penyimpanan Belum Tersedia') }} · PPRU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=14">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=2">
+  <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=1"></script>
+</head>
+<body class="storage-error-body">
+  <main class="storage-error-overlay">
+    <section class="storage-error-dialog" role="alertdialog" aria-modal="true" aria-labelledby="storage-error-title">
+      <span class="section-eyebrow">PPRU · PANEL ADMIN</span>
+      <h1 id="storage-error-title">{{ title|default('Perubahan belum dapat disimpan') }}</h1>
+      <p class="storage-error-callout">{% if data_saved %}Perubahan utama sudah tersimpan di MongoDB Atlas.{% else %}mongo eror sementara pakai preferensi.json{% endif %}</p>
+      <p>{{ message }}</p>
+      {% if not data_saved %}<p class="storage-error-honesty">Perubahan belum disimpan. Di production Vercel, file JSON deployment tidak persisten dan tidak dapat menggantikan MongoDB Atlas.</p>{% endif %}
+      <div class="storage-error-actions"><a class="button button--green" href="/admin">Kembali ke panel admin</a><a class="storage-error-home" href="/">Lihat website</a></div>
+    </section>
+  </main>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Aktifkan mode gelap" title="Aktifkan mode gelap">
+    <i class="fa-solid fa-moon" aria-hidden="true" data-theme-icon></i>
+    <span class="visually-hidden" data-theme-label>Aktifkan mode gelap</span>
+  </button>
+</body>
+</html>

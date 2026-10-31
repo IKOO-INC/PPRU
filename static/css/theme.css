@@ -1,0 +1,466 @@
+/* Per-browser global theme preference. A first visit remains in the light theme. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --green: #62d1a0;
+  --mint: #1a3025;
+  --mint-strong: #244232;
+  --ink: #e6eee9;
+  --muted: #a8b7ad;
+  --line: #2d4337;
+  --paper: #111a15;
+  --white: #17231c;
+}
+
+:root[data-theme="dark"] body { color: var(--ink); background: #101713; }
+:root[data-theme="dark"] :is(h1, h2, h3, h4, h5, h6) { color: #edf4ef; }
+
+:root[data-theme="dark"] :is(
+  .site-header, .site-nav, .nav-dropdown-menu, .nav-toggle,
+  .stats-card, .programs-section, .program-card, .latest-section, .news-card,
+  .work-card, .academic-program-menu a, .academic-program-detail-section,
+  .academic-class-card, .academic-calendar-event, .academic-calendar-empty,
+  .event-card, .faq-section, .profile-content-section, .vision-card, .mission-card,
+  .masyayikh-section, .featured-news, .sidebar-box, .article-related-box,
+  .gallery-page-section, .login-card, .contact-panel, .map-card,
+  .admission-steps-section, .step-number, .admission-cta, .admission-cta-card,
+  .hafalan-form, .hafalan-card, .hafalan-chooser, .hafalan-choice-card,
+  .quran-mode-option, .hafalan-nadzom-prompt, .hafalan-answer,
+  .hafalan-score-card, .hafalan-mistake-item, .admin-live-preview, .admin-sidebar,
+  .admin-panel, .admin-news-form-card, .admin-gallery-form-card, .admin-login-card,
+  .admin-news-row, .admin-gallery-row, .academic-admin-item, .admin-asset-field,
+  .admin-repeat-card, .admin-rich-editor, .admin-auto-summary, .admin-news-empty,
+  .admin-gallery-empty, .storage-notice-card, .storage-error-dialog,
+  .gallery-lightbox-shell
+) {
+  color: var(--ink);
+  background-color: #17231c;
+  border-color: #2b4034;
+}
+
+:root[data-theme="dark"] :is(
+  .works-section, .gallery-section-home, .academic-calendar-section, .events-section,
+  .news-listing-section, .vision-mission-section, .article-page, .gallery-page-section,
+  .requirements-section, .contact-section, .map-section, .login-section, .admin-page,
+  .admin-login-wrap, .not-found, .hafalan-section, .storage-error-body
+) { background-color: #111a15; }
+
+:root[data-theme="dark"] :is(.site-header, .site-nav, .nav-dropdown-menu, .nav-toggle, .nav-link, .nav-dropdown-menu a, .login-link) {
+  color: #dce9e1;
+  border-color: #30483a;
+}
+:root[data-theme="dark"] :is(.brand, .brand-copy strong, .not-found h1) { color: #dff4e7; }
+:root[data-theme="dark"] .brand-copy small { color: #a7c0b1; }
+:root[data-theme="dark"] :is(.section-title > p, .academic-program-group-heading p, .program-card p, .program-kitabs,
+  .news-card p, .featured-meta, .sidebar-box p, .article-content, .article-dek, .article-meta-line,
+  .academic-admin-item p, .admin-news-copy p, .admin-news-meta, .admin-field-note, .admin-editor-hint,
+  .admin-form-actions > span, .admin-news-form-header p, .admin-page-heading p, .admin-panel-heading p,
+  .admin-sidebar-hint, .admin-program-summary p, .article-related-copy > span, .article-related-empty,
+  .event-copy p, .faq-item p, .academic-class-card ul, .academic-calendar-heading p, .academic-calendar-event p,
+  .vision-card p, .mission-card ol, .history-article > p, .article-credits, .hafalan-result-meta,
+  .hafalan-review-line, .hafalan-review-nadzom, .hafalan-prompt-caption, .hafalan-choice-copy,
+  .hafalan-chooser-note, .hafalan-back, .certificate-action-status, .admin-news-summary span) {
+  color: #a8b7ad;
+}
+
+:root[data-theme="dark"] :is(.academic-program-menu a, .academic-calendar-event time, .category-list button span,
+  .tag-list button, .gallery-filters button, .pagination button, .search-field, .field-input,
+  .contact-form .field-input, .admin-preview-link, .admin-logout-button, .admin-field input,
+  .admin-field textarea, .admin-field select, .admin-news-row, .admin-gallery-row,
+  .academic-admin-item, .admin-repeat-card, .admin-asset-field, .admin-news-empty,
+  .admin-gallery-empty, .admin-cancel-button, .admin-upload-button, .admin-editor-toolbar,
+  .admin-editor-toolbar button, .admin-rich-editor, .admin-auto-summary, .article-share-button,
+  .article-related-card, .storage-notice-close, .admin-user-status, .admin-user-toggle,
+  .gallery-lightbox-share, .event-card, .quran-mode-option) {
+  color: #e1ebe4;
+  background-color: #121e17;
+  border-color: #30483a;
+}
+
+:root[data-theme="dark"] :is(.academic-program-menu a[aria-current="page"], .academic-program-menu a:hover,
+  .admin-menu-item.is-active, .admin-menu-item:hover, .academic-admin-nav a[aria-current="page"],
+  .academic-admin-nav a:hover) {
+  color: #eafff2;
+  background-color: #175b42;
+  border-color: #287b5d;
+}
+:root[data-theme="dark"] :is(.admin-field, .admin-editor-label, .admin-panel-heading h2, .admin-live-preview-heading h2,
+  .admin-program-summary strong, .admin-repeat-index, .academic-admin-kitabs, .academic-admin-nav a span) { color: #d8e6dd; }
+:root[data-theme="dark"] .academic-admin-nav a,
+:root[data-theme="dark"] .admin-menu-item {
+  color: #dce9e1;
+  background-color: #121e17;
+  border-color: #30483a;
+}
+:root[data-theme="dark"] .admin-kicker,
+:root[data-theme="dark"] .admin-news-summary strong { color: #75d8a9; }
+:root[data-theme="dark"] .admin-news-actions a,
+:root[data-theme="dark"] .academic-admin-actions a,
+:root[data-theme="dark"] .admin-gallery-actions a {
+  color: #9fe5c0;
+  background: #193628;
+  border-color: #315b43;
+}
+:root[data-theme="dark"] .admin-news-actions button,
+:root[data-theme="dark"] .academic-admin-actions button,
+:root[data-theme="dark"] .admin-gallery-actions button {
+  color: #f3b5a9;
+  background: #35201e;
+  border-color: #5a332f;
+}
+:root[data-theme="dark"] :is(input, textarea, select, .search-field input) {
+  color: #e6eee9;
+  background-color: #101914;
+  border-color: #385344;
+}
+:root[data-theme="dark"] input::placeholder, :root[data-theme="dark"] textarea::placeholder { color: #819187; }
+:root[data-theme="dark"] :is(.program-card, .news-card, .work-card, .academic-class-card, .academic-calendar-event,
+  .vision-card, .mission-card, .featured-news, .sidebar-box, .contact-panel, .login-card,
+  .hafalan-form, .hafalan-card, .hafalan-chooser, .admin-panel, .admin-sidebar,
+  .admin-live-preview, .admin-news-form-card, .admin-gallery-form-card, .admin-login-card) {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+}
+:root[data-theme="dark"] :is(.program-kitabs, .academic-calendar-empty, .search-field, .category-list button span,
+  .tag-list button, .gallery-filters button, .pagination button, .admin-news-row, .admin-gallery-row,
+  .academic-admin-item, .admin-repeat-card, .admin-asset-field, .admin-news-empty, .admin-gallery-empty) {
+  background-color: #121e17;
+}
+:root[data-theme="dark"] .nav-dropdown-menu a:hover,
+:root[data-theme="dark"] .nav-dropdown-menu a:focus-visible,
+:root[data-theme="dark"] .nav-dropdown-menu a[aria-current="page"],
+:root[data-theme="dark"] .login-link:hover,
+:root[data-theme="dark"] .tag-list button:hover { background-color: #1c3528; }
+:root[data-theme="dark"] .button--green,
+:root[data-theme="dark"] .hafalan-result-actions .button--green { color: #fff; background: #147b58; }
+:root[data-theme="dark"] .button--green:hover { background: #1a946a; }
+:root[data-theme="dark"] .step-number { color: #a7edca; background: #1c3025; border-color: #315b43; }
+:root[data-theme="dark"] .academic-calendar-event time,
+:root[data-theme="dark"] .academic-program-menu a span,
+:root[data-theme="dark"] .event-date,
+:root[data-theme="dark"] .vm-icon--green,
+:root[data-theme="dark"] .hafalan-choice-icon,
+:root[data-theme="dark"] .hafalan-question-counter,
+:root[data-theme="dark"] .hafalan-result-mark,
+:root[data-theme="dark"] .hafalan-motivation,
+:root[data-theme="dark"] .hafalan-perfect-message {
+  color: #9be5bd;
+  background-color: #1a3527;
+}
+:root[data-theme="dark"] .program-logo-image,
+:root[data-theme="dark"] .admission-program-logo,
+:root[data-theme="dark"] .academic-admin-program-icon img,
+:root[data-theme="dark"] .admin-program-summary-icon img { background-color: #fff; }
+:root[data-theme="dark"] .program-grid::before { opacity: .18; }
+:root[data-theme="dark"] .site-footer { background-color: #09251b; }
+:root[data-theme="dark"] .site-footer p,
+:root[data-theme="dark"] .site-footer a,
+:root[data-theme="dark"] .site-footer .brand-copy strong,
+:root[data-theme="dark"] .site-footer .brand-copy small { color: #d7e6dc; }
+:root[data-theme="dark"] .article-content a,
+:root[data-theme="dark"] .article-related-card a:hover,
+:root[data-theme="dark"] .article-breadcrumbs a,
+:root[data-theme="dark"] .back-link { color: #69d7a6; }
+:root[data-theme="dark"] .article-content blockquote,
+:root[data-theme="dark"] .admin-rich-editor blockquote { color: #c2d6c9; background: #1b3024; border-left-color: #4ac18b; }
+:root[data-theme="dark"] .admin-rich-editor h2,
+:root[data-theme="dark"] .admin-rich-editor h3 { color: #e7f0e9; }
+:root[data-theme="dark"] .admin-editor-toolbar button:hover,
+:root[data-theme="dark"] .admin-editor-toolbar button.is-active { color: #fff; background: #147b58; border-color: #147b58; }
+:root[data-theme="dark"] .admin-auto-summary p { color: #dce9e1; }
+:root[data-theme="dark"] .event-copy h3,
+:root[data-theme="dark"] .faq-item summary,
+:root[data-theme="dark"] .academic-class-card h3,
+:root[data-theme="dark"] .academic-class-card li,
+:root[data-theme="dark"] .academic-calendar-category,
+:root[data-theme="dark"] .history-article h2,
+:root[data-theme="dark"] .news-card h3 a { color: #e1ebe4; }
+:root[data-theme="dark"] .hafalan-choice-card { color: #e3eee7; background: linear-gradient(145deg, #1b3024, #14241b); border-color: #31513e; }
+:root[data-theme="dark"] .hafalan-choice-card--quran { background: linear-gradient(145deg, #302b1b, #221f17); border-color: #64512a; }
+:root[data-theme="dark"] .hafalan-choice-title,
+:root[data-theme="dark"] .hafalan-nadzom-prompt,
+:root[data-theme="dark"] .hafalan-answer.is-selected,
+:root[data-theme="dark"] .certificate-brand { color: #e1f0e6; }
+:root[data-theme="dark"] .hafalan-nadzom-prompt { background: #172b20; border-color: #31543d; }
+:root[data-theme="dark"] .hafalan-answer-letter { color: #d4e0d8; background: #283a2e; }
+:root[data-theme="dark"] .hafalan-answer.is-selected { background: #1a4c36; border-color: #3ba879; }
+:root[data-theme="dark"] .hafalan-score-card,
+:root[data-theme="dark"] .hafalan-progress { background: #19271f; border-color: #30483a; }
+:root[data-theme="dark"] .hafalan-mistake-item { background: #141f18; }
+:root[data-theme="dark"] .hafalan-review,
+:root[data-theme="dark"] .faq-list,
+:root[data-theme="dark"] .faq-item,
+:root[data-theme="dark"] .article-share-tools { border-color: #2b4135; }
+:root[data-theme="dark"] .gallery-lightbox-shell { background: #17231c; }
+:root[data-theme="dark"] .gallery-lightbox-details h2 { color: #e7f0e9; }
+:root[data-theme="dark"] .gallery-lightbox-details p { color: #adbbb2; }
+:root[data-theme="dark"] .gallery-lightbox-share { color: #9fe5c0; }
+:root[data-theme="dark"] .admin-editor-toolbar .toolbar-separator,
+:root[data-theme="dark"] .admin-divider,
+:root[data-theme="dark"] .hafalan-guide-divider { background-color: #30483a; }
+:root[data-theme="dark"] .storage-error-overlay { background: radial-gradient(circle at 15% 10%, #183527 0, transparent 35%), #101713; }
+:root[data-theme="dark"] .storage-error-dialog h1,
+:root[data-theme="dark"] .storage-error-dialog p { color: #e1ebe4; }
+:root[data-theme="dark"] .storage-error-dialog .storage-error-callout { color: #f4d693; background: #332b1b; border-color: #62512e; }
+:root[data-theme="dark"] .storage-error-honesty { color: #b4c1b8; }
+
+/* Article detail: calm breadcrumb/title presentation with a right editorial rail on desktop. */
+.article-container { max-width: 1180px; }
+.article-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 24px; color: #79877e; font-size: 12px; }
+.article-breadcrumbs a { color: #08704f; font-weight: 650; }
+.article-breadcrumbs i { color: #a3aea7; font-size: 9px; }
+.article-breadcrumbs span { max-width: min(48vw, 440px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.article-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 295px; gap: clamp(28px, 4.2vw, 58px); align-items: start; }
+.article-main { min-width: 0; }
+.article-header { padding: 0 0 17px; }
+.article-category { display: inline-block; margin-bottom: 9px; color: #08704f; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.article-header h1 { max-width: 850px; margin: 0 0 12px; color: #182820; font-size: clamp(30px, 4.2vw, 48px); font-weight: 800; line-height: 1.16; letter-spacing: -.045em; }
+.article-dek { max-width: 780px; margin: 0 0 15px; color: #66776d; font-size: 15px; line-height: 1.7; }
+.article-meta-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 13px 0 17px; color: #75837a; font-size: 12px; }
+.article-author { display: inline-flex; align-items: center; gap: 10px; }
+.article-author-icon { display: grid; width: 37px; height: 37px; place-items: center; color: #08704f; background: #e8f5ed; border-radius: 50%; font-size: 15px; }
+.article-author strong, .article-author small { display: block; }
+.article-author strong { color: #293b30; font-size: 12px; }
+.article-author small { margin-top: 2px; color: #819087; font-size: 10px; }
+.article-share-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding-top: 13px; border-top: 1px solid #e7ece8; }
+.article-share-label { margin-right: 3px; color: #68776e; font-size: 11px; font-weight: 700; }
+.article-share-button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; color: #345044; background: #fff; border: 1px solid #dce8df; border-radius: 999px; font-size: 10px; font-weight: 700; cursor: pointer; }
+.article-share-button:hover { color: #075d42; background: #eef8f2; border-color: #bedbc9; }
+.article-share-button--whatsapp { color: #08764c; }
+.article-share-button--instagram { color: #a33c6e; }
+.article-share-status { min-height: 16px; color: #08704f; font-size: 10px; }
+.article-cover { overflow: hidden; width: 100%; max-height: 510px; margin: 12px 0 24px; background: #e7eee9; border-radius: 12px; }
+.article-cover img { display: block; width: 100%; max-height: 510px; object-fit: cover; }
+.article-content { min-width: 0; color: #34473c; font-size: 16px; line-height: 1.9; overflow-wrap: anywhere; }
+.article-content > :first-child { margin-top: 0; }
+.article-content p { margin: 0 0 1.2em; }
+.article-content h2 { margin: 1.55em 0 .55em; color: #1d3327; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.3; }
+.article-content h3 { margin: 1.35em 0 .5em; color: #233b2e; font-size: clamp(18px, 2vw, 23px); line-height: 1.35; }
+.article-content ul, .article-content ol { margin: 0 0 1.3em; padding-left: 1.5em; }
+.article-content li { margin-bottom: .4em; }
+.article-content blockquote { margin: 1.3em 0; padding: 14px 19px; color: #4b6254; background: #f0f7f2; border-left: 4px solid #168259; border-radius: 0 8px 8px 0; }
+.article-content .article-image { margin: 1.5em 0; text-align: center; }
+.article-content .article-image img, .article-content img { display: block; width: auto; max-width: 100%; height: auto; max-height: 78vh; margin: 0 auto; object-fit: contain; border-radius: 9px; }
+.article-sidebar { min-width: 0; }
+.article-related-box { position: sticky; top: 18px; padding: 18px; }
+.article-sidebar-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.article-sidebar-heading .section-eyebrow { font-size: 9px; }
+.article-sidebar-heading h2 { margin: 3px 0 0; color: #203328; font-size: 19px; line-height: 1.25; }
+.article-related-list { display: grid; gap: 13px; }
+.article-related-card { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #edf1ee; }
+.article-related-image { display: block; overflow: hidden; width: 90px; aspect-ratio: 1.25 / 1; background: #e7eee9; border-radius: 7px; }
+.article-related-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.article-related-copy { min-width: 0; }
+.article-related-copy > span { display: block; margin-bottom: 4px; color: #839087; font-size: 9px; line-height: 1.5; }
+.article-related-copy h3 { margin: 0; color: #293b30; font-size: 12px; line-height: 1.45; }
+.article-related-copy h3 a:hover { color: #08704f; }
+.article-related-empty { color: #78867d; font-size: 12px; }
+.article-related-all { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; color: #08704f; font-size: 11px; font-weight: 750; }
+
+/* Automatic excerpt preview and centered, responsive article-editor images. */
+.admin-auto-summary { margin: 12px 0 17px; padding: 13px 15px; color: #3e5648; background: #f2faf5; border: 1px solid #dceee2; border-radius: 8px; }
+.admin-auto-summary strong { display: block; margin-bottom: 5px; color: #116747; font-size: 10px; }
+.admin-auto-summary p { margin: 0 0 5px; color: #354a3c; font-size: 9px; line-height: 1.65; overflow-wrap: anywhere; }
+.admin-auto-summary small { color: #79877e; font-size: 7px; }
+.admin-editor-upload-status { display: block; min-height: 18px; margin: 4px 0; color: #117353; font-size: 8px; }
+.admin-editor-toolbar button:disabled { cursor: wait; opacity: .6; }
+.admin-rich-editor .article-image { margin: 14px 0; text-align: center; }
+.admin-rich-editor .article-image img { display: block; width: auto; max-width: 100%; height: auto; margin: 0 auto; object-fit: contain; }
+
+/* Fixed global light/dark switch; the preference is stored for this browser. */
+.theme-toggle { position: fixed; z-index: 1001; right: calc(18px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); display: grid; width: 46px; height: 46px; place-items: center; padding: 0; color: #fff; background: #08704f; border: 1px solid rgba(255,255,255,.72); border-radius: 50%; box-shadow: 0 6px 20px rgba(7,43,29,.28); font-size: 17px; cursor: pointer; transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+.theme-toggle:hover { background: #04583e; box-shadow: 0 8px 22px rgba(7,43,29,.36); transform: translateY(-2px); }
+.theme-toggle:focus-visible { outline: 3px solid #f4aa37; outline-offset: 3px; }
+:root[data-theme="dark"] .theme-toggle { color: #15251b; background: #f5c34c; border-color: #ffe29b; box-shadow: 0 7px 23px rgba(0,0,0,.4); }
+:root[data-theme="dark"] .theme-toggle:hover { background: #ffd76a; }
+
+@media (max-width: 900px) {
+  .article-detail-layout { grid-template-columns: minmax(0, 1fr) 255px; gap: 24px; }
+  .article-related-box { padding: 14px; }
+  .article-related-card { grid-template-columns: 74px minmax(0, 1fr); gap: 8px; }
+  .article-related-image { width: 74px; }
+}
+@media (max-width: 720px) {
+  .article-page { padding-top: 19px; }
+  .article-breadcrumbs { gap: 7px; margin-bottom: 18px; font-size: 10px; }
+  .article-breadcrumbs span { max-width: 45vw; }
+  .article-detail-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .article-header h1 { font-size: clamp(27px, 7vw, 39px); }
+  .article-dek { font-size: 13px; }
+  .article-meta-line { font-size: 11px; }
+  .article-share-tools { gap: 6px; }
+  .article-share-label { flex-basis: 100%; }
+  .article-share-button { min-height: 32px; padding-inline: 9px; font-size: 9px; }
+  .article-cover, .article-cover img { max-height: 340px; }
+  .article-content { font-size: 14px; line-height: 1.8; }
+  .article-related-box { position: static; }
+  .article-related-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+  .article-related-card { grid-template-columns: 74px minmax(0, 1fr); padding-bottom: 10px; }
+  :root[data-theme="dark"] .site-nav { background-color: #17231c; border-color: #2b4034; }
+}
+@media (max-width: 480px) {
+  .theme-toggle { right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); width: 42px; height: 42px; font-size: 15px; }
+  .article-related-list { grid-template-columns: minmax(0, 1fr); }
+  .article-related-card { grid-template-columns: 88px minmax(0, 1fr); }
+  .article-related-image { width: 88px; }
+}
+@media (prefers-reduced-motion: reduce) { .theme-toggle { transition: none; } }
+@media print { .theme-toggle { display: none !important; } }
+
+/* Contrast hardening: readable defaults for any page component not yet theme-aware. */
+:root[data-theme="dark"] {
+  --dark-text-primary: #edf4ef;
+  --dark-text-body: #c4d0c8;
+  --dark-text-muted: #aebdb4;
+  --dark-surface: #17231c;
+  --dark-surface-raised: #1d2b22;
+  --dark-surface-input: #101914;
+  --dark-border: #344a3b;
+  --dark-link: #8de0ae;
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] main { color: var(--dark-text-body); }
+:root[data-theme="dark"] main :is(p, li, small, label, legend, dt, dd, time, figcaption, summary, address) {
+  color: var(--dark-text-body);
+}
+:root[data-theme="dark"] main :is(h1, h2, h3, h4, h5, h6, strong, b) { color: var(--dark-text-primary); }
+:root[data-theme="dark"] main a:not(.button):not(.admin-save-button):not(.admin-upload-button):not(.article-share-button) {
+  color: var(--dark-link);
+}
+:root[data-theme="dark"] main a:not(.button):not(.admin-save-button):not(.admin-upload-button):not(.article-share-button):hover {
+  color: #b8f2ce;
+}
+:root[data-theme="dark"] main :is(button, [role="button"]):not(.button--orange):not(.button--green):not(.admin-save-button):not(.admin-upload-button) {
+  color: var(--dark-text-primary);
+}
+:root[data-theme="dark"] :is(
+  .admin-madrasah-form, .admin-madrasah-card, .admin-madrasah-overview,
+  .admin-madrasah-manage-link, .admin-madrasah-empty
+) {
+  color: var(--dark-text-body);
+  background-color: var(--dark-surface);
+  border-color: var(--dark-border);
+}
+:root[data-theme="dark"] .admin-madrasah-manage-icon,
+:root[data-theme="dark"] .admin-madrasah-overview-icon,
+:root[data-theme="dark"] .admin-madrasah-count {
+  color: #a5eac2;
+  background-color: #1a3527;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-madrasah-count strong { color: #e7f4eb; }
+:root[data-theme="dark"] .admin-madrasah-card-heading h3,
+:root[data-theme="dark"] .admin-madrasah-list-heading h2,
+:root[data-theme="dark"] .admin-madrasah-empty strong,
+:root[data-theme="dark"] .admin-madrasah-manage-link strong { color: var(--dark-text-primary); }
+:root[data-theme="dark"] .admin-madrasah-card-index,
+:root[data-theme="dark"] .admin-madrasah-empty > i { color: #8de0ae; }
+:root[data-theme="dark"] .admin-madrasah-remove-button,
+:root[data-theme="dark"] main .academic-admin-actions button,
+:root[data-theme="dark"] main .admin-news-actions button,
+:root[data-theme="dark"] main .admin-gallery-actions button {
+  color: #ffc0b7;
+  background-color: #382320;
+  border-color: #63413b;
+}
+:root[data-theme="dark"] .admin-madrasah-add-button {
+  color: #a5eac2;
+  background-color: #1a3527;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-madrasah-add-button:hover { color: #fff; background-color: #176b4c; border-color: #27815b; }
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field,
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field small,
+:root[data-theme="dark"] .admin-madrasah-count small,
+:root[data-theme="dark"] .admin-madrasah-form-actions > span,
+:root[data-theme="dark"] .admin-madrasah-list-heading p,
+:root[data-theme="dark"] .admin-madrasah-overview p,
+:root[data-theme="dark"] .admin-madrasah-manage-link p,
+:root[data-theme="dark"] .admin-madrasah-empty span { color: var(--dark-text-muted); }
+:root[data-theme="dark"] :is(input, textarea, select) {
+  color: var(--dark-text-primary);
+  background-color: var(--dark-surface-input);
+  border-color: #405a49;
+  caret-color: #8de0ae;
+}
+:root[data-theme="dark"] :is(input, textarea, select):focus-visible {
+  border-color: #70c99a;
+  box-shadow: 0 0 0 3px rgba(112, 201, 154, .2);
+}
+:root[data-theme="dark"] select option { color: var(--dark-text-primary); background: var(--dark-surface-input); }
+:root[data-theme="dark"] :is(input, textarea)::placeholder { color: #a0b0a6; opacity: 1; }
+:root[data-theme="dark"] .admin-field,
+:root[data-theme="dark"] .admin-field-note,
+:root[data-theme="dark"] .admin-field small,
+:root[data-theme="dark"] .admin-news-form-header p,
+:root[data-theme="dark"] .admin-page-heading p,
+:root[data-theme="dark"] .admin-panel-heading p,
+:root[data-theme="dark"] .admin-editor-hint,
+:root[data-theme="dark"] .admin-form-actions > span,
+:root[data-theme="dark"] .admin-news-form-actions > span,
+:root[data-theme="dark"] .admin-sidebar-hint,
+:root[data-theme="dark"] .academic-admin-item p,
+:root[data-theme="dark"] .academic-admin-kitabs,
+:root[data-theme="dark"] .academic-admin-kitabs strong,
+:root[data-theme="dark"] .admin-news-meta,
+:root[data-theme="dark"] .admin-news-copy p,
+:root[data-theme="dark"] .admin-news-copy small,
+:root[data-theme="dark"] .admin-gallery-info small,
+:root[data-theme="dark"] .admin-user-status small,
+:root[data-theme="dark"] .admin-madrasah-card-index,
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field small { color: var(--dark-text-muted); }
+:root[data-theme="dark"] :is(
+  .stat-item span, .event-copy > span, .academic-class-index, .article-author small,
+  .article-share-label, .article-share-status, .article-category, .admin-news-views,
+  .academic-admin-date, .academic-admin-program-icon, .academic-admin-nav a span,
+  .admin-menu-number, .admin-menu-arrow, .admin-status--published, .admin-status--draft,
+  .carousel-arrows span, .question-count label span, .hafalan-score-card span,
+  .hafalan-quiz-controls > span, .search-field > span:last-child
+) { color: #b9e1c8; }
+:root[data-theme="dark"] .question-count input:checked + span { color: #fff; }
+:root[data-theme="dark"] .admin-alert--success {
+  color: #b8efcb;
+  background-color: #173826;
+  border-color: #315b40;
+}
+:root[data-theme="dark"] .admin-alert--error {
+  color: #ffc0b7;
+  background-color: #382320;
+  border-color: #63413b;
+}
+:root[data-theme="dark"] .admin-save-button,
+:root[data-theme="dark"] .button--green { color: #fff; background-color: #147b58; }
+:root[data-theme="dark"] .admin-save-button:hover,
+:root[data-theme="dark"] .button--green:hover { background-color: #1a946a; }
+:root[data-theme="dark"] .admin-cancel-button,
+:root[data-theme="dark"] .admin-preview-link,
+:root[data-theme="dark"] .admin-logout-button {
+  color: #a5eac2;
+  background-color: #1b2c22;
+  border-color: #3a5544;
+}
+:root[data-theme="dark"] .academic-admin-actions a,
+:root[data-theme="dark"] .admin-news-actions a,
+:root[data-theme="dark"] .admin-gallery-actions a {
+  color: #a5eac2;
+  background-color: #193628;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-user-status,
+:root[data-theme="dark"] .admin-user-toggle,
+:root[data-theme="dark"] .admin-news-summary > div,
+:root[data-theme="dark"] .admin-asset-field,
+:root[data-theme="dark"] .admin-gallery-upload {
+  color: var(--dark-text-body);
+  background-color: var(--dark-surface-raised);
+  border-color: var(--dark-border);
+}
+:root[data-theme="dark"] .site-header,
+:root[data-theme="dark"] .site-nav,
+:root[data-theme="dark"] .nav-dropdown-menu,
+:root[data-theme="dark"] .nav-dropdown-menu a,
+:root[data-theme="dark"] .login-link { color: #e4eee7; }
+:root[data-theme="dark"] .site-footer { color: #d7e6dc; }
+:root[data-theme="dark"] .site-footer p,
+:root[data-theme="dark"] .site-footer a,
+:root[data-theme="dark"] .site-footer .brand-copy strong,
+:root[data-theme="dark"] .site-footer .brand-copy small { color: #d7e6dc; }

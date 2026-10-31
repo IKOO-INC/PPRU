@@ -1,0 +1,47 @@
+{% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="original_slug" value="{{ post.slug if is_edit else '' }}">
+{% if error %}<div class="admin-alert admin-alert--error">{{ error }}</div>{% endif %}
+<div class="admin-fields-grid">
+  <label class="admin-field"><span>Judul berita *</span><input type="text" name="title" value="{{ post.title }}" placeholder="Masukkan judul berita" required></label>
+  {{ text_field('Slug / alamat artikel', 'slug', post.slug, 'otomatis-dari-judul') }}
+  {{ text_field('Kategori', 'category', post.category|default('Kegiatan')) }}
+  {{ text_field('Teks alternatif foto', 'image_alt', post.image_alt|default(post.title), 'news') }}
+  <label class="admin-field"><span>Status publikasi</span><select name="status"><option value="published"{% if post.status|default('published') == 'published' %} selected{% endif %}>Terbitkan</option><option value="draft"{% if post.status == 'draft' %} selected{% endif %}>Simpan sebagai draft</option></select></label>
+  <label class="admin-field"><span>Tanggal &amp; waktu publikasi</span><input type="datetime-local" name="published_at" value="{{ published_at_input }}"><small>Kosongkan untuk memakai waktu sekarang (WIB).</small></label>
+</div>
+{{ image_url_field('URL foto berita', 'image', post.image, post.image_alt|default(post.title), 'news') }}
+
+<div class="admin-auto-summary" data-news-summary data-max-chars="160">
+  <strong>Ringkasan otomatis untuk kartu berita</strong>
+  <p data-news-summary-preview>{{ auto_excerpt or 'Ringkasan akan dibuat dari isi berita.' }}</p>
+  <small>Diambil dari isi berita, maksimal 160 karakter. Jika terlalu panjang, ringkasan diakhiri dengan tiga titik.</small>
+</div>
+
+<label class="admin-editor-label" for="article-editor">Isi berita</label>
+<div class="admin-editor-toolbar" role="toolbar" aria-label="Format teks berita">
+  <button type="button" data-editor-command="bold" data-editor-toggle aria-pressed="false" title="Tebal"><strong>B</strong></button>
+  <button type="button" data-editor-command="italic" data-editor-toggle aria-pressed="false" title="Miring"><em>I</em></button>
+  <button type="button" data-editor-command="underline" data-editor-toggle aria-pressed="false" title="Garis bawah"><u>U</u></button>
+  <span class="toolbar-separator" aria-hidden="true"></span>
+  <button type="button" data-editor-command="formatBlock" data-editor-value="h2" data-editor-toggle aria-pressed="false" title="Judul bagian">H2</button>
+  <button type="button" data-editor-command="formatBlock" data-editor-value="h3" data-editor-toggle aria-pressed="false" title="Subjudul">H3</button>
+  <button type="button" data-editor-command="formatBlock" data-editor-value="p" data-editor-toggle aria-pressed="false" title="Paragraf"><i class="fa-solid fa-paragraph" aria-hidden="true"></i></button>
+  <span class="toolbar-separator" aria-hidden="true"></span>
+  <button type="button" data-editor-command="insertUnorderedList" data-editor-toggle aria-pressed="false" title="Daftar bullet"><i class="fa-solid fa-list-ul" aria-hidden="true"></i> Daftar</button>
+  <button type="button" data-editor-command="insertOrderedList" data-editor-toggle aria-pressed="false" title="Daftar nomor"><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Daftar nomor</button>
+  <button type="button" data-editor-command="formatBlock" data-editor-value="blockquote" data-editor-toggle aria-pressed="false" title="Kutipan">Kutipan</button>
+  <button type="button" data-editor-command="createLink" data-editor-toggle aria-pressed="false" title="Tambah atau hapus tautan"><i class="fa-solid fa-link" aria-hidden="true"></i> Tautan</button>
+  <button type="button" data-editor-command="removeFormat" title="Hapus format"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Hapus format</button>
+  <span class="toolbar-separator" aria-hidden="true"></span>
+  <button type="button" data-editor-insert-image title="Sisipkan gambar ke isi berita"><i class="fa-solid fa-image" aria-hidden="true"></i> Sisipkan gambar</button>
+</div>
+<input class="admin-asset-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-editor-image-file aria-label="Pilih gambar untuk isi berita">
+<span class="admin-editor-upload-status" data-editor-image-status role="status" aria-live="polite"></span>
+<div class="admin-rich-editor" id="article-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Mulai menulis isi berita di sini...">{{ editor_html }}</div>
+<textarea name="body_html" id="article-body-html" hidden></textarea>
+<small class="admin-editor-hint">Klik tombol format untuk mengaktifkan atau mematikannya. Gambar isi berita diunggah ke Cloudinary, otomatis berada di tengah, dan menyesuaikan ukuran layar.</small>
+<div class="admin-news-form-actions">
+  <span class="admin-news-views">{% if is_edit %}<i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
+  <div><a class="admin-cancel-button" href="{{ cancel_url }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan pengumuman' if academic else 'Simpan berita' }}</button></div>
+</div>

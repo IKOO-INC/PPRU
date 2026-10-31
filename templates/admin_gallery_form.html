@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "partials/admin_fields.html" import image_url_field, textarea_field %}
+{% block title %}{{ 'Edit foto galeri' if is_edit else 'Upload foto galeri' }} · Admin{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=12">{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
+{% block content %}
+<section class="admin-gallery-form container">
+  <header class="admin-news-form-header"><div><span class="admin-kicker">Admin · Galeri</span><h1>{{ 'Edit foto galeri' if is_edit else 'Upload foto galeri baru' }}</h1><p>Unggah foto dan atur informasi yang tampil bersama gambar.</p></div><a class="admin-cancel-button" href="{{ url_for('admin', tab='gallery') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke galeri</a></header>
+  {% if error %}<div class="admin-alert admin-alert--error">{{ error }}</div>{% endif %}
+  <form class="admin-gallery-form-card" method="post" action="{{ url_for('admin_gallery_save') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="original_id" value="{{ item.id if is_edit else '' }}">
+    <div class="admin-fields-grid">
+      <label class="admin-field"><span>Judul foto *</span><input type="text" name="title" value="{{ item.title }}" placeholder="Contoh: Kegiatan santri" required></label>
+      <label class="admin-field"><span>Kategori</span><select name="category">{% for category in ('Kegiatan', 'Santri', 'Pesantren') %}<option value="{{ category }}"{% if item.category|default('Kegiatan') == category %} selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+      <label class="admin-field"><span>Bentuk kartu</span><select name="shape">{% for shape, label in [('large', 'Besar'), ('wide', 'Lebar'), ('small', 'Kecil')] %}<option value="{{ shape }}"{% if item.shape|default('large') == shape %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label class="admin-field"><span>Posisi foto</span><select name="position">{% for position, label in [('center', 'Tengah'), ('top', 'Atas'), ('bottom', 'Bawah'), ('left', 'Kiri'), ('right', 'Kanan')] %}<option value="{{ position }}"{% if item.position|default('center') == position %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label class="admin-field"><span>Teks alternatif gambar</span><input type="text" name="image_alt" value="{{ item.image_alt|default(item.title) }}" placeholder="Deskripsi singkat foto"></label>
+      {{ textarea_field('Caption', 'caption', item.caption, 3) }}
+    </div>
+    {{ image_url_field('URL foto galeri', 'image', item.image, item.image_alt|default(item.title), 'gallery') }}
+    <div class="admin-gallery-form-actions"><a class="admin-cancel-button" href="{{ url_for('admin', tab='gallery') }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Upload ke galeri' }}</button></div>
+  </form>
+</section>
+{% endblock %}

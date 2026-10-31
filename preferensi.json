@@ -2,7 +2,7 @@
   "site": {
     "name": "Pondok Pesantren Roudlotul Ulum",
     "short_name": "PPRU",
-    "description": "Membangun generasi Qur'ani yang berilmu, beradab, mandiri, dan membawa manfaat bagi sesama.",
+    "description": "Pondok Pesantren Roudlotul Ulum di Karangtanjung, Kebumen, menyelenggarakan pendidikan salafiyah dan pendidikan formal SMP serta SMK untuk membina ilmu, akhlak, wawasan, dan keterampilan santri.",
     "placeholder_image": "/static/images/pondok-campus.jpg",
     "navigation": [
       {
@@ -41,258 +41,225 @@
         "url": "/kontak"
       }
     ],
-    "login_label": "Masuk",
-    "login_url": "/masuk",
+    "login_label": "Masuk Portal Santri",
+    "login_url": "https://siapik.com",
     "admission_label": "Daftar PSB",
     "admission_url": "/psb",
-    "footer_note": "Membangun generasi Qur'ani yang beradab, berilmu, dan berwawasan melalui pendidikan pesantren.",
-    "address": "Karangtanjung, Alian, Kebumen",
+    "footer_note": "Menjaga tradisi salafiyah, mengembangkan keilmuan, dan membina santri agar berilmu, berakhlak, serta bermanfaat bagi masyarakat.",
+    "address": "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352.",
     "phone": "",
     "email": "",
-    "logo_path": "/static/images/mark.svg"
+    "logo_path": "/static/images/mark.svg",
+    "social_links": {
+      "facebook": "https://www.facebook.com/pprukarangtanjungisrugans/?locale=id_ID",
+      "instagram": "https://www.instagram.com/roudlotululum_karangtanjung/",
+      "youtube": "https://www.youtube.com/@mediaroudlatululum6018",
+      "tiktok": "https://www.tiktok.com/@roudlotululum1983?_r=1&_t=ZS-9AzQydgGWTx"
+    }
   },
   "hero": {
-    "eyebrow": "Pendidikan pesantren · Karangtanjung, Kebumen",
-    "title": "Membangun Generasi Qur’ani & Beradab",
-    "description": "Menumbuhkan generasi yang dekat dengan Al-Qur’an, berilmu, dan berakhlak mulia melalui pendidikan pesantren yang berlandaskan adab.",
+    "eyebrow": "Pesantren Salafiyah · Karangtanjung, Kebumen",
+    "title": "Menjaga Tradisi Keilmuan, Membina Generasi Berdaya",
+    "description": "Berpijak pada tradisi salafiyah Ahlussunnah wal Jama’ah, kami memadukan kajian kitab, pembinaan akhlak, pendidikan formal SMP dan SMK, serta pengembangan keterampilan santri.",
     "primary_label": "Daftar Sekarang",
     "primary_url": "/psb",
     "secondary_label": "Lihat Profil",
     "secondary_url": "/profil",
     "image_alt": "Suasana lingkungan Pondok Pesantren Roudlotul Ulum",
-    "image_note": "30 Juz Mutqin",
+    "image_note": "Berdiri sejak 1983",
     "image": "/static/images/pondok-campus.jpg"
   },
   "stats": [
     {
-      "value": "1095",
-      "label": "Santri Aktif"
+      "value": "—",
+      "label": "Santri aktif"
     },
     {
-      "value": "32",
-      "label": "Pengajar"
+      "value": "—",
+      "label": "Alumni"
     },
     {
-      "value": "1611",
-      "label": "Total Alumni"
+      "value": "1983",
+      "label": "Tahun berdiri"
     },
     {
-      "value": "20",
-      "label": "Tahun Mengabdi"
+      "value": "2",
+      "label": "Unit pendidikan formal"
     }
   ],
   "program_intro": {
-    "eyebrow": "Program Unggulan",
-    "title": "Pendidikan Holistik Berbasis Adab",
-    "description": "Kami memadukan pendidikan Al-Qur’an, ilmu keislaman, dan pembinaan karakter dalam lingkungan belajar yang dekat dan terarah."
+    "eyebrow": "Pendidikan Pesantren & Sekolah Formal",
+    "title": "Tradisi Keilmuan, Pendidikan Terpadu",
+    "description": "Pendidikan salafiyah berjalan bersama SMP dan SMK, didukung madrasah diniyah, sorogan, bandungan, syawir, serta program takhassus untuk memperdalam keilmuan dan keterampilan."
   },
   "programs": [
     {
       "number": "01",
-      "title": "Tahfidzul Qur’an",
-      "category": "Program Al-Qur’an",
-      "description": "Program menghafal Al-Qur’an dengan pendampingan dan pembiasaan murajaah, agar hafalan terjaga serta tumbuh kecintaan kepada Al-Qur’an.",
-      "icon": "quran",
-      "color": "green"
+      "title": "Pendidikan Formal SMP & SMK",
+      "category": "Pendidikan formal · pesantren & industri",
+      "description": "SMP dan SMK Roudlotul ‘Ulum memadukan kurikulum pendidikan formal dengan kurikulum pesantren. Model sekolah berbasis pesantren dan industri membina ilmu, akhlak, wawasan, serta keterampilan santri.",
+      "icon": "school",
+      "color": "orange",
+      "kitabs_label": "Kurikulum dan pendekatan",
+      "kitabs": [
+        "Kurikulum pendidikan formal",
+        "Kurikulum pesantren",
+        "Pendekatan berbasis pesantren dan industri"
+      ],
+      "info_url": "/kontak",
+      "education_type": "formal",
+      "logo": ""
     },
     {
       "number": "02",
-      "title": "SPM (Muadalah)",
-      "category": "Pendidikan formal pesantren",
-      "description": "Pembelajaran ilmu agama dan pengetahuan umum yang dirancang bertahap dalam suasana pendidikan pesantren.",
-      "icon": "school",
-      "color": "orange"
+      "title": "Madrasah Diniyah",
+      "category": "Pendidikan salafiyah berjenjang",
+      "description": "Madrasah Diniyah mencakup jenjang I’dadiyah, Ibtida, Tsanawi, dan Aliyah. Kegiatan pagi berlangsung pukul 06.30–08.30, sedangkan madrasah lailiyah pukul 18.30–20.00. Sorogan dilaksanakan selepas Subuh dan bandungan menyesuaikan jenjang.",
+      "icon": "book-open-reader",
+      "color": "green",
+      "kitabs_label": "Jenjang belajar",
+      "kitabs": [
+        "I’dadiyah",
+        "Ibtida",
+        "Tsanawi",
+        "Aliyah"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": "",
+      "class_details": [
+        {
+          "name": "I’dadiyah",
+          "description": "Syawir dilaksanakan selepas salat Isya hingga pukul 22.00.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": []
+        },
+        {
+          "name": "Ibtida",
+          "description": "Bandungan kitab mengikuti jenjang santri.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Fathul Qorib",
+            "Ta’limul Muta’allim"
+          ]
+        },
+        {
+          "name": "Tsanawi",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar; Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Al-Hikam",
+            "Fathul Wahab",
+            "Tafsir Al-Qur’an"
+          ]
+        },
+        {
+          "name": "Aliyah",
+          "description": "Al-Hikam dan Fathul Wahab dikaji setelah Zuhur; Tafsir Al-Qur’an setelah Asar; Syawir dilaksanakan selepas salat Isya hingga pukul 23.00.",
+          "kitabs_label": "Kitab bandungan",
+          "kitabs": [
+            "Al-Hikam",
+            "Fathul Wahab",
+            "Tafsir Al-Qur’an"
+          ]
+        }
+      ]
     },
     {
       "number": "03",
-      "title": "Diniyah Takmiliyah",
-      "category": "Penguatan ilmu keislaman",
-      "description": "Pembelajaran dasar-dasar keislaman untuk menguatkan pemahaman, ibadah, dan akhlak santri dalam keseharian.",
+      "title": "Takhassus Al-Miftah Lil Ulum",
+      "category": "Akselerasi baca kitab kuning",
+      "description": "Program baca kitab kuning berbasis modul dan jilid. Santri mengikuti kelas jilid dan kelas praktik (taqrib); perpindahan ke jilid berikutnya disesuaikan dengan kemampuan dan hasil tes.",
+      "icon": "scroll",
+      "color": "blue",
+      "kitabs_label": "Alur pembelajaran",
+      "kitabs": [
+        "Kelas jilid",
+        "Kelas praktik (taqrib)"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": ""
+    },
+    {
+      "number": "04",
+      "title": "Kajian Sorogan & Bandungan",
+      "category": "Pembelajaran kitab",
+      "description": "Sorogan dilakukan dengan menyimak kitab yang dipelajari di kelas. Bandungan menjadi ruang kajian kitab bersama setelah salat Zuhur dan Asar sesuai jenjang santri.",
       "icon": "book",
-      "color": "blue"
+      "color": "orange",
+      "kitabs_label": "Kitab bandungan",
+      "kitabs": [
+        "Fathul Qorib",
+        "Ta’limul Muta’allim",
+        "Al-Hikam",
+        "Fathul Wahab",
+        "Tafsir Al-Qur’an"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": ""
+    },
+    {
+      "number": "05",
+      "title": "Takhassus MPQ & Bahasa",
+      "category": "Al-Qur’an & bahasa",
+      "description": "Program untuk santri yang ingin memperdalam baca-tulis Al-Qur’an sekaligus mengembangkan bahasa Arab dan bahasa Inggris.",
+      "icon": "quran",
+      "color": "green",
+      "kitabs_label": "Fokus pembelajaran",
+      "kitabs": [
+        "Baca-tulis Al-Qur’an",
+        "Bahasa Arab",
+        "Bahasa Inggris"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": ""
+    },
+    {
+      "number": "06",
+      "title": "Takhassus Syawir",
+      "category": "Musyawarah keilmuan",
+      "description": "Jenjang lanjutan bagi santri yang telah menamatkan MISRIU. Syawir melatih kemandirian berpikir, pengambilan keputusan yang bertanggung jawab, dan pembahasan masalah fikih sesuai perkembangan masyarakat.",
+      "icon": "chalkboard-user",
+      "color": "blue",
+      "kitabs_label": "Fokus pembinaan",
+      "kitabs": [
+        "Kemandirian berpikir",
+        "Pengambilan keputusan bertanggung jawab",
+        "Kajian masalah fikihiyyah"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": ""
+    },
+    {
+      "number": "07",
+      "title": "Takhassus Tahfidzul Qur’an",
+      "category": "Hafalan Al-Qur’an",
+      "description": "Program takhassus yang diperuntukkan bagi santri yang ingin menghafal Al-Qur’an.",
+      "icon": "quran",
+      "color": "orange",
+      "kitabs_label": "Fokus program",
+      "kitabs": [
+        "Hafalan Al-Qur’an"
+      ],
+      "info_url": "/kontak",
+      "education_type": "non_formal",
+      "logo": ""
     }
   ],
   "history": {
     "eyebrow": "Sejarah & Profil",
-    "title": "Sejarah Pesantren",
-    "intro": "Pondok Pesantren Roudlotul Ulum tumbuh dari ikhtiar menghadirkan pendidikan yang dekat dengan Al-Qur’an, menguatkan adab, dan memberi manfaat bagi masyarakat.",
-    "body": "Di lingkungan pesantren, santri belajar untuk mengenal ilmu sekaligus membiasakan nilai-nilai kebaikan. Pendidikan dijalani melalui pembelajaran, ibadah, kebersamaan, dan pendampingan yang terus bertumbuh dari waktu ke waktu.",
-    "quote": "Mendidik dengan keteladanan, menumbuhkan generasi Qur’ani yang beradab.",
+    "title": "Berakar di Karangtanjung, berkembang lewat ilmu",
+    "intro": "K.H. Ilyas Al-Yasir kembali mengabdi di Karangtanjung pada 1975, mengajarkan nahwu dan sharaf melalui sorogan. Pada 1983, pengajian itu berkembang menjadi pesantren bernama Riyadul ‘Ulum Al-Hidayah.",
+    "body": "Kini Pondok Pesantren Roudlotul Ulum memadukan pendidikan salafiyah—madrasah diniyah, sorogan, bandungan, dan syawir—dengan pendidikan formal SMP serta SMK. Program takhassus meliputi Al-Miftah Lil Ulum, MPQ & Bahasa, Syawir, dan Tahfidzul Qur’an.",
+    "quote": "Di mana ada saya, di situ ada ngaji. — K.H. Ilyas Al-Yasir",
     "image": "/static/images/pondok-campus.jpg",
     "image_alt": "Suasana lingkungan Pondok Pesantren Roudlotul Ulum",
     "video_label": "Video profil pesantren"
   },
-  "news": [
-    {
-      "slug": "peringatan-maulid-nabi-1448",
-      "category": "Kegiatan",
-      "title": "Peringatan Ta’dzim Maulid Nabi Muhammad SAW 1448 H",
-      "excerpt": "Kegiatan menjadi ruang untuk meneladani akhlak Rasulullah dan mempererat kebersamaan keluarga pesantren.",
-      "date": "08 September 2026",
-      "content": [
-        {
-          "heading": "Meneladani akhlak Rasulullah",
-          "paragraphs": [
-            "Peringatan Maulid Nabi menjadi momen untuk kembali mengenal keteladanan Rasulullah SAW dan menumbuhkan kecintaan kepada beliau.",
-            "Keluarga pesantren mengisi kegiatan dengan doa, pembacaan selawat, dan kebersamaan dalam suasana penuh khidmat."
-          ]
-        },
-        {
-          "heading": "Menguatkan kebersamaan",
-          "paragraphs": [
-            "Semoga nilai-nilai kebaikan yang dipelajari dapat menjadi bekal dalam kehidupan sehari-hari."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Kegiatan di lingkungan pesantren",
-      "shape": "landscape"
-    },
-    {
-      "slug": "gelar-kegiatan-santri",
-      "category": "Kegiatan",
-      "title": "Santri mengikuti kegiatan pembelajaran dan kebersamaan",
-      "excerpt": "Ragam kegiatan di pesantren menjadi bagian dari proses belajar, berlatih mandiri, dan bekerja sama.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Belajar dalam kebersamaan",
-          "paragraphs": [
-            "Kegiatan santri menjadi ruang untuk menerapkan nilai disiplin, tanggung jawab, serta saling mendukung dalam proses belajar."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Suasana kegiatan pesantren",
-      "shape": "landscape"
-    },
-    {
-      "slug": "pemahaman-keilmuan-santri",
-      "category": "Pendidikan",
-      "title": "Menguatkan pemahaman keilmuan dan hafalan santri",
-      "excerpt": "Proses belajar yang berkelanjutan membantu santri menjaga semangat dan mengembangkan pemahaman.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Belajar dan terus memperbaiki diri",
-          "paragraphs": [
-            "Setiap santri menjalani proses belajar dengan tahapan yang berbeda. Pendampingan dan murajaah membantu menjaga semangat untuk terus berproses."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Lingkungan belajar santri",
-      "shape": "portrait"
-    },
-    {
-      "slug": "santri-pesantren-berprestasi",
-      "category": "Prestasi",
-      "title": "Santri terus berproses meraih prestasi dan pengalaman",
-      "excerpt": "Semangat belajar dan keberanian mencoba menjadi bekal untuk mengembangkan potensi santri.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Mengembangkan potensi",
-          "paragraphs": [
-            "Pengalaman belajar di dalam maupun di luar kelas memberi ruang bagi santri untuk mengembangkan potensi dan rasa percaya diri."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Kegiatan santri di pesantren",
-      "shape": "landscape"
-    },
-    {
-      "slug": "sholawat-muhammad-rasulullah",
-      "category": "Karya Santri",
-      "title": "Sholawat Muhammad Rasulullah, karya dan tradisi santri",
-      "excerpt": "Karya santri menjadi salah satu cara menyampaikan kecintaan kepada Rasulullah dan semangat berkarya.",
-      "date": "Karya Santri",
-      "content": [
-        {
-          "heading": "Kreativitas yang berangkat dari nilai",
-          "paragraphs": [
-            "Kreativitas santri tumbuh dari kebiasaan belajar, berkarya, dan saling menginspirasi."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Karya dan kegiatan santri",
-      "shape": "square"
-    },
-    {
-      "slug": "matasa-dan-penerimaan-santri",
-      "category": "Kegiatan",
-      "title": "Menyambut santri baru dengan semangat kebersamaan",
-      "excerpt": "Masa pengenalan menjadi awal bagi santri untuk mengenal lingkungan, kegiatan, dan budaya belajar pesantren.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Memulai perjalanan baru",
-          "paragraphs": [
-            "Santri baru menjalani proses pengenalan lingkungan pesantren dengan dukungan para pengajar dan teman-teman."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Suasana pesantren",
-      "shape": "landscape"
-    },
-    {
-      "slug": "khidmat-menyambut-tahun-baru-hijriah",
-      "category": "Kegiatan",
-      "title": "Khidmat menyambut tahun baru Hijriah bersama keluarga pesantren",
-      "excerpt": "Doa dan kebersamaan menjadi bagian dari ikhtiar menyambut lembaran baru dengan semangat kebaikan.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Mengawali dengan doa",
-          "paragraphs": [
-            "Pergantian tahun Hijriah menjadi pengingat untuk memperbaiki diri dan menguatkan langkah dalam kebaikan."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Lingkungan pondok pesantren",
-      "shape": "landscape"
-    },
-    {
-      "slug": "haflah-khotmil-quran",
-      "category": "Kegiatan",
-      "title": "Haflah Khotmil Qur’an dan doa bersama",
-      "excerpt": "Apresiasi atas ikhtiar santri dalam belajar dan menjaga kedekatan dengan Al-Qur’an.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Menjaga semangat bersama Al-Qur’an",
-          "paragraphs": [
-            "Khataman menjadi momen syukur dan penyemangat untuk terus membaca, memahami, dan mengamalkan Al-Qur’an."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Suasana kegiatan pesantren",
-      "shape": "portrait"
-    },
-    {
-      "slug": "kolaborasi-literasi-santri",
-      "category": "Pendidikan",
-      "title": "Kolaborasi literasi untuk menumbuhkan budaya membaca",
-      "excerpt": "Kegiatan literasi mengajak santri untuk membuka wawasan dan berbagi pengetahuan.",
-      "date": "Kabar Pesantren",
-      "content": [
-        {
-          "heading": "Membangun budaya literasi",
-          "paragraphs": [
-            "Membaca dan berbagi gagasan membuka kesempatan untuk tumbuh, mengenal perspektif baru, dan memperluas wawasan."
-          ]
-        }
-      ],
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Kegiatan pendidikan santri",
-      "shape": "landscape"
-    }
-  ],
   "works": [
     {
       "category": "Karya Santri",
@@ -302,62 +269,6 @@
       "image": "/static/images/pondok-campus.jpg",
       "image_alt": "Karya dan aktivitas santri",
       "label": "Dengarkan karya"
-    }
-  ],
-  "gallery": [
-    {
-      "title": "Kebersamaan di pesantren",
-      "caption": "Belajar bersama dalam suasana yang hangat.",
-      "category": "Kegiatan",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Lingkungan pesantren",
-      "shape": "large",
-      "position": "center"
-    },
-    {
-      "title": "Ruang belajar",
-      "caption": "Menjaga semangat belajar setiap hari.",
-      "category": "Santri",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Suasana belajar di pesantren",
-      "shape": "small",
-      "position": "center"
-    },
-    {
-      "title": "Kehidupan santri",
-      "caption": "Tumbuh dan berproses bersama.",
-      "category": "Kegiatan",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Kegiatan di lingkungan pesantren",
-      "shape": "small",
-      "position": "center"
-    },
-    {
-      "title": "Lingkungan pesantren",
-      "caption": "Tempat menimba ilmu dan membiasakan kebaikan.",
-      "category": "Pesantren",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Bangunan dan pepohonan di pesantren",
-      "shape": "wide",
-      "position": "center"
-    },
-    {
-      "title": "Berbagi pengalaman",
-      "caption": "Bersama saling menguatkan dan menginspirasi.",
-      "category": "Kegiatan",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Suasana kebersamaan",
-      "shape": "small",
-      "position": "center"
-    },
-    {
-      "title": "Alam yang menenangkan",
-      "caption": "Lingkungan yang mendukung proses belajar.",
-      "category": "Pesantren",
-      "image": "/static/images/pondok-campus.jpg",
-      "image_alt": "Area hijau di lingkungan pesantren",
-      "shape": "small",
-      "position": "center"
     }
   ],
   "events": [
@@ -390,52 +301,42 @@
     },
     {
       "question": "Apa saja program pendidikan yang tersedia?",
-      "answer": "PPRU memiliki program Tahfidzul Qur’an, SPM (Muadalah), dan Diniyah Takmiliyah. Rincian program dapat berubah mengikuti kebijakan pesantren."
+      "answer": "Pendidikan formal tersedia melalui SMP dan SMK. Pendidikan pesantren mencakup Madrasah Diniyah, sorogan, bandungan, dan syawir, serta takhassus Al-Miftah Lil Ulum, MPQ & Bahasa, Syawir, dan Tahfidzul Qur’an."
     },
     {
       "question": "Di mana lokasi Pondok Pesantren Roudlotul Ulum?",
-      "answer": "Pondok Pesantren Roudlotul Ulum berada di Karangtanjung, Alian, Kebumen."
+      "answer": "Pondok Pesantren Roudlotul Ulum berada di Dukuh Krajan, Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah."
     }
   ],
   "profile": {
-    "eyebrow": "Tentang Kami",
-    "title": "Sejarah & Profil Pesantren",
-    "subtitle": "Mengenal lebih dekat lembaga pendidikan yang berkomitmen mencetak generasi Qur’ani yang berakhlak mulia.",
-    "history_title": "Sejarah Berdiri",
+    "eyebrow": "Profil Pesantren",
+    "title": "Profil Pondok Pesantren Roudlotul Ulum",
+    "subtitle": "Mengenal perjalanan pesantren salafiyah yang dirintis K.H. Ilyas Al-Yasir di Karangtanjung pada 1975 dan resmi berdiri pada 1983.",
+    "history_title": "Sejarah & Perkembangan",
     "history_paragraphs": [
-      "Pondok Pesantren Roudlotul Ulum merupakan lembaga pendidikan Islam yang tumbuh di tengah masyarakat Karangtanjung, Alian, Kebumen. Dengan semangat untuk mendekatkan generasi kepada Al-Qur’an, pesantren menjadi ruang belajar, beribadah, dan membentuk akhlak.",
-      "Pendidikan di pesantren dijalani melalui pembelajaran Al-Qur’an, ilmu keislaman, dan pembiasaan nilai-nilai baik dalam kehidupan sehari-hari. Santri didampingi agar mampu mengembangkan potensi, menjaga adab, serta terus menumbuhkan kemandirian.",
-      "Dalam kebersamaan, para santri belajar menghargai ilmu, menghormati guru, saling membantu, dan menumbuhkan kepedulian kepada sesama. Setiap proses menjadi bagian dari perjalanan untuk menjadi pribadi yang membawa manfaat.",
-      "Pondok Pesantren Roudlotul Ulum terus berikhtiar menjaga tradisi keilmuan pesantren sekaligus menyambut tantangan zaman dengan pendidikan yang berlandaskan nilai-nilai Islam."
+      "K.H. Ilyas Al-Yasir menuntut ilmu di sejumlah pesantren, antara lain Pesantren Glonggong dan Riyadul ‘Ulum di Kebumen, Lasem, Magelang, Somalangu, serta Citangkolo. Setelah kembali ke Karangtanjung pada 1975, beliau mengajarkan nahwu dan sharaf dengan metode sorogan kepada masyarakat.",
+      "Pada 27 Sya‘ban 1404 H (1983 M), beliau mendirikan pesantren bernama Riyadul ‘Ulum Al-Hidayah. Santri putri mulai diterima pada 1989, dan pada 1992 lembaga ini dikenal sebagai Pondok Pesantren Roudlotul ‘Ulum.",
+      "Dedikasi beliau dirangkum dalam ungkapan, “Di mana ada saya, di situ ada ngaji.” K.H. Ilyas Al-Yasir wafat pada 7 Mei 2010; semangatnya menghidupkan tradisi mengaji terus menjadi teladan bagi keluarga dan santri.",
+      "Pesantren berafiliasi dengan Nahdlatul Ulama dan tercatat dengan Nomor Statistik Pesantren 510033050018. Pendidikan formal yang diselenggarakan meliputi SMP dan SMK di bawah Yayasan Pendidikan Islam Roudlotul ‘Ulum.",
+      "Kurikulum pesantren memadukan madrasah diniyah, sorogan, bandungan, dan syawir. Program takhassus mencakup Al-Miftah Lil Ulum, MPQ & Bahasa, Syawir, serta Tahfidzul Qur’an untuk mengembangkan ilmu, akhlak, wawasan, dan keterampilan santri.",
+      "Prestasi santri yang terdokumentasi pada 2017–2023 mencakup Musabaqah Qira’atil Kutub tingkat kabupaten dan provinsi, Musabaqah Hifzhil Qur’an, hafalan kitab, kaligrafi, puisi Islami, pidato bahasa Arab, serta cabang olahraga."
     ],
-    "vision_title": "Visi & Misi",
-    "vision": "Terwujudnya generasi Qur’ani yang berakhlak mulia, berwawasan global, dan mandiri.",
+    "vision_title": "Visi & Misi Pondok Pesantren",
+    "vision": "Menjadi lembaga pendidikan dan pengajaran agama Islam yang mempertahankan tradisi salafiyah dengan thariqah at-ta‘lim wa at-ta‘allum, menjadi rujukan pengembangan keilmuan Islam, serta menjadi wadah multikultural.",
     "mission": [
-      "Menyelenggarakan pendidikan Al-Qur’an yang tekun dan beradab.",
-      "Mengintegrasikan kurikulum pesantren dengan pendidikan umum.",
-      "Membekali santri dengan keterampilan, kemandirian, dan kepedulian."
+      "Mengembangkan keilmuan dan kelembagaan pesantren serta mencerahkan masyarakat melalui kegiatan ta‘lim, tarbiyah, dan ta’dib.",
+      "Meningkatkan kompetensi lulusan melalui pembekalan moral dan keterampilan, penguatan ilmiah-amaliah dan amaliah-ilmiah, serta pengembangan wawasan."
     ],
     "video_label": "Video profil Pondok Pesantren Roudlotul Ulum",
-    "image": "/static/images/pondok-campus.jpg"
+    "image": "/static/images/pondok-campus.jpg",
+    "video_embed_url": "",
+    "leadership_title": "Pendiri & Pengasuh",
+    "leadership_note": "K.H. Ilyas Al-Yasir mewariskan kecintaan pada ilmu dan tradisi mengaji. Kini kepemimpinan pesantren diemban K.H. Bahaudin Al Yasir, didampingi K.H. Zaenal Mustofa sebagai wakil pimpinan."
   },
   "admission": {
     "eyebrow": "Penerimaan Santri Baru",
     "title": "Penerimaan Santri Baru Tahun Ajaran 1447/1448",
     "description": "Mari bergabung menjadi bagian dari generasi Qur’ani yang berakhlak mulia dan berwawasan luas.",
-    "programs": [
-      {
-        "name": "Tahfidz",
-        "detail": "Program tahfidz Al-Qur’an"
-      },
-      {
-        "name": "SPM",
-        "detail": "Pendidikan Muadalah"
-      },
-      {
-        "name": "Diniyah",
-        "detail": "Pembelajaran ilmu keislaman"
-      }
-    ],
     "steps": [
       {
         "number": "01",
@@ -510,43 +411,26 @@
     "image": "/static/images/pondok-campus.jpg"
   },
   "hafalan": {
-    "title": "Sambung Ayat Challenge",
-    "eyebrow": "Uji hafalanmu di sini",
-    "description": "Pilih rentang juz dan jumlah soal untuk memulai latihan hafalan.",
-    "frequent_title": "Ayat yang teman-teman sering salah",
-    "frequent_description": "Ringkasan ayat yang sering perlu diulang oleh peserta.",
-    "frequent_items": [
-      {
-        "surah": "Al-Baqarah",
-        "note": "Sering terputus hafalannya",
-        "count": "15x Salah"
-      },
-      {
-        "surah": "Ali 'Imran",
-        "note": "Perlu murajaah kembali",
-        "count": "12x Salah"
-      },
-      {
-        "surah": "An-Nisa",
-        "note": "Perhatikan sambungan ayat",
-        "count": "10x Salah"
-      },
-      {
-        "surah": "Al-Ma'idah",
-        "note": "Latih kembali ayat pilihan",
-        "count": "8x Salah"
-      }
-    ]
+    "title": "Sambung Nadzom Challenge",
+    "eyebrow": "Uji hafalan nadzommu",
+    "description": "Pilih kitab nahwu, rentang bab, dan jumlah soal untuk menguji hafalan nadzom."
   },
   "contact": {
     "title": "Silaturahmi & Informasi",
     "subtitle": "Kami siap membantu menjawab pertanyaan Anda seputar Pondok Pesantren Roudlotul Ulum.",
     "address_label": "Alamat",
-    "address": "Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah",
+    "address": "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352.",
     "phone_label": "Telepon / WhatsApp",
     "phone": "Informasi nomor kontak menyusul",
     "email_label": "Email",
     "email": "Informasi email menyusul",
     "map_image": "/static/images/pondok-campus.jpg"
-  }
+  },
+  "academic_events": [],
+  "_profile_content_revision": "musyawarah-profil-2026-v2",
+  "_academic_program_details_revision": "madrasah-diniyah-details-2026-v2",
+  "_contact_address_revision": "contact-address-2026-v1",
+  "_home_stats_revision": "home-stats-santri-alumni-2026-v1",
+  "_social_links_revision": "official-social-links-2026-v1",
+  "_hafalan_navigation_revision": "hafalan-navigation-2026-v1"
 }
