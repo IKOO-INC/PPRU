@@ -703,7 +703,10 @@ class PortalRoutesTestCase(unittest.TestCase):
             admin_session["admin_role"] = "main"
         madrasah_panel = self.client.get("/admin/akademik?tab=non_formal")
         self.assertEqual(madrasah_panel.status_code, 200)
-        self.assertIn("Edit kelas Madrasah", madrasah_panel.get_data(as_text=True))
+        madrasah_panel_html = madrasah_panel.get_data(as_text=True)
+        self.assertIn("Lihat kelas dan kitab", madrasah_panel_html)
+        self.assertIn("Edit kelas dan kitab", madrasah_panel_html)
+        self.assertIn('href="/akademik/program/madrasah-diniyah"', madrasah_panel_html)
         programs = migrated["programs"]
         madrasah_index = next(index for index, item in enumerate(programs) if item["title"] == "Madrasah Diniyah")
         item_id = str(migrated_madrasah.get("id") or migrated_madrasah.get("number") or madrasah_index)
@@ -711,8 +714,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(edit_response.status_code, 200)
         edit_html = edit_response.get_data(as_text=True)
         self.assertIn('name="class_details"', edit_html)
-        self.assertIn("Kelas Madrasah Diniyah dan kitabnya", edit_html)
+        self.assertIn("Kelas dan kitab pada halaman Madrasah Diniyah", edit_html)
+        self.assertIn('href="/akademik/program/madrasah-diniyah"', edit_html)
+        self.assertIn("Perubahan akan tampil di sana setelah disimpan", edit_html)
         self.assertIn("Satu kelas per baris", edit_html)
+        self.assertIn("Simpan kelas dan program", edit_html)
         csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', edit_html).group(1)
         updated = self.client.post(
             "/admin/akademik/program/simpan",
