@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
 {% block title %}Kelola Website · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=15">{% endblock %}
-{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=8"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=16">{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=9"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=2"></script>{% endblock %}
 {% block content %}
 <section class="admin-page">
   <div class="container admin-container">
     <header class="admin-page-heading"><div><span class="admin-kicker">Panel pengelola · {{ site.short_name }}</span><h1>Kelola Website</h1><p>{% if storage_backend == 'mongodb' %}MongoDB Atlas menjadi penyimpanan utama{% if storage_json_mirror %}; berkas JSON lokal diperbarui sebagai mirror{% endif %}.{% elif storage_backend == 'json-fallback' %}MongoDB bermasalah; mode JSON lokal sementara aktif.{% elif storage_backend == 'read-only' %}Mode baca saja: file JSON deployment bukan penyimpanan persisten.{% else %}Konten disimpan ke file JSON lokal.{% endif %}</p></div><div class="admin-heading-actions"><a class="admin-preview-link" href="/" target="_blank" rel="noopener">Lihat website <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a><form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="admin-logout-button" type="submit">Keluar</button></form></div></header>
     {% if saved %}<div class="admin-alert admin-alert--success" role="status">{% if storage_backend == 'mongodb' %}Perubahan berhasil disimpan di MongoDB Atlas{% if storage_json_mirror %} dan mirror JSON lokal{% endif %}.{% elif storage_backend == 'json-fallback' %}Perubahan disimpan sementara ke file JSON lokal, belum ke MongoDB Atlas.{% else %}Perubahan berhasil disimpan ke file JSON lokal.{% endif %}</div>{% endif %}
     {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><span class="admin-kicker">Penyimpanan sementara</span><h2 id="storage-notice-title">mongo eror sementara pakai preferensi.json</h2><p>MongoDB Atlas sedang tidak dapat dihubungi. File JSON lokal dipakai sementara; perubahan baru belum tersinkron ke MongoDB Atlas.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
+    <button class="admin-preview-link admin-mobile-sidebar-toggle" type="button" aria-controls="admin-sidebar" aria-expanded="false" data-admin-sidebar-toggle><i class="fa-solid fa-bars" aria-hidden="true"></i><span>Menu komponen</span></button>
+    <button class="admin-sidebar-backdrop" type="button" aria-label="Tutup menu komponen" data-admin-sidebar-backdrop></button>
     <div class="admin-layout">
-      <aside class="admin-sidebar"><div class="admin-sidebar-title">Komponen website</div><nav class="admin-menu" aria-label="Komponen yang dapat diedit">
+      <aside class="admin-sidebar" id="admin-sidebar" data-admin-sidebar><div class="admin-sidebar-heading"><div class="admin-sidebar-title">Komponen website</div><button class="admin-preview-link admin-sidebar-close" type="button" aria-label="Tutup menu komponen" data-admin-sidebar-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div><nav class="admin-menu" aria-label="Komponen yang dapat diedit">
         {% for component_id, component_label in components %}<button type="button" class="admin-menu-item{% if active_component == component_id %} is-active{% endif %}" data-admin-tab="{{ component_id }}"><span class="admin-menu-number">{{ '%02d'|format(loop.index) }}</span>{{ component_label }}<span class="admin-menu-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span></button>{% endfor %}
       </nav><div class="admin-sidebar-hint"><span><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>Isi URL foto Cloudinary atau klik tombol Upload di sampingnya.</div></aside>
       <div class="admin-edit-workspace">
         <aside class="admin-live-preview" aria-label="Pratinjau langsung halaman">
           <div class="admin-live-preview-heading"><div><span class="admin-kicker">Live preview</span><h2>Pratinjau halaman</h2></div><a href="{{ preview_path }}" target="_blank" rel="noopener" data-preview-open>Buka <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></div>
-          <iframe id="admin-live-preview-frame" src="{{ preview_path }}" title="Live preview website PPRU" loading="lazy" sandbox="allow-scripts allow-same-origin" data-live-preview-frame></iframe>
+          <iframe id="admin-live-preview-frame" src="about:blank" title="Live preview website PPRU" loading="lazy" sandbox="allow-scripts allow-same-origin" data-live-preview-frame></iframe>
           <p class="admin-preview-status" data-preview-status role="status" aria-live="polite">Perubahan formulir akan tampil di sini sebelum disimpan.</p>
         </aside>
         <div class="admin-panels">
