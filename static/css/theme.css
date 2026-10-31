@@ -304,3 +304,163 @@
 }
 @media (prefers-reduced-motion: reduce) { .theme-toggle { transition: none; } }
 @media print { .theme-toggle { display: none !important; } }
+
+/* Contrast hardening: readable defaults for any page component not yet theme-aware. */
+:root[data-theme="dark"] {
+  --dark-text-primary: #edf4ef;
+  --dark-text-body: #c4d0c8;
+  --dark-text-muted: #aebdb4;
+  --dark-surface: #17231c;
+  --dark-surface-raised: #1d2b22;
+  --dark-surface-input: #101914;
+  --dark-border: #344a3b;
+  --dark-link: #8de0ae;
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] main { color: var(--dark-text-body); }
+:root[data-theme="dark"] main :is(p, li, small, label, legend, dt, dd, time, figcaption, summary, address) {
+  color: var(--dark-text-body);
+}
+:root[data-theme="dark"] main :is(h1, h2, h3, h4, h5, h6, strong, b) { color: var(--dark-text-primary); }
+:root[data-theme="dark"] main a:not(.button):not(.admin-save-button):not(.admin-upload-button):not(.article-share-button) {
+  color: var(--dark-link);
+}
+:root[data-theme="dark"] main a:not(.button):not(.admin-save-button):not(.admin-upload-button):not(.article-share-button):hover {
+  color: #b8f2ce;
+}
+:root[data-theme="dark"] main :is(button, [role="button"]):not(.button--orange):not(.button--green):not(.admin-save-button):not(.admin-upload-button) {
+  color: var(--dark-text-primary);
+}
+:root[data-theme="dark"] :is(
+  .admin-madrasah-form, .admin-madrasah-card, .admin-madrasah-overview,
+  .admin-madrasah-manage-link, .admin-madrasah-empty
+) {
+  color: var(--dark-text-body);
+  background-color: var(--dark-surface);
+  border-color: var(--dark-border);
+}
+:root[data-theme="dark"] .admin-madrasah-manage-icon,
+:root[data-theme="dark"] .admin-madrasah-overview-icon,
+:root[data-theme="dark"] .admin-madrasah-count {
+  color: #a5eac2;
+  background-color: #1a3527;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-madrasah-count strong { color: #e7f4eb; }
+:root[data-theme="dark"] .admin-madrasah-card-heading h3,
+:root[data-theme="dark"] .admin-madrasah-list-heading h2,
+:root[data-theme="dark"] .admin-madrasah-empty strong,
+:root[data-theme="dark"] .admin-madrasah-manage-link strong { color: var(--dark-text-primary); }
+:root[data-theme="dark"] .admin-madrasah-card-index,
+:root[data-theme="dark"] .admin-madrasah-empty > i { color: #8de0ae; }
+:root[data-theme="dark"] .admin-madrasah-remove-button,
+:root[data-theme="dark"] main .academic-admin-actions button,
+:root[data-theme="dark"] main .admin-news-actions button,
+:root[data-theme="dark"] main .admin-gallery-actions button {
+  color: #ffc0b7;
+  background-color: #382320;
+  border-color: #63413b;
+}
+:root[data-theme="dark"] .admin-madrasah-add-button {
+  color: #a5eac2;
+  background-color: #1a3527;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-madrasah-add-button:hover { color: #fff; background-color: #176b4c; border-color: #27815b; }
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field,
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field small,
+:root[data-theme="dark"] .admin-madrasah-count small,
+:root[data-theme="dark"] .admin-madrasah-form-actions > span,
+:root[data-theme="dark"] .admin-madrasah-list-heading p,
+:root[data-theme="dark"] .admin-madrasah-overview p,
+:root[data-theme="dark"] .admin-madrasah-manage-link p,
+:root[data-theme="dark"] .admin-madrasah-empty span { color: var(--dark-text-muted); }
+:root[data-theme="dark"] :is(input, textarea, select) {
+  color: var(--dark-text-primary);
+  background-color: var(--dark-surface-input);
+  border-color: #405a49;
+  caret-color: #8de0ae;
+}
+:root[data-theme="dark"] :is(input, textarea, select):focus-visible {
+  border-color: #70c99a;
+  box-shadow: 0 0 0 3px rgba(112, 201, 154, .2);
+}
+:root[data-theme="dark"] select option { color: var(--dark-text-primary); background: var(--dark-surface-input); }
+:root[data-theme="dark"] :is(input, textarea)::placeholder { color: #a0b0a6; opacity: 1; }
+:root[data-theme="dark"] .admin-field,
+:root[data-theme="dark"] .admin-field-note,
+:root[data-theme="dark"] .admin-field small,
+:root[data-theme="dark"] .admin-news-form-header p,
+:root[data-theme="dark"] .admin-page-heading p,
+:root[data-theme="dark"] .admin-panel-heading p,
+:root[data-theme="dark"] .admin-editor-hint,
+:root[data-theme="dark"] .admin-form-actions > span,
+:root[data-theme="dark"] .admin-news-form-actions > span,
+:root[data-theme="dark"] .admin-sidebar-hint,
+:root[data-theme="dark"] .academic-admin-item p,
+:root[data-theme="dark"] .academic-admin-kitabs,
+:root[data-theme="dark"] .academic-admin-kitabs strong,
+:root[data-theme="dark"] .admin-news-meta,
+:root[data-theme="dark"] .admin-news-copy p,
+:root[data-theme="dark"] .admin-news-copy small,
+:root[data-theme="dark"] .admin-gallery-info small,
+:root[data-theme="dark"] .admin-user-status small,
+:root[data-theme="dark"] .admin-madrasah-card-index,
+:root[data-theme="dark"] .admin-madrasah-card-fields .admin-field small { color: var(--dark-text-muted); }
+:root[data-theme="dark"] :is(
+  .stat-item span, .event-copy > span, .academic-class-index, .article-author small,
+  .article-share-label, .article-share-status, .article-category, .admin-news-views,
+  .academic-admin-date, .academic-admin-program-icon, .academic-admin-nav a span,
+  .admin-menu-number, .admin-menu-arrow, .admin-status--published, .admin-status--draft,
+  .carousel-arrows span, .question-count label span, .hafalan-score-card span,
+  .hafalan-quiz-controls > span, .search-field > span:last-child
+) { color: #b9e1c8; }
+:root[data-theme="dark"] .question-count input:checked + span { color: #fff; }
+:root[data-theme="dark"] .admin-alert--success {
+  color: #b8efcb;
+  background-color: #173826;
+  border-color: #315b40;
+}
+:root[data-theme="dark"] .admin-alert--error {
+  color: #ffc0b7;
+  background-color: #382320;
+  border-color: #63413b;
+}
+:root[data-theme="dark"] .admin-save-button,
+:root[data-theme="dark"] .button--green { color: #fff; background-color: #147b58; }
+:root[data-theme="dark"] .admin-save-button:hover,
+:root[data-theme="dark"] .button--green:hover { background-color: #1a946a; }
+:root[data-theme="dark"] .admin-cancel-button,
+:root[data-theme="dark"] .admin-preview-link,
+:root[data-theme="dark"] .admin-logout-button {
+  color: #a5eac2;
+  background-color: #1b2c22;
+  border-color: #3a5544;
+}
+:root[data-theme="dark"] .academic-admin-actions a,
+:root[data-theme="dark"] .admin-news-actions a,
+:root[data-theme="dark"] .admin-gallery-actions a {
+  color: #a5eac2;
+  background-color: #193628;
+  border-color: #375b43;
+}
+:root[data-theme="dark"] .admin-user-status,
+:root[data-theme="dark"] .admin-user-toggle,
+:root[data-theme="dark"] .admin-news-summary > div,
+:root[data-theme="dark"] .admin-asset-field,
+:root[data-theme="dark"] .admin-gallery-upload {
+  color: var(--dark-text-body);
+  background-color: var(--dark-surface-raised);
+  border-color: var(--dark-border);
+}
+:root[data-theme="dark"] .site-header,
+:root[data-theme="dark"] .site-nav,
+:root[data-theme="dark"] .nav-dropdown-menu,
+:root[data-theme="dark"] .nav-dropdown-menu a,
+:root[data-theme="dark"] .login-link { color: #e4eee7; }
+:root[data-theme="dark"] .site-footer { color: #d7e6dc; }
+:root[data-theme="dark"] .site-footer p,
+:root[data-theme="dark"] .site-footer a,
+:root[data-theme="dark"] .site-footer .brand-copy strong,
+:root[data-theme="dark"] .site-footer .brand-copy small { color: #d7e6dc; }

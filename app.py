@@ -1942,6 +1942,131 @@ def create_app(test_config=None):
             **admin_storage_context(),
         )
 
+    def _find_madrasah_diniyah_program(content):
+        programs = content.get("programs", [])
+        if not isinstance(programs, list):
+            return None
+        return next(
+            (
+                program for program in programs
+                if isinstance(program, dict)
+                and str(program.get("title", "")).strip().casefold() == "madrasah diniyah"
+            ),
+            None,
+        )
+
+    def _madrasah_class_editor_cards(program):
+        cards = []
+        details = program.get("class_details", []) if isinstance(program, dict) else []
+        for item in details if isinstance(details, list) else []:
+            if not isinstance(item, dict):
+                continue
+            kitabs = item.get("kitabs", [])
+            if not isinstance(kitabs, list):
+                kitabs = _split_list_lines(kitabs)
+            cards.append({
+                "name": str(item.get("name", "")),
+                "description": str(item.get("description", "")),
+                "kitabs_label": str(item.get("kitabs_label", "Kitab bandungan") or "Kitab bandungan"),
+                "kitabs_text": "\n".join(str(kitab).strip() for kitab in kitabs if str(kitab).strip()),
+            })
+        return cards
+
+    @app.get("/admin/akademik/madrasah-diniyah")
+    def admin_academic_madrasah_edit():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        content = load_content()
+        program = _find_madrasah_diniyah_program(content)
+        if program is None:
+            abort(404)
+        return render_template(
+            "admin_academic_madrasah.html",
+            site=content.get("site", {}),
+            data=_without_admin_users(content),
+            class_cards=_madrasah_class_editor_cards(program),
+            error=None,
+            saved=request.args.get("saved") == "1",
+            admin_username=session.get("admin_username", "Admin Akademik"),
+            **admin_storage_context(),
+        )
+
+    @app.post("/admin/akademik/madrasah-diniyah/simpan")
+    def admin_academic_madrasah_save():
+        access_response = require_academic_admin()
+        if access_response is not None:
+            return access_response
+        validate_csrf()
+        names = request.form.getlist("class_name")
+        descriptions = request.form.getlist("class_description")
+        labels = request.form.getlist("class_kitabs_label")
+        kitabs_texts = request.form.getlist("class_kitabs")
+        card_count = len(names)
+        error = None
+        class_details = []
+        seen_names = set()
+        if not (len(descriptions) == len(labels) == len(kitabs_texts) == card_count):
+            error = "Form rincian kelas tidak lengkap. Muat ulang halaman, lalu coba lagi."
+        elif card_count > 30:
+            error = "Maksimal 30 kartu kelas dapat disimpan."
+        else:
+            for index, (raw_name, raw_description, raw_label, raw_kitabs) in enumerate(
+                zip(names, descriptions, labels, kitabs_texts), start=1
+            ):
+                name = raw_name.strip()[:120]
+                description = raw_description.strip()[:500]
+                kitabs_label = raw_label.strip()[:80] or "Kitab bandungan"
+                kitabs = [book[:160] for book in _split_list_lines(raw_kitabs)[:30]]
+                if not any((name, description, raw_label.strip(), raw_kitabs.strip())):
+                    continue
+                if not name:
+                    error = f"Nama wajib diisi pada kartu kelas ke-{index}."
+                    break
+                if name.casefold() in seen_names:
+                    error = f"Nama kelas “{name}” muncul lebih dari satu kali. Gunakan nama yang berbeda."
+                    break
+                seen_names.add(name.casefold())
+                class_details.append({
+                    "name": name,
+                    "description": description,
+                    "kitabs_label": kitabs_label,
+                    "kitabs": kitabs,
+                })
+
+        if error:
+            content = load_content()
+            program = _find_madrasah_diniyah_program(content)
+            if program is None:
+                abort(404)
+            submitted_cards = []
+            for index in range(min(max(len(names), len(descriptions), len(labels), len(kitabs_texts)), 30)):
+                submitted_cards.append({
+                    "name": names[index] if index < len(names) else "",
+                    "description": descriptions[index] if index < len(descriptions) else "",
+                    "kitabs_label": labels[index] if index < len(labels) else "Kitab bandungan",
+                    "kitabs_text": kitabs_texts[index] if index < len(kitabs_texts) else "",
+                })
+            return render_template(
+                "admin_academic_madrasah.html",
+                site=content.get("site", {}),
+                data=_without_admin_users(content),
+                class_cards=submitted_cards,
+                error=error,
+                saved=False,
+                admin_username=session.get("admin_username", "Admin Akademik"),
+                **admin_storage_context(),
+            ), 400
+
+        with content_lock:
+            content = load_content()
+            program = _find_madrasah_diniyah_program(content)
+            if program is None:
+                abort(404)
+            program["class_details"] = class_details
+            store.save(content)
+        return redirect(url_for("admin_academic_madrasah_edit", saved="1"))
+
     @app.post("/admin/akademik/psb/simpan")
     def admin_academic_psb_save():
         access_response = require_academic_admin()

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Kelas dan kitab Madrasah Diniyah · Admin Akademik{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=14">{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/madrasah_classes.js') }}?v=1"></script>{% endblock %}
+{% block content %}
+<section class="admin-page academic-admin-page admin-madrasah-page">
+  <div class="container admin-container">
+    <header class="admin-page-heading admin-madrasah-heading">
+      <div>
+        <span class="admin-kicker">Admin Akademik · Pendidikan Non Formal</span>
+        <h1>Kelola kelas dan kitab Madrasah Diniyah</h1>
+        <p>Perbarui jenjang, keterangan kegiatan, dan kitab untuk setiap kartu yang tampil di halaman Madrasah Diniyah.</p>
+      </div>
+      <div class="admin-heading-actions">
+        <a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='non_formal') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke Pendidikan Non Formal</a>
+        <a class="admin-preview-link" href="{{ url_for('academic_program_detail', program_slug='madrasah-diniyah') }}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-eye" aria-hidden="true"></i> Lihat halaman</a>
+      </div>
+    </header>
+
+    {% if saved %}<div class="admin-alert admin-alert--success" role="status">Rincian kelas dan kitab berhasil disimpan.</div>{% endif %}
+    {% if storage_backend == 'read-only' %}<div class="admin-alert admin-alert--error" role="alert">Mode baca saja: perubahan memerlukan MongoDB Atlas; file JSON deployment bukan penyimpanan persisten.</div>{% elif storage_backend == 'json-fallback' %}<div class="admin-alert admin-alert--error" role="alert">MongoDB Atlas bermasalah. Perubahan sementara hanya ada di JSON lokal dan belum tersinkron ke Atlas.</div>{% endif %}
+    {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><span class="admin-kicker">Penyimpanan sementara</span><h2 id="storage-notice-title">mongo eror sementara pakai preferensi.json</h2><p>MongoDB Atlas sedang tidak dapat dihubungi. File JSON lokal dipakai sementara; perubahan baru belum tersinkron ke MongoDB Atlas.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
+
+    {% if error %}<div class="admin-alert admin-alert--error" role="alert">{{ error }}</div>{% endif %}
+
+    <aside class="admin-madrasah-overview">
+      <span class="admin-madrasah-overview-icon"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i></span>
+      <div><strong>Satu kartu untuk setiap jenjang</strong><p>Tambah atau hapus kartu sesuai kebutuhan. Isian di bawah mengatur tepat bagian “Kelas dan kitab” pada halaman publik.</p></div>
+      <span class="admin-madrasah-count"><strong data-class-count>{{ class_cards|length }}</strong><small>jenjang</small></span>
+    </aside>
+
+    <form class="admin-madrasah-form" method="post" action="{{ url_for('admin_academic_madrasah_save') }}" data-madrasah-class-editor data-max-classes="30">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="admin-madrasah-list-heading">
+        <div><span class="admin-kicker">Daftar jenjang</span><h2>Kartu kelas</h2><p>Nama kelas wajib diisi. Keterangan dan daftar kitab dapat disesuaikan.</p></div>
+        <button class="admin-madrasah-add-button" type="button" data-add-class><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah kelas</button>
+      </div>
+
+      <div class="admin-madrasah-class-grid" data-class-grid>
+        {% for class_item in class_cards %}
+        <article class="admin-madrasah-card" data-class-card>
+          <header class="admin-madrasah-card-heading">
+            <div><span class="admin-madrasah-card-index">Kelas <strong data-class-number>{{ '%02d'|format(loop.index) }}</strong></span><h3 data-class-title>{{ class_item.name or 'Kelas baru' }}</h3></div>
+            <button class="admin-madrasah-remove-button" type="button" data-remove-class aria-label="Hapus kelas {{ class_item.name or loop.index }}"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span>Hapus kelas</span></button>
+          </header>
+          <div class="admin-madrasah-card-fields">
+            <label class="admin-field"><span>Nama kelas *</span><input type="text" name="class_name" value="{{ class_item.name }}" maxlength="120" placeholder="Contoh: Ibtida" required data-class-name></label>
+            <label class="admin-field"><span>Keterangan kegiatan / jadwal</span><textarea name="class_description" rows="3" maxlength="500" placeholder="Jelaskan kegiatan, waktu belajar, atau jadwal kelas.">{{ class_item.description }}</textarea><small>Maksimal 500 karakter.</small></label>
+            <label class="admin-field"><span>Judul daftar kitab</span><input type="text" name="class_kitabs_label" value="{{ class_item.kitabs_label or 'Kitab bandungan' }}" maxlength="80" placeholder="Kitab bandungan"></label>
+            <label class="admin-field"><span>Kitab untuk jenjang ini</span><textarea name="class_kitabs" rows="4" placeholder="Satu kitab per baris">{{ class_item.kitabs_text }}</textarea><small>Masukkan satu kitab per baris. Boleh dikosongkan jika belum ada daftar kitab.</small></label>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="admin-madrasah-empty" data-class-empty{% if class_cards %} hidden{% endif %}>
+        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+        <strong>Belum ada kartu kelas</strong>
+        <span>Gunakan “Tambah kelas” untuk membuat jenjang pertama.</span>
+      </div>
+
+      <div class="admin-madrasah-form-actions">
+        <span>Perubahan hanya berlaku untuk bagian “Kelas dan kitab” Madrasah Diniyah.</span>
+        <div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab='non_formal') }}">Batal</a><button class="admin-save-button" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Simpan perubahan</button></div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<template id="madrasah-class-card-template">
+  <article class="admin-madrasah-card" data-class-card>
+    <header class="admin-madrasah-card-heading">
+      <div><span class="admin-madrasah-card-index">Kelas <strong data-class-number></strong></span><h3 data-class-title>Kelas baru</h3></div>
+      <button class="admin-madrasah-remove-button" type="button" data-remove-class aria-label="Hapus kelas baru"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span>Hapus kelas</span></button>
+    </header>
+    <div class="admin-madrasah-card-fields">
+      <label class="admin-field"><span>Nama kelas *</span><input type="text" name="class_name" maxlength="120" placeholder="Contoh: Ibtida" required data-class-name></label>
+      <label class="admin-field"><span>Keterangan kegiatan / jadwal</span><textarea name="class_description" rows="3" maxlength="500" placeholder="Jelaskan kegiatan, waktu belajar, atau jadwal kelas."></textarea><small>Maksimal 500 karakter.</small></label>
+      <label class="admin-field"><span>Judul daftar kitab</span><input type="text" name="class_kitabs_label" value="Kitab bandungan" maxlength="80" placeholder="Kitab bandungan"></label>
+      <label class="admin-field"><span>Kitab untuk jenjang ini</span><textarea name="class_kitabs" rows="4" placeholder="Satu kitab per baris"></textarea><small>Masukkan satu kitab per baris. Boleh dikosongkan jika belum ada daftar kitab.</small></label>
+    </div>
+  </article>
+</template>
+{% endblock %}

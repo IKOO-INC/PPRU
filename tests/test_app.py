@@ -16,7 +16,7 @@ from content_store import MongoPortalStore
 from migrate_portal_data_to_mongodb import load_portal_content, prepare_portal_content
 from news_service import news_summary, sanitize_rich_text
 from pymongo.errors import PyMongoError
-from werkzeug.datastructures import FileStorage
+from werkzeug.datastructures import FileStorage, MultiDict
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -670,7 +670,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(later_response.status_code, 200)
         self.assertIn("Perubahan admin setelah pembaruan.", later_response.get_data(as_text=True))
 
-    def test_madrasah_diniyah_details_link_and_academic_admin_editing(self):
+    def test_madrasah_diniyah_details_have_a_dedicated_card_editor(self):
         legacy_content = json.loads(self.content_file.read_text(encoding="utf-8"))
         legacy_content.pop("_academic_program_details_revision", None)
         madrasah = next(item for item in legacy_content["programs"] if item["title"] == "Madrasah Diniyah")
@@ -706,41 +706,105 @@ class PortalRoutesTestCase(unittest.TestCase):
         madrasah_panel_html = madrasah_panel.get_data(as_text=True)
         self.assertIn("Lihat kelas dan kitab", madrasah_panel_html)
         self.assertIn("Edit kelas dan kitab", madrasah_panel_html)
+        self.assertIn('href="/admin/akademik/madrasah-diniyah"', madrasah_panel_html)
         self.assertIn('href="/akademik/program/madrasah-diniyah"', madrasah_panel_html)
+
         programs = migrated["programs"]
         madrasah_index = next(index for index, item in enumerate(programs) if item["title"] == "Madrasah Diniyah")
         item_id = str(migrated_madrasah.get("id") or migrated_madrasah.get("number") or madrasah_index)
-        edit_response = self.client.get(f"/admin/akademik/program/{item_id}/edit")
-        self.assertEqual(edit_response.status_code, 200)
-        edit_html = edit_response.get_data(as_text=True)
-        self.assertIn('name="class_details"', edit_html)
-        self.assertIn("Kelas dan kitab pada halaman Madrasah Diniyah", edit_html)
-        self.assertIn('href="/akademik/program/madrasah-diniyah"', edit_html)
-        self.assertIn("Perubahan akan tampil di sana setelah disimpan", edit_html)
-        self.assertIn("Satu kelas per baris", edit_html)
-        self.assertIn("Simpan kelas dan program", edit_html)
-        csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', edit_html).group(1)
-        updated = self.client.post(
+        program_edit = self.client.get(f"/admin/akademik/program/{item_id}/edit")
+        self.assertEqual(program_edit.status_code, 200)
+        program_edit_html = program_edit.get_data(as_text=True)
+        self.assertIn("Edit program Madrasah Diniyah", program_edit_html)
+        self.assertIn("Buka panel kelas dan kitab", program_edit_html)
+        self.assertNotIn('name="class_details"', program_edit_html)
+        program_csrf = re.search(r'name="csrf_token" value="([^"]+)"', program_edit_html).group(1)
+        program_saved = self.client.post(
             "/admin/akademik/program/simpan",
             data={
-                "csrf_token": csrf_token,
+                "csrf_token": program_csrf,
                 "item_id": item_id,
                 "title": migrated_madrasah["title"],
                 "category": migrated_madrasah["category"],
                 "education_type": "non_formal",
                 "description": migrated_madrasah["description"],
                 "kitabs_label": migrated_madrasah["kitabs_label"],
-                "kitabs": "I’dadiyah\nIbtida\nTsanawi\nAliyah",
-                "class_details": "Ibtida | Contoh yang diedit di Admin Akademik | Safinatun Najah; Jurumiyah",
+                "kitabs": "\n".join(migrated_madrasah["kitabs"]),
                 "info_url": "/kontak",
                 "icon": migrated_madrasah["icon"],
                 "program_logo": migrated_madrasah.get("logo", ""),
             },
         )
+        self.assertEqual(program_saved.status_code, 302)
+        preserved_madrasah = next(
+            item for item in json.loads(self.content_file.read_text(encoding="utf-8"))["programs"]
+            if item["title"] == "Madrasah Diniyah"
+        )
+        self.assertEqual(len(preserved_madrasah["class_details"]), 4)
+
+        class_editor = self.client.get("/admin/akademik/madrasah-diniyah")
+        self.assertEqual(class_editor.status_code, 200)
+        editor_html = class_editor.get_data(as_text=True)
+        self.assertIn("Kelola kelas dan kitab Madrasah Diniyah", editor_html)
+        self.assertIn('class="admin-madrasah-card"', editor_html)
+        self.assertEqual(editor_html.count('name="class_name" value='), 4)
+        self.assertIn('name="class_name"', editor_html)
+        self.assertIn('name="class_description"', editor_html)
+        self.assertIn('name="class_kitabs"', editor_html)
+        self.assertNotIn('name="class_details"', editor_html)
+        self.assertIn('href="/akademik/program/madrasah-diniyah"', editor_html)
+        csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', editor_html).group(1)
+
+        updated = self.client.post(
+            "/admin/akademik/madrasah-diniyah/simpan",
+            data=MultiDict([
+                ("csrf_token", csrf_token),
+                ("class_name", "Ibtida"),
+                ("class_description", "Contoh yang diedit di Admin Akademik"),
+                ("class_kitabs_label", "Kitab pilihan"),
+                ("class_kitabs", "Safinatun Najah\nJurumiyah"),
+            ]),
+        )
         self.assertEqual(updated.status_code, 302)
+        saved_editor = self.client.get("/admin/akademik/madrasah-diniyah?saved=1")
+        self.assertIn("Rincian kelas dan kitab berhasil disimpan", saved_editor.get_data(as_text=True))
         saved_detail = self.client.get("/akademik/program/madrasah-diniyah")
-        self.assertIn("Contoh yang diedit di Admin Akademik", saved_detail.get_data(as_text=True))
-        self.assertIn("Safinatun Najah", saved_detail.get_data(as_text=True))
+        saved_detail_html = saved_detail.get_data(as_text=True)
+        self.assertIn("Contoh yang diedit di Admin Akademik", saved_detail_html)
+        self.assertIn("Safinatun Najah", saved_detail_html)
+        self.assertIn("Jurumiyah", saved_detail_html)
+
+    def test_madrasah_class_editor_rejects_duplicate_class_names(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "academic"
+            admin_session["admin_token"] = "academic-session-token"
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content["admin_users"] = {"academic": {"active": True, "session_token": "academic-session-token"}}
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        editor = self.client.get("/admin/akademik/madrasah-diniyah")
+        self.assertEqual(editor.status_code, 200)
+        csrf_token = re.search(r'name="csrf_token" value="([^"]+)"', editor.get_data(as_text=True)).group(1)
+        response = self.client.post(
+            "/admin/akademik/madrasah-diniyah/simpan",
+            data=MultiDict([
+                ("csrf_token", csrf_token),
+                ("class_name", "Tsanawi"),
+                ("class_description", "Catatan pertama"),
+                ("class_kitabs_label", "Kitab bandungan"),
+                ("class_kitabs", "Al-Hikam"),
+                ("class_name", "tsanawi"),
+                ("class_description", "Catatan kedua"),
+                ("class_kitabs_label", "Kitab pilihan"),
+                ("class_kitabs", "Kitab lain"),
+            ]),
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("muncul lebih dari satu kali", response.get_data(as_text=True))
+        saved_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        saved_madrasah = next(item for item in saved_content["programs"] if item["title"] == "Madrasah Diniyah")
+        self.assertEqual(len(saved_madrasah["class_details"]), 4)
 
     def test_madrasah_schedule_revision_preserves_prior_admin_class_edits(self):
         content = json.loads(self.content_file.read_text(encoding="utf-8"))
@@ -1148,7 +1212,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn('class="theme-toggle"', response_text)
-        self.assertIn("css/theme.css?v=1", response_text)
+        self.assertIn("css/theme.css?v=2", response_text)
         self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
         self.assertIn("mongo eror sementara pakai preferensi.json", response_text)
         self.assertIn("Perubahan belum tersimpan", response_text)
@@ -1296,7 +1360,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=1", rendered)
+        self.assertIn("css/theme.css?v=2", rendered)
         self.assertIn("js/theme.js?v=1", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 
@@ -1312,6 +1376,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("right: calc(18px + env(safe-area-inset-right))", theme_css_source)
         self.assertIn("bottom: calc(18px + env(safe-area-inset-bottom))", theme_css_source)
         self.assertIn(':root[data-theme="dark"]', theme_css_source)
+        self.assertIn("--dark-text-body: #c4d0c8", theme_css_source)
+        self.assertIn(':root[data-theme="dark"] main :is(p, li, small, label', theme_css_source)
+        self.assertIn("--dark-surface-input: #101914", theme_css_source)
         self.assertIn("grid-template-columns: minmax(0, 1fr) 295px", theme_css_source)
         self.assertIn("@media (max-width: 720px)", theme_css_source)
         self.assertIn("max-width: 100%", theme_css_source)
