@@ -420,10 +420,10 @@
     "subtitle": "Kami siap membantu menjawab pertanyaan Anda seputar Pondok Pesantren Roudlotul Ulum.",
     "address_label": "Alamat",
     "address": "Dk. Krajan RT 05 / RW 01, Desa Karangtanjung, Kecamatan Alian, Kabupaten Kebumen, Jawa Tengah 54352.",
-    "phone_label": "Telepon / WhatsApp",
-    "phone": "Informasi nomor kontak menyusul",
+    "phone_label": "Telepon",
+    "phone": "",
     "email_label": "Email",
-    "email": "Informasi email menyusul",
+    "email": "",
     "map_image": "/static/images/pondok-campus.jpg"
   },
   "academic_events": [],

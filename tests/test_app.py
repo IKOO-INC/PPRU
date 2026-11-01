@@ -23,6 +23,12 @@ from werkzeug.security import generate_password_hash
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def visible_text(markup):
+    markup = re.sub(r"<!--.*?-->", " ", markup, flags=re.S)
+    markup = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", " ", markup, flags=re.I | re.S)
+    return html.unescape(re.sub(r"<[^>]+>", " ", markup))
+
+
 class PortalRoutesTestCase(unittest.TestCase):
     def setUp(self):
         self.temporary_directory = tempfile.TemporaryDirectory()
@@ -250,9 +256,11 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("Sampai bab", rendered)
         self.assertIn("jumlah soal", rendered.lower())
         self.assertIn("Nama lengkap peserta", rendered)
-        self.assertIn("Cetak / Simpan PDF", rendered)
+        self.assertIn("Cetak sertifikat", rendered)
         self.assertIn("Unduh PNG", rendered)
-        self.assertIn("Unduh JPG", rendered)
+        self.assertIn("Unduh sertifikat", rendered)
+        self.assertNotIn("Simpan PDF", rendered)
+        self.assertNotIn("Unduh JPG", rendered)
         self.assertIn("Bagikan", rendered)
         self.assertIn("Sertifikat Partisipasi", rendered)
         self.assertIn('alt="Logo Pondok Pesantren Roudlotul Ulum"', rendered)
@@ -484,6 +492,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn('title="Peta Pondok Pesantren Roudlotul Ulum, Karangtanjung, Kebumen"', rendered)
         self.assertIn("https://www.google.com/maps/search/?api=1&amp;query=", rendered)
         self.assertIn("fa-location-dot", rendered)
+        self.assertNotIn("Informasi nomor kontak menyusul", rendered)
+        self.assertNotIn("Informasi email menyusul", rendered)
         self.assertNotIn("map_image or", rendered)
         self.assertEqual(
             _google_maps_urls("Dk. Krajan RT 05 / RW 01, Kebumen."),
@@ -492,6 +502,62 @@ class PortalRoutesTestCase(unittest.TestCase):
                 "https://www.google.com/maps/search/?api=1&query=Dk.+Krajan+RT+05+%2F+RW+01%2C+Kebumen",
             ),
         )
+
+    def test_public_contact_and_login_posts_explain_that_nothing_is_submitted(self):
+        private_contact_data = {"name": "PRIVATE-CONTACT-NAME", "phone": "PRIVATE-CONTACT-PHONE"}
+        contact_response = self.client.post("/kontak", data=private_contact_data)
+        self.assertEqual(contact_response.status_code, 200)
+        contact_html = contact_response.get_data(as_text=True)
+        contact_text = visible_text(contact_html)
+        self.assertIn("Pesan tidak terkirim. Pengiriman formulir belum tersedia.", contact_text)
+        self.assertNotIn("PRIVATE-CONTACT-NAME", contact_html)
+        self.assertNotIn("PRIVATE-CONTACT-PHONE", contact_html)
+        self.assertNotIn('name="name"', contact_html)
+        self.assertNotIn('name="phone"', contact_html)
+
+        private_login_data = {"username": "PRIVATE-USERNAME", "password": "PRIVATE-PASSWORD"}
+        login_response = self.client.post("/masuk", data=private_login_data)
+        self.assertEqual(login_response.status_code, 200)
+        login_html = login_response.get_data(as_text=True)
+        login_text = visible_text(login_html)
+        self.assertIn("Akses belum tersedia. Tidak ada data yang dikirim.", login_text)
+        self.assertNotIn("PRIVATE-USERNAME", login_html)
+        self.assertNotIn("PRIVATE-PASSWORD", login_html)
+        self.assertNotIn('name="username"', login_html)
+        self.assertNotIn('name="password"', login_html)
+
+        saved_content = json.dumps(json.loads(self.content_file.read_text(encoding="utf-8")))
+        for private_value in (*private_contact_data.values(), *private_login_data.values()):
+            self.assertNotIn(private_value, saved_content)
+
+    def test_unavailable_contact_channels_are_hidden_from_public_and_admin_views(self):
+        content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        content["contact"]["phone"] = "  Informasi nomor kontak menyusul  "
+        content["contact"]["email"] = "Informasi email menyusul"
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+
+        public_html = self.client.get("/kontak").get_data(as_text=True)
+        self.assertNotIn("Informasi nomor kontak menyusul", public_html)
+        self.assertNotIn("Informasi email menyusul", public_html)
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "contact-view-csrf-token"
+        admin_html = self.client.get("/admin?tab=contact").get_data(as_text=True)
+        self.assertNotIn("Informasi nomor kontak menyusul", admin_html)
+        self.assertNotIn("Informasi email menyusul", admin_html)
+        self.assertIn('name="contact_phone"', admin_html)
+        self.assertIn('name="contact_email"', admin_html)
+
+        saved = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(saved["contact"]["phone"], "  Informasi nomor kontak menyusul  ")
+        self.assertEqual(saved["contact"]["email"], "Informasi email menyusul")
+
+        content["contact"]["phone"] = "08123456789"
+        content["contact"]["email"] = "informasi@example.id"
+        self.content_file.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+        public_html = self.client.get("/kontak").get_data(as_text=True)
+        self.assertIn("08123456789", public_html)
+        self.assertIn("informasi@example.id", public_html)
 
     def test_contact_address_migration_updates_only_address_and_syncs_site_location(self):
         content = json.loads(self.content_file.read_text(encoding="utf-8"))
@@ -571,6 +637,15 @@ class PortalRoutesTestCase(unittest.TestCase):
         admin_html = self.client.get("/admin?tab=brand").get_data(as_text=True)
         self.assertIn('name="social_facebook"', admin_html)
         self.assertIn('name="social_tiktok"', admin_html)
+
+    def test_public_academic_calendar_empty_state_uses_visitor_friendly_copy(self):
+        expected = "Belum ada jadwal kegiatan akademik yang diumumkan."
+        for route in ("/", "/akademik"):
+            with self.subTest(route=route):
+                rendered = visible_text(self.client.get(route).get_data(as_text=True))
+                self.assertIn(expected, rendered)
+                self.assertNotIn("ditambahkan ke kalender akademik", rendered.lower())
+                self.assertNotIn("informasi jadwal akan diperbarui", rendered.lower())
 
     def test_home_upcoming_events_are_the_next_three_academic_calendar_items(self):
         today = now_jakarta().date()
@@ -995,7 +1070,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn(".gallery-card-caption", styles)
         self.assertNotIn("figcaption", styles)
 
-    def test_vercel_admin_deletes_explain_missing_persistent_storage(self):
+    def test_vercel_admin_deletes_show_honest_storage_errors_without_internal_details(self):
         app = create_app({
             "TESTING": True,
             "VERCEL": True,
@@ -1020,13 +1095,19 @@ class PortalRoutesTestCase(unittest.TestCase):
         news_slug = self.content["news"][0]["slug"]
         news_delete = client.post(f"/admin/berita/{news_slug}/hapus", data={"csrf_token": token})
         self.assertEqual(news_delete.status_code, 503)
-        self.assertIn("MONGODB_URI", news_delete.get_data(as_text=True))
+        news_error_text = visible_text(news_delete.get_data(as_text=True))
+        self.assertIn("Perubahan belum tersimpan", news_error_text)
+        for detail in ("MongoDB", "Atlas", "Vercel", "MONGODB_URI", "preferensi.json", "JSON"):
+            self.assertNotIn(detail, news_error_text)
         self.assertTrue(any(item["slug"] == news_slug for item in json.loads(self.news_file.read_text(encoding="utf-8"))))
 
         gallery_id = self.content["gallery"][0]["id"]
         gallery_delete = client.post(f"/admin/galeri/{gallery_id}/hapus", data={"csrf_token": token})
         self.assertEqual(gallery_delete.status_code, 503)
-        self.assertIn("MONGODB_URI", gallery_delete.get_data(as_text=True))
+        gallery_error_text = visible_text(gallery_delete.get_data(as_text=True))
+        self.assertIn("Perubahan belum tersimpan", gallery_error_text)
+        for detail in ("MongoDB", "Atlas", "Vercel", "MONGODB_URI", "preferensi.json", "JSON"):
+            self.assertNotIn(detail, gallery_error_text)
         self.assertTrue(any(item["id"] == gallery_id for item in json.loads(self.gallery_file.read_text(encoding="utf-8"))))
 
     def test_mongodb_store_seeds_and_atomically_persists_portal_sections(self):
@@ -1109,7 +1190,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertTrue(store.json_fallback_active)
         self.assertEqual(json.loads(self.content_file.read_text(encoding="utf-8"))["stats"][0]["value"], "321")
 
-    def test_local_admin_shows_json_fallback_popup_when_atlas_is_down(self):
+    def test_local_admin_shows_a_clear_temporary_save_notice_without_vendor_details(self):
         class FailingCollection:
             def find_one(self, _query):
                 raise PyMongoError("simulated Atlas outage")
@@ -1133,9 +1214,13 @@ class PortalRoutesTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         rendered = response.get_data(as_text=True)
+        notice_text = visible_text(rendered)
         self.assertIn('role="alertdialog"', rendered)
-        self.assertIn("mongo eror sementara pakai preferensi.json", rendered)
-        self.assertIn("belum tersinkron ke MongoDB Atlas", rendered)
+        self.assertIn("Penyimpanan mengalami kendala", notice_text)
+        self.assertIn("Penyimpanan sementara sedang digunakan", notice_text)
+        self.assertIn("mungkin belum tersedia bagi semua pengunjung", notice_text)
+        for detail in ("MongoDB", "Atlas", "preferensi.json", "JSON", "Vercel"):
+            self.assertNotIn(detail, notice_text)
 
     def test_mongodb_store_can_skip_ephemeral_vercel_json_mirror(self):
         class MemoryCollection:
@@ -1213,11 +1298,12 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn('class="theme-toggle"', response_text)
-        self.assertIn("css/theme.css?v=3", response_text)
-        self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
-        self.assertIn("mongo eror sementara pakai preferensi.json", response_text)
-        self.assertIn("Perubahan belum tersimpan", response_text)
-        self.assertIn("file JSON deployment tidak persisten", response_text)
+        self.assertIn("css/theme.css?v=5", response_text)
+        error_text = visible_text(response_text)
+        self.assertIn("Perubahan belum tersimpan", error_text)
+        self.assertIn("Silakan coba lagi", error_text)
+        for detail in ("MongoDB", "Atlas", "Vercel", "MONGODB_URI", "preferensi.json", "JSON"):
+            self.assertNotIn(detail, error_text)
         self.assertNotIn("Perubahan berhasil disimpan", response_text)
         self.assertEqual(collection.write_attempts, 1)
         self.assertEqual(collection.document, initial_document)
@@ -1361,7 +1447,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=3", rendered)
+        self.assertIn("css/theme.css?v=5", rendered)
         self.assertIn("js/theme.js?v=1", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 
@@ -1385,6 +1471,118 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("max-width: 100%", theme_css_source)
         theme_js.close()
         theme_css.close()
+
+    def test_public_and_admin_copy_hides_internal_storage_and_vendor_details(self):
+        forbidden_copy = (
+            "MongoDB", "Atlas", "Cloudinary", "Vercel", "Google Maps", "MONGODB_URI",
+            "preferensi.json", "JSON", "backend", "hash", "array", "Slug", "embed",
+        )
+        public_routes = (
+            "/", "/profil", "/akademik", "/akademik/formal", "/akademik/non-formal",
+            "/akademik/program/madrasah-diniyah", "/berita",
+            f"/berita/{self.content['news'][0]['slug']}", "/galeri",
+            "/kontak", "/psb", "/masuk", "/hafalan",
+        )
+        for route in public_routes:
+            with self.subTest(route=route):
+                response = self.client.get(route)
+                self.assertEqual(response.status_code, 200)
+                text = visible_text(response.get_data(as_text=True))
+                for detail in forbidden_copy:
+                    self.assertNotIn(detail, text)
+
+        admin_login = self.client.get("/admin")
+        self.assertEqual(admin_login.status_code, 200)
+        admin_login_text = visible_text(admin_login.get_data(as_text=True))
+        for detail in forbidden_copy:
+            self.assertNotIn(detail, admin_login_text)
+
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "copy-audit-csrf-token"
+        admin_routes = (
+            "/admin", "/admin?tab=users", "/admin/akademik?tab=calendar",
+            "/admin/akademik?tab=psb", "/admin/akademik?tab=news",
+            "/admin/akademik/madrasah-diniyah", "/admin/akademik/kalender/baru",
+            "/admin/akademik/program/baru", "/admin/akademik/pengumuman/baru",
+            "/admin/berita/baru", "/admin/galeri/baru",
+        )
+        for route in admin_routes:
+            with self.subTest(route=route):
+                response = self.client.get(route)
+                self.assertEqual(response.status_code, 200)
+                text = visible_text(response.get_data(as_text=True))
+                for detail in forbidden_copy:
+                    self.assertNotIn(detail, text)
+
+        contact_html = self.client.get("/kontak").get_data(as_text=True)
+        login_html = self.client.get("/masuk").get_data(as_text=True)
+        self.assertIn("data-demo-message=", contact_html)
+        self.assertIn("data-demo-message=", login_html)
+        app_script = (ROOT / "static" / "js" / "app.js").read_text(encoding="utf-8")
+        self.assertNotIn("Terima kasih. Formulir contoh", app_script)
+        self.assertNotIn("form.reset()", app_script)
+
+    def test_sitewide_contrast_rules_and_motion_cover_light_dark_and_reduced_motion(self):
+        style = (ROOT / "static" / "css" / "style.css").read_text(encoding="utf-8")
+        theme = (ROOT / "static" / "css" / "theme.css").read_text(encoding="utf-8")
+        for rule in (
+            ".promo-badge strong", ".promo-badge small", ".image-category",
+            '.academic-program-menu a[aria-current="page"] span',
+            ".hafalan-certificate-frame", ".vm-icon--orange", ".form-emblem",
+            ".admin-preview-status", ".admin-status--draft", ".admin-status--published",
+            ".admin-kicker", ".not-found h1 em", ".step-card p",
+            ".requirements-copy article p", ".certificate-range", ".certificate-brand small",
+            ".academic-class-card li::marker",
+        ):
+            self.assertIn(rule, theme)
+        self.assertIn("#a85b00", style)
+        self.assertIn(".admission-programs {", style)
+        self.assertIn(".contact-form .field-label b {", style)
+        self.assertIn("@keyframes ppru-page-fade-in", theme)
+        self.assertIn("@media (hover: hover) and (prefers-reduced-motion: no-preference)", theme)
+        self.assertIn("@media (prefers-reduced-motion: reduce)", theme)
+
+        def contrast_ratio(foreground, background):
+            def luminance(color):
+                hex_value = color.lstrip("#")
+                if len(hex_value) == 3:
+                    hex_value = "".join(channel * 2 for channel in hex_value)
+                if len(hex_value) != 6:
+                    raise ValueError(f"Expected #RGB or #RRGGBB, got {color!r}")
+                channels = [int(hex_value[index:index + 2], 16) / 255 for index in (0, 2, 4)]
+                linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
+                return sum(channel * weight for channel, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+            brighter, darker = sorted((luminance(foreground), luminance(background)), reverse=True)
+            return (brighter + 0.05) / (darker + 0.05)
+
+        tested_pairs = (
+            ("#58665c", "#ffffff"),
+            ("#fff", "#58665c"),
+            ("#08704f", "#e7f7ee"),
+            ("#08704f", "#f8faf9"),
+            ("#77530c", "#ffffff"),
+            ("#76500b", "#fff1d9"),
+            ("#77530c", "#eafbf3"),
+            ("#58665c", "#f5f8f7"),
+            ("#854700", "#f5f9f6"),
+            ("#a33e2d", "#ffffff"),
+            ("#f7be46", "#21483f"),
+            ("#58665c", "#fcfdfb"),
+            ("#a5eac2", "#1a3527"),
+            ("#f2d58f", "#3a2f1b"),
+            ("#a85b00", "#ffffff"),
+            ("#362407", "#ec9b19"),
+            ("#70450b", "#fff0da"),
+            ("#173b2b", "#ffffff"),
+            ("#53665b", "#ffffff"),
+            ("#d9f6e5", "#1a3b2b"),
+            ("#26382d", "#fcfdfb"),
+        )
+        for foreground, background in tested_pairs:
+            with self.subTest(foreground=foreground, background=background):
+                self.assertGreaterEqual(contrast_ratio(foreground, background), 4.5)
 
     def test_hafalan_question_surfaces_keep_readable_contrast_in_both_themes(self):
         response = self.client.get("/static/css/theme.css")
@@ -1417,7 +1615,12 @@ class PortalRoutesTestCase(unittest.TestCase):
 
         def contrast_ratio(foreground, background):
             def luminance(color):
-                channels = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+                hex_value = color.lstrip("#")
+                if len(hex_value) == 3:
+                    hex_value = "".join(channel * 2 for channel in hex_value)
+                if len(hex_value) != 6:
+                    raise ValueError(f"Expected #RGB or #RRGGBB, got {color!r}")
+                channels = [int(hex_value[index:index + 2], 16) / 255 for index in (0, 2, 4)]
                 linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
                 return sum(channel * weight for channel, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
 
@@ -1477,7 +1680,7 @@ class PortalRoutesTestCase(unittest.TestCase):
             users_page = main_client.get("/admin?tab=users")
             users_html = users_page.get_data(as_text=True)
             self.assertIn("Kelola User Admin", users_html)
-            self.assertIn("Admin Utama tetap masuk tanpa nama pengguna", users_html)
+            self.assertIn("Admin Utama menggunakan kata sandi utama", users_html)
             self.assertIn("Belum ada akun Admin Akademik", users_html)
             self.assertNotIn('data-admin-tab="programs"', users_html)
             token = re.search(r'name="csrf_token" value="([^"]+)"', users_html).group(1)
@@ -1777,7 +1980,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertEqual(form_response.status_code, 200)
         self.assertIn('name="program_logo"', form_html)
         self.assertIn('data-cloudinary-folder="programs"', form_html)
-        self.assertIn(">Upload logo</button>", form_html)
+        self.assertIn(">Unggah logo</button>", form_html)
         self.assertIn('name="icon"', form_html)
         self.assertIn("Font Awesome", form_html)
         token = re.search(r'name="csrf_token" value="([^"]+)"', form_html).group(1)
@@ -2114,7 +2317,7 @@ class PortalRoutesTestCase(unittest.TestCase):
 
             gallery_panel = client.get("/admin?tab=gallery")
             self.assertEqual(gallery_panel.status_code, 200)
-            self.assertIn(b"Upload galeri baru", gallery_panel.data)
+            self.assertIn(b"Unggah foto galeri", gallery_panel.data)
             self.assertIn(b"Kebersamaan di pesantren", gallery_panel.data)
             self.assertIn(b"Edit", gallery_panel.data)
             self.assertIn(b"Hapus", gallery_panel.data)
@@ -2245,7 +2448,9 @@ class PortalRoutesTestCase(unittest.TestCase):
             self.assertIn("[redacted]", log_message)
             self.assertNotIn("test-api-secret", log_message)
             self.assertNotIn("test-api-key", log_message)
-            self.assertIn("log server", response.get_json()["error"])
+            self.assertIn("Terjadi kendala saat mengunggah foto", response.get_json()["error"])
+            self.assertNotIn("Cloudinary", response.get_json()["error"])
+            self.assertNotIn("server", response.get_json()["error"])
 
     def test_shared_image_asset_is_available(self):
         response = self.client.get("/static/images/pondok-campus.jpg")

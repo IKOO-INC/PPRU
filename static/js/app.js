@@ -209,8 +209,7 @@
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const status = form.querySelector(".form-status") || form.parentElement.querySelector(".form-status");
-      if (status) status.textContent = "Terima kasih. Formulir contoh ini belum terhubung ke backend.";
-      form.reset();
+      if (status) status.textContent = form.dataset.demoMessage || "Layanan ini belum tersedia saat ini. Silakan hubungi pengurus pesantren.";
     });
   });
 

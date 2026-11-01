@@ -119,12 +119,12 @@
           return;
         }
         downloadBlob(blob, "png");
-        setStatus(button, "Berbagi langsung tidak tersedia. Sertifikat PNG diunduh agar dapat dibagikan.");
+        setStatus(button, "Berbagi langsung tidak tersedia. Sertifikat telah diunduh dan siap dibagikan.");
       }
       return;
     }
     downloadBlob(blob, "png");
-    setStatus(button, "Perangkat ini belum mendukung berbagi berkas langsung. Sertifikat PNG diunduh agar dapat dibagikan.");
+    setStatus(button, "Perangkat ini belum mendukung berbagi langsung. Sertifikat telah diunduh dan siap dibagikan.");
   };
 
   document.addEventListener("click", async (event) => {
@@ -143,7 +143,7 @@
       if (action === "png" || action === "jpg") await exportImage(button, action);
       else if (action === "share") await shareCertificate(button);
     } catch (error) {
-      setStatus(button, error?.message || "Sertifikat belum dapat diekspor. Silakan coba lagi.");
+      setStatus(button, "Sertifikat belum dapat disiapkan. Silakan coba lagi.");
     } finally {
       button.disabled = false;
     }

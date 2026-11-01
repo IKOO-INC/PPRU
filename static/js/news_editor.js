@@ -211,7 +211,7 @@
     payload.append("folder", "news");
     payload.append("image_file", file);
     imageButton.disabled = true;
-    if (imageStatus) imageStatus.textContent = "Mengunggah gambar ke Cloudinary…";
+    if (imageStatus) imageStatus.textContent = "Mengunggah dan menyiapkan gambar…";
 
     try {
       const response = await fetch("/admin/upload-image", {
@@ -220,14 +220,16 @@
         credentials: "same-origin",
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.url) throw new Error(result.error || "Upload gambar gagal.");
+      if (!response.ok || !result.url) throw new Error(result.error || "Pengunggahan gambar belum berhasil. Silakan coba lagi.");
 
       const defaultAlt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
       const alt = window.prompt("Teks alternatif untuk gambar (opsional):", defaultAlt);
       insertImage(result.url, alt === null ? "" : alt.trim());
       if (imageStatus) imageStatus.textContent = "Gambar berhasil disisipkan. Simpan berita untuk menerapkan perubahan.";
     } catch (error) {
-      if (imageStatus) imageStatus.textContent = error.message || "Upload gambar gagal.";
+      if (imageStatus) imageStatus.textContent = error instanceof TypeError
+        ? "Koneksi terganggu. Periksa jaringan, lalu coba lagi."
+        : error.message || "Pengunggahan gambar belum berhasil. Silakan coba lagi.";
     } finally {
       imageButton.disabled = false;
       imageInput.value = "";

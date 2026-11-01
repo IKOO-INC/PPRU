@@ -1083,6 +1083,15 @@ def create_app(test_config=None):
         needs_save = _apply_academic_program_details_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_contact_address_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_home_stats_revision(content, profile_seed_content) or needs_save
+        contact_channels = content.get("contact")
+        if isinstance(contact_channels, dict):
+            unavailable_channels = (
+                ("phone", "informasi nomor kontak menyusul"),
+                ("email", "informasi email menyusul"),
+            )
+            for field, placeholder in unavailable_channels:
+                if str(contact_channels.get(field, "") or "").strip().casefold() == placeholder:
+                    contact_channels[field] = ""
         needs_save = _apply_social_links_revision(content, profile_seed_content) or needs_save
         needs_save = _apply_hafalan_navigation_revision(content, profile_seed_content) or needs_save
         site = content.get("site")
@@ -1329,9 +1338,9 @@ def create_app(test_config=None):
             if not title:
                 form_error = "Judul pengumuman wajib diisi." if academic else "Judul berita wajib diisi."
             elif not image_url:
-                form_error = "Upload foto cover ke Cloudinary atau masukkan URL Cloudinary."
+                form_error = "Foto sampul belum tersedia. Unggah foto atau masukkan tautan gambar HTTPS yang valid."
             elif submitted_image and image_url == existing_image and submitted_image != existing_image:
-                form_error = "URL foto harus menggunakan HTTPS Cloudinary atau gunakan tombol Upload."
+                form_error = "Tautan foto tidak dapat digunakan. Gunakan tautan gambar HTTPS yang valid atau unggah foto."
             if form_error:
                 post = {
                     **existing,
@@ -1551,9 +1560,12 @@ def create_app(test_config=None):
         response.headers["Cache-Control"] = "public, max-age=3600"
         return response
 
-    @app.get("/kontak")
+    @app.route("/kontak", methods=["GET", "POST"])
     def contact():
-        return render_template("contact.html", **page_context("contact"))
+        context = page_context("contact")
+        if request.method == "POST":
+            context["form_status"] = "Pesan tidak terkirim. Pengiriman formulir belum tersedia."
+        return render_template("contact.html", **context)
 
     @app.get("/psb")
     def admission():
@@ -1570,9 +1582,12 @@ def create_app(test_config=None):
             admission_programs=_selected_admission_programs(context["data"]),
         )
 
-    @app.get("/masuk")
+    @app.route("/masuk", methods=["GET", "POST"])
     def login():
-        return render_template("login.html", **page_context(None))
+        context = page_context(None)
+        if request.method == "POST":
+            context["form_status"] = "Akses belum tersedia. Tidak ada data yang dikirim."
+        return render_template("login.html", **context)
 
     @app.get("/admin")
     def admin():
@@ -1737,14 +1752,16 @@ def create_app(test_config=None):
         }
         try:
             uploaded = upload_image(request.files.get("image_file"), credentials, folder)
-        except CloudinaryConfigurationError as exc:
-            return jsonify(error=str(exc)), 503
-        except (InvalidImageUpload, ValueError) as exc:
+        except CloudinaryConfigurationError:
+            return jsonify(error="Pengunggahan gambar belum tersedia saat ini. Silakan hubungi pengelola situs."), 503
+        except InvalidImageUpload as exc:
             return jsonify(error=str(exc)), 400
+        except ValueError:
+            return jsonify(error="Data unggah tidak valid. Pilih foto dan coba kembali."), 400
         except Exception as exc:
             detail = _redacted_error_detail(exc, credentials.values())
             app.logger.error("Cloudinary upload failed (%s): %s", folder, detail)
-            return jsonify(error="Cloudinary gagal memproses upload. Periksa log server untuk detail tanpa kredensial."), 502
+            return jsonify(error="Terjadi kendala saat mengunggah foto. Silakan coba lagi beberapa saat."), 502
         return jsonify(url=uploaded["url"], public_id=uploaded["public_id"])
 
     @app.get("/admin/galeri/baru")
@@ -1831,9 +1848,9 @@ def create_app(test_config=None):
                 and form_item["image"] == existing_image
                 and submitted_image != existing_image
             ):
-                error = "Masukkan URL Cloudinary yang valid atau unggah foto melalui tombol Upload."
+                error = "Tautan foto tidak dapat digunakan. Gunakan tautan gambar HTTPS yang valid atau unggah foto."
             elif not error and not form_item["image"]:
-                error = "Upload foto ke Cloudinary atau isi URL foto Cloudinary terlebih dahulu."
+                error = "Foto belum tersedia. Unggah foto atau masukkan tautan gambar HTTPS yang valid."
 
             if not error:
                 if category not in {"Kegiatan", "Santri", "Pesantren"}:
@@ -2294,9 +2311,9 @@ def create_app(test_config=None):
         elif icon_field_provided and icon not in ACADEMIC_PROGRAM_ICON_OPTIONS:
             error = "Pilih ikon Font Awesome yang tersedia."
         elif submitted_logo and not logo:
-            error = "Logo harus berupa URL gambar Cloudinary HTTPS yang valid."
+            error = "Logo harus berupa tautan gambar HTTPS yang valid."
         elif submitted_info_url and info_url == "/kontak" and submitted_info_url != "/kontak":
-            error = "Tautan informasi harus berupa path lokal atau URL HTTPS yang valid."
+            error = "Tautan informasi harus berupa alamat halaman atau URL HTTPS yang valid."
 
         item = {
             "id": item_id,
@@ -2616,7 +2633,7 @@ def create_app(test_config=None):
         return render_template(
             "storage_error.html",
             message=error.user_message,
-            title="MongoDB Atlas berhasil menyimpan" if mirror_saved else "Perubahan belum dapat disimpan",
+            title="Sebagian perubahan berhasil disimpan" if mirror_saved else "Perubahan belum dapat disimpan",
             data_saved=mirror_saved,
         ), 503
 

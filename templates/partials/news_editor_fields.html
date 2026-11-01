@@ -4,7 +4,7 @@
 {% if error %}<div class="admin-alert admin-alert--error">{{ error }}</div>{% endif %}
 <div class="admin-fields-grid">
   <label class="admin-field"><span>Judul berita *</span><input type="text" name="title" value="{{ post.title }}" placeholder="Masukkan judul berita" required></label>
-  {{ text_field('Slug / alamat artikel', 'slug', post.slug, 'otomatis-dari-judul') }}
+  {{ text_field('Alamat artikel', 'slug', post.slug, 'Otomatis dari judul') }}
   {{ text_field('Kategori', 'category', post.category|default('Kegiatan')) }}
   {{ text_field('Teks alternatif foto', 'image_alt', post.image_alt|default(post.title), 'news') }}
   <label class="admin-field"><span>Status publikasi</span><select name="status"><option value="published"{% if post.status|default('published') == 'published' %} selected{% endif %}>Terbitkan</option><option value="draft"{% if post.status == 'draft' %} selected{% endif %}>Simpan sebagai draft</option></select></label>
@@ -40,7 +40,7 @@
 <span class="admin-editor-upload-status" data-editor-image-status role="status" aria-live="polite"></span>
 <div class="admin-rich-editor" id="article-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Mulai menulis isi berita di sini...">{{ editor_html }}</div>
 <textarea name="body_html" id="article-body-html" hidden></textarea>
-<small class="admin-editor-hint">Klik tombol format untuk mengaktifkan atau mematikannya. Gambar isi berita diunggah ke Cloudinary, otomatis berada di tengah, dan menyesuaikan ukuran layar.</small>
+<small class="admin-editor-hint">Gunakan tombol pemformatan untuk mengatur tampilan teks. Gambar dalam berita tampil di tengah dan menyesuaikan ukuran layar.</small>
 <div class="admin-news-form-actions">
   <span class="admin-news-views">{% if is_edit %}<i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
   <div><a class="admin-cancel-button" href="{{ cancel_url }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan pengumuman' if academic else 'Simpan berita' }}</button></div>

@@ -412,11 +412,20 @@
   .stat-item span, .event-copy > span, .academic-class-index, .article-author small,
   .article-share-label, .article-share-status, .article-category, .admin-news-views,
   .academic-admin-date, .academic-admin-program-icon, .academic-admin-nav a span,
-  .admin-menu-number, .admin-menu-arrow, .admin-status--published, .admin-status--draft,
+  .admin-menu-number, .admin-menu-arrow,
   .carousel-arrows span, .question-count label span, .hafalan-score-card span,
   .hafalan-quiz-controls > span, .search-field > span:last-child
 ) { color: #b9e1c8; }
 :root[data-theme="dark"] .question-count input:checked + span { color: #fff; }
+/* Keep publication-status badges readable on their own dark surfaces. */
+:root[data-theme="dark"] .admin-status--published {
+  color: #a5eac2;
+  background-color: #1a3527;
+}
+:root[data-theme="dark"] .admin-status--draft {
+  color: #f2d58f;
+  background-color: #3a2f1b;
+}
 :root[data-theme="dark"] .admin-alert--success {
   color: #b8efcb;
   background-color: #173826;
@@ -712,4 +721,155 @@
 :root[data-theme="dark"] .hafalan-card .button--orange:focus-visible {
   outline: 3px solid currentColor;
   outline-offset: 3px;
+}
+
+/* Surface-aware contrast and gentle motion across public and admin pages. */
+:root:not([data-theme="dark"]) :is(
+  .section-title > p, .stat-item span, .program-category, .program-card p,
+  .program-kitabs ul, .news-meta, .news-card p, .work-copy p,
+  .academic-program-detail-heading p, .academic-class-index, .academic-class-card p,
+  .academic-calendar-heading p, .academic-calendar-category, .academic-calendar-event p,
+  .academic-calendar-empty, .event-copy > span, .event-copy p, .faq-item p,
+  .featured-meta, .article-meta-line, .article-breadcrumbs, .article-author small,
+  .article-related-copy > span, .article-related-empty, .article-credits,
+  .history-article > .article-signoff, .admin-auto-summary small,
+  .admission-cta-card p, .admission-cta-card small, .step-card p,
+  .requirements-copy article p, .vision-card p, .mission-card ol,
+  .certificate-awarded, .certificate-range, .certificate-footer, .certificate-brand small
+) { color: #58665c; }
+:root:not([data-theme="dark"]) .work-kicker,
+:root:not([data-theme="dark"]) :is(.text-link--gold, .card-link--gold) { color: #77530c; }
+:root:not([data-theme="dark"]) .not-found h1 em { color: #854700; }
+:root:not([data-theme="dark"]) :is(.search-field > span:last-child, .carousel-arrows span, .event-arrow) { color: #58665c; }
+:root:not([data-theme="dark"]) :is(.article-breadcrumbs i, .hafalan-chooser-note i) { color: #77530c; }
+:root[data-theme="dark"] .academic-class-card li::marker { color: #f2d58f; }
+:root:not([data-theme="dark"]) .promo-badge small { color: #536258; }
+:root:not([data-theme="dark"]) :is(
+  .admin-page-heading p, .admin-preview-status, .admin-sidebar-title, .admin-menu-number,
+  .admin-menu-arrow, .admin-sidebar-hint, .admin-panel-heading p, .admin-field-note,
+  .admin-field small, .admin-asset-field > small, .admin-program-summary p,
+  .admin-form-actions > span, .admin-news-form-actions > span, .admin-login-brand small,
+  .admin-login-card > p, .admin-news-summary span, .admin-news-meta, .admin-news-copy p,
+  .admin-news-copy small, .admin-news-empty, .admin-news-form-header p, .admin-editor-hint,
+  .admin-news-views, .admin-gallery-info small, .admin-gallery-empty, .admin-gallery-upload small,
+  .admin-user-status small, .academic-admin-item p, .academic-admin-kitabs,
+  .academic-admin-form-wrap .admin-field small, .admin-madrasah-manage-link p,
+  .admin-madrasah-overview p, .admin-madrasah-count small, .admin-madrasah-list-heading p,
+  .admin-madrasah-card-fields .admin-field small, .admin-madrasah-empty,
+  .admin-madrasah-form-actions > span, .storage-notice-card p
+) { color: #58665c; }
+:root:not([data-theme="dark"]) :is(
+  .admin-kicker, .admin-repeat-index, .admin-madrasah-card-index,
+  .admin-program-summary-icon, .academic-admin-program-icon, .admin-madrasah-empty > i
+) { color: #08704f; }
+:root:not([data-theme="dark"]) .admin-sidebar-hint > span { color: #77530c; }
+:root:not([data-theme="dark"]) .admin-status--draft { color: #76500b; }
+:root:not([data-theme="dark"]) .admin-rich-editor:empty::before,
+:root:not([data-theme="dark"]) .storage-notice-close { color: #58665c; }
+:root:not([data-theme="dark"]) .category-list button span,
+:root:not([data-theme="dark"]) .pagination button:not(.is-current) { color: #58665c; }
+:root:not([data-theme="dark"]) .gallery-filters button.is-active,
+:root:not([data-theme="dark"]) .gallery-filters button:hover,
+:root:not([data-theme="dark"]) .pagination button.is-current {
+  color: #fff;
+  background-color: #08704f;
+  border-color: #08704f;
+}
+:root[data-theme="dark"] .promo-badge {
+  color: #173b2b;
+  background: rgba(255,255,255,.97);
+  border-color: #dce8df;
+}
+:root[data-theme="dark"] .promo-badge strong { color: #173b2b; }
+:root[data-theme="dark"] .promo-badge small { color: #53665b; }
+:root[data-theme="dark"] .promo-icon,
+:root[data-theme="dark"] .play-dot {
+  color: #075c45;
+  background-color: #e9f7ef;
+}
+:root[data-theme="dark"] .play-dot { background-color: #fff; }
+:root[data-theme="dark"] .image-category {
+  color: #173b2b;
+  background: rgba(255,255,255,.96);
+}
+:root[data-theme="dark"] .academic-program-menu a[aria-current="page"] span {
+  color: #d9f6e5;
+  background: #1a3b2b;
+}
+:root[data-theme="dark"] .vm-icon--orange {
+  color: #f3d28e;
+  background: #40331d;
+}
+:root[data-theme="dark"] .form-emblem {
+  color: #a5eac2;
+  background: #1a3527;
+}
+:root[data-theme="dark"] .gallery-filters button.is-active,
+:root[data-theme="dark"] .gallery-filters button:hover,
+:root[data-theme="dark"] .pagination button.is-current {
+  color: #fff;
+  background-color: #147b58;
+  border-color: #147b58;
+}
+:root[data-theme="dark"] .hafalan-certificate { color: #26382d; }
+:root[data-theme="dark"] .hafalan-certificate-frame {
+  color: #26382d;
+  background: #fcfdfb;
+  border-color: #b78b2e;
+}
+:root[data-theme="dark"] .hafalan-certificate :is(h1, h2, h3, h4, h5, h6, strong, b) { color: #20382b; }
+:root[data-theme="dark"] .hafalan-certificate :is(p, small, span) { color: #536258; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand,
+:root[data-theme="dark"] .hafalan-certificate .certificate-book { color: #17553c; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand strong { color: #17553c; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand small { color: #536258; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-kicker,
+:root[data-theme="dark"] .hafalan-certificate .certificate-ornament { color: #8a6b23; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-score {
+  color: #775c18;
+  background: #f8f2df;
+}
+:root[data-theme="dark"] .hafalan-certificate .certificate-score strong { color: #604b14; }
+
+@keyframes ppru-page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .site-header, main#main, .site-footer, .storage-error-overlay {
+    animation: ppru-page-fade-in .55s cubic-bezier(.22,.61,.36,1) both;
+  }
+  :where(a, button, input, select, textarea, summary, [role="button"]) {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: .22s;
+    transition-timing-function: cubic-bezier(.22,.61,.36,1);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :is(.program-card, .news-card, .work-card, .event-card, .academic-class-card,
+    .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
+    .admin-repeat-card, .admin-news-row, .admin-gallery-row) {
+    transition: transform .24s cubic-bezier(.22,.61,.36,1), box-shadow .24s cubic-bezier(.22,.61,.36,1), border-color .24s ease;
+  }
+  :is(.program-card, .news-card, .work-card, .event-card, .academic-class-card,
+    .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
+    .admin-repeat-card, .admin-news-row, .admin-gallery-row):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(11,45,29,.12);
+  }
+  :is(.program-card, .news-card, .work-card, .event-card, .academic-class-card,
+    .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
+    .admin-repeat-card, .admin-news-row, .admin-gallery-row):focus-within {
+    transform: translateY(-2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header, main#main, .site-footer, .storage-error-overlay { animation: none !important; }
+  :where(a, button, input, select, textarea, summary, [role="button"]) { transition: none !important; }
+  :is(.program-card, .news-card, .work-card, .event-card, .academic-class-card,
+    .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
+    .admin-repeat-card, .admin-news-row, .admin-gallery-row):hover,
+  :is(.program-card, .news-card, .work-card, .event-card, .academic-class-card,
+    .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
+    .admin-repeat-card, .admin-news-row, .admin-gallery-row):focus-within { transform: none !important; }
 }

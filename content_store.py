@@ -144,16 +144,15 @@ class JsonPortalStore:
 class PersistentStorageError(RuntimeError):
     """Base class for deployment storage errors that should not become HTTP 500s."""
 
-    user_message = "Penyimpanan data sedang tidak tersedia. Silakan coba kembali."
+    user_message = "Perubahan belum dapat disimpan saat ini. Silakan coba lagi setelah beberapa saat."
 
 
 class PersistentStorageNotConfigured(PersistentStorageError):
     """Raised when a serverless deployment has no durable writable data store."""
 
     user_message = (
-        "Perubahan admin belum dapat disimpan karena Vercel tidak menyediakan penyimpanan "
-        "file persisten. Hubungkan MongoDB Atlas ke project Vercel dan atur "
-        "MONGODB_URI, lalu deploy ulang. Data belum diubah."
+        "Perubahan belum dapat disimpan saat ini. Silakan coba lagi nanti atau hubungi "
+        "pengelola situs untuk mendapatkan bantuan. Data Anda belum berubah."
     )
 
 
@@ -161,8 +160,8 @@ class PersistentStorageUnavailable(PersistentStorageError):
     """Raised when the configured MongoDB Atlas service cannot be used."""
 
     user_message = (
-        "Penyimpanan MongoDB Atlas sedang tidak dapat dihubungi. Perubahan belum tersimpan; "
-        "periksa MONGODB_URI dan aturan Network Access Atlas, lalu coba kembali."
+        "Perubahan belum dapat disimpan saat ini. Silakan coba lagi setelah beberapa saat. "
+        "Data Anda belum berubah."
     )
 
 
@@ -170,8 +169,8 @@ class JsonFallbackUnavailable(PersistentStorageError):
     """Raised when both MongoDB and a writable local JSON fallback are unavailable."""
 
     user_message = (
-        "MongoDB Atlas sedang tidak dapat dihubungi dan preferensi.json lokal tidak dapat "
-        "ditulis. Perubahan belum tersimpan."
+        "Perubahan belum dapat disimpan saat ini. Silakan coba lagi nanti atau hubungi "
+        "pengelola situs. Data Anda belum berubah."
     )
 
 
@@ -179,8 +178,8 @@ class PersistentStorageMirrorUnavailable(PersistentStorageError):
     """Raised when Atlas is saved but the optional local JSON mirror cannot be updated."""
 
     user_message = (
-        "MongoDB Atlas berhasil menyimpan perubahan, tetapi mirror JSON lokal gagal "
-        "diperbarui. Data utama tetap berada di MongoDB Atlas."
+        "Perubahan utama berhasil disimpan, tetapi beberapa informasi pendukung belum "
+        "dapat diperbarui. Silakan coba lagi setelah beberapa saat."
     )
 
 

@@ -11,10 +11,10 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/fontawesome.min.css') }}?v=6.7.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/solid.min.css') }}?v=6.7.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/brands.min.css') }}?v=6.7.2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=14">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=16">
   {% block extra_head %}{% endblock %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3">
-  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=7"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=5">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}?v=10"></script>
   <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=1"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
@@ -84,18 +84,15 @@
       <div class="footer-contact">
         <h2 class="footer-title">Hubungi Kami</h2>
         <p><i class="footer-icon fa-solid fa-location-dot" aria-hidden="true"></i>{{ data.contact.address }}</p>
-        <p><i class="footer-icon fa-solid fa-phone" aria-hidden="true"></i>{{ data.contact.phone }}</p>
-        <p><i class="footer-icon fa-solid fa-envelope" aria-hidden="true"></i>{{ data.contact.email }}</p>
+        {% set footer_phone = data.contact.phone|default('', true)|trim %}
+        {% if footer_phone and footer_phone|lower != 'informasi nomor kontak menyusul' %}<p><i class="footer-icon fa-solid fa-phone" aria-hidden="true"></i>{{ footer_phone }}</p>{% endif %}
+        {% set footer_email = data.contact.email|default('', true)|trim %}
+        {% if footer_email and footer_email|lower != 'informasi email menyusul' %}<p><i class="footer-icon fa-solid fa-envelope" aria-hidden="true"></i>{{ footer_email }}</p>{% endif %}
       </div>
       <div class="footer-newsletter">
-        <h2 class="footer-title">Buletin</h2>
-        <p>Dapatkan info kegiatan dan kabar terbaru.</p>
-        <form class="newsletter-form" data-demo-form>
-          <label class="visually-hidden" for="newsletter-email">Email Anda</label>
-          <input id="newsletter-email" type="email" placeholder="Email Anda" required>
-          <button type="submit" aria-label="Daftar buletin"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
-        </form>
-        <p class="form-status" aria-live="polite"></p>
+        <h2 class="footer-title">Kabar Terbaru</h2>
+        <p>Baca berita dan kegiatan terbaru pesantren.</p>
+        <a class="button button--orange button--small" href="/berita">Jelajahi berita <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
       </div>
     </div>
     <div class="container footer-bottom" id="footer">

@@ -41,7 +41,7 @@
       button.disabled = true;
       button.dataset.originalText = button.textContent;
       button.textContent = "Mengunggah…";
-      if (status) status.textContent = "Mengunggah dan mengoptimalkan foto di Cloudinary…";
+      if (status) status.textContent = "Mengunggah dan menyiapkan foto…";
 
       try {
         const response = await fetch("/admin/upload-image", {
@@ -50,16 +50,18 @@
           credentials: "same-origin",
         });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.error || "Upload foto gagal.");
+        if (!response.ok) throw new Error(result.error || "Pengunggahan foto belum berhasil. Silakan coba lagi.");
 
         urlInput.value = result.url;
         urlInput.dispatchEvent(new Event("input", { bubbles: true }));
-        if (status) status.textContent = "Foto berhasil diunggah. Simpan form untuk menerapkan URL.";
+        if (status) status.textContent = "Foto berhasil diunggah. Simpan perubahan untuk menggunakannya.";
       } catch (error) {
-        if (status) status.textContent = error.message || "Upload foto gagal.";
+        if (status) status.textContent = error instanceof TypeError
+          ? "Koneksi terganggu. Periksa jaringan, lalu coba lagi."
+          : error.message || "Pengunggahan foto belum berhasil. Silakan coba lagi.";
       } finally {
         button.disabled = false;
-        button.textContent = button.dataset.originalText || "Upload foto";
+        button.textContent = button.dataset.originalText || "Unggah foto";
         fileInput.value = "";
       }
     });

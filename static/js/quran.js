@@ -96,7 +96,7 @@
       return response.json();
     }).then((data) => {
       if (!Array.isArray(data) || data.length !== 114 || data.some((surah) => !Array.isArray(surah.ayahs))) {
-        throw new Error("Format data Al-Qur’an belum dapat dibaca.");
+        throw new Error("Daftar ayat belum dapat ditampilkan. Silakan coba lagi.");
       }
       quranData = data;
       allPairs = buildPairs(data);
@@ -108,7 +108,7 @@
     }).catch((error) => {
       dataPromise = null;
       startButton.disabled = true;
-      status.textContent = error.message || "Data Al-Qur’an belum dapat dimuat. Silakan coba lagi.";
+      status.textContent = "Daftar surah dan ayat belum dapat dimuat. Silakan coba lagi.";
       throw error;
     });
     return dataPromise;
@@ -449,7 +449,7 @@
       renderQuestion();
       quizView.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      status.textContent = error.message || "Tantangan belum dapat disiapkan. Silakan coba lagi.";
+      status.textContent = "Tantangan belum dapat disiapkan. Silakan coba lagi.";
     } finally {
       startButton.disabled = false;
       startButton.innerHTML = 'Mulai Tantangan <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>';

@@ -2,9 +2,9 @@
 {% block title %}Hafalan · {{ site.name }}{% endblock %}
 {% block extra_scripts %}
 <script defer src="{{ url_for('static', filename='vendor/html2canvas/html2canvas.min.js') }}?v=1.4.1"></script>
-<script defer src="{{ url_for('static', filename='js/hafalan-certificate.js') }}?v=1"></script>
-<script defer src="{{ url_for('static', filename='js/hafalan.js') }}?v=3"></script>
-<script defer src="{{ url_for('static', filename='js/quran.js') }}?v=1"></script>
+<script defer src="{{ url_for('static', filename='js/hafalan-certificate.js') }}?v=4"></script>
+<script defer src="{{ url_for('static', filename='js/hafalan.js') }}?v=5"></script>
+<script defer src="{{ url_for('static', filename='js/quran.js') }}?v=3"></script>
 <script defer src="{{ url_for('static', filename='js/hafalan-modes.js') }}?v=1"></script>
 {% endblock %}
 {% block content %}
@@ -100,9 +100,9 @@
               <button class="button button--green" id="review-toggle" type="button" aria-expanded="false">Lihat Evaluasi &amp; Motivasi</button>
             </div>
             <div class="hafalan-result-actions hafalan-export-actions">
-              <button class="button button--orange" type="button" data-certificate-action="print"><i class="fa-solid fa-print" aria-hidden="true"></i> Cetak / Simpan PDF</button>
+              <button class="button button--orange" type="button" data-certificate-action="print"><i class="fa-solid fa-print" aria-hidden="true"></i> Cetak sertifikat</button>
               <button class="button button--green" type="button" data-certificate-action="png"><i class="fa-solid fa-image" aria-hidden="true"></i> Unduh PNG</button>
-              <button class="button button--green" type="button" data-certificate-action="jpg"><i class="fa-solid fa-file-image" aria-hidden="true"></i> Unduh JPG</button>
+              <button class="button button--green" type="button" data-certificate-action="jpg"><i class="fa-solid fa-file-image" aria-hidden="true"></i> Unduh sertifikat</button>
               <button class="button button--green" type="button" data-certificate-action="share"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Bagikan</button>
             </div>
             <p class="certificate-action-status" data-certificate-status role="status" aria-live="polite"></p>
@@ -206,9 +206,9 @@
               <button class="button button--green" id="quran-review-toggle" type="button" aria-expanded="false">Lihat Evaluasi &amp; Motivasi</button>
             </div>
             <div class="hafalan-result-actions hafalan-export-actions">
-              <button class="button button--orange" type="button" data-certificate-action="print"><i class="fa-solid fa-print" aria-hidden="true"></i> Cetak / Simpan PDF</button>
+              <button class="button button--orange" type="button" data-certificate-action="print"><i class="fa-solid fa-print" aria-hidden="true"></i> Cetak sertifikat</button>
               <button class="button button--green" type="button" data-certificate-action="png"><i class="fa-solid fa-image" aria-hidden="true"></i> Unduh PNG</button>
-              <button class="button button--green" type="button" data-certificate-action="jpg"><i class="fa-solid fa-file-image" aria-hidden="true"></i> Unduh JPG</button>
+              <button class="button button--green" type="button" data-certificate-action="jpg"><i class="fa-solid fa-file-image" aria-hidden="true"></i> Unduh sertifikat</button>
               <button class="button button--green" type="button" data-certificate-action="share"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Bagikan</button>
             </div>
             <p class="certificate-action-status" data-certificate-status role="status" aria-live="polite"></p>

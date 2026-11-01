@@ -114,8 +114,10 @@
       credentials: "same-origin",
     });
     if (!response.ok) throw new Error("Data kitab belum dapat dimuat. Coba muat ulang halaman.");
-    const rows = await response.json();
-    if (!Array.isArray(rows) || !rows.length) throw new Error("Data bait untuk kitab ini masih kosong.");
+    const rows = await response.json().catch(() => {
+      throw new Error("Bank soal belum dapat dimuat. Silakan coba lagi.");
+    });
+    if (!Array.isArray(rows) || !rows.length) throw new Error("Materi untuk kitab ini belum tersedia.");
     rowsByBook.set(bookId, rows);
     return rows;
   };
@@ -322,7 +324,9 @@
       renderQuestion();
       quizView.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      status.textContent = error.message || "Soal belum dapat dimuat. Silakan coba lagi.";
+      status.textContent = error instanceof TypeError
+        ? "Koneksi terganggu. Periksa jaringan, lalu coba lagi."
+        : error.message || "Soal belum dapat dimuat. Silakan coba lagi.";
     } finally {
       startButton.disabled = false;
       startButton.innerHTML = 'Mulai Tantangan <span aria-hidden="true"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>';

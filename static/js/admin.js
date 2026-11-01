@@ -120,7 +120,7 @@
         if (!(value instanceof File)) formData.append(key, value);
       });
       formData.set("component", panel.dataset.adminPanel || "");
-      if (previewStatus) previewStatus.textContent = "Memperbarui live preview…";
+      if (previewStatus) previewStatus.textContent = "Memperbarui pratinjau halaman…";
 
       try {
         const response = await fetch("/admin/live-preview", {
@@ -134,10 +134,10 @@
         if (sequence !== previewSequence) return;
         previewFrame.srcdoc = renderedPage;
         if (previewLink) previewLink.href = panel.dataset.previewPath || "/";
-        if (previewStatus) previewStatus.textContent = "Live preview · perubahan ini belum disimpan.";
+        if (previewStatus) previewStatus.textContent = "Pratinjau perubahan yang belum disimpan.";
       } catch (_error) {
         if (sequence !== previewSequence) return;
-        if (previewStatus) previewStatus.textContent = "Preview tidak tersedia. Formulir tetap bisa disimpan setelah koneksi pulih.";
+        if (previewStatus) previewStatus.textContent = "Pratinjau halaman belum tersedia saat ini. Silakan coba lagi nanti.";
       }
     }, 350);
   };
