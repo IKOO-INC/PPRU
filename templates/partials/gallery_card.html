@@ -1,7 +1,9 @@
 <figure class="gallery-card gallery-card--{{ item.shape|default('small') }}" data-gallery-card data-category="{{ item.category|default('Kegiatan') }}">
-  <div class="gallery-card-image">
-    <img src="{{ item.image or site.placeholder_image }}" alt="{{ item.image_alt|default(item.title) }}" loading="lazy" style="object-position: {{ item.position|default('center') }}">
-    <span class="gallery-card-hover" aria-hidden="true">↗</span>
-  </div>
-  <figcaption><strong>{{ item.title }}</strong><small>{{ item.caption }}</small></figcaption>
+  <button class="gallery-card-button" type="button" data-gallery-open data-gallery-url="{{ item.image or site.placeholder_image }}" data-gallery-title="{{ item.title }}" data-gallery-caption="{{ item.caption }}" aria-label="Lihat foto: {{ item.title }}">
+    <span class="gallery-card-image">
+      <img src="{{ item.image or site.placeholder_image }}" alt="{{ item.image_alt|default(item.title) }}" loading="lazy" style="object-position: {{ item.position|default('center') }}">
+      <span class="gallery-card-hover" aria-hidden="true"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
+    </span>
+    <span class="gallery-card-caption"><strong>{{ item.title }}</strong><small>{{ item.caption }}</small></span>
+  </button>
 </figure>

@@ -1,0 +1,9 @@
+{% set links = site.get('social_links') if site.get('social_links') is mapping else {} %}
+{% if links.get('facebook') or links.get('instagram') or links.get('youtube') or links.get('tiktok') %}
+<div class="social-links" aria-label="Media sosial">
+  {% if links.get('facebook') %}<a href="{{ links.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></a>{% endif %}
+  {% if links.get('instagram') %}<a href="{{ links.instagram }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>{% endif %}
+  {% if links.get('youtube') %}<a href="{{ links.youtube }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><i class="fa-brands fa-youtube" aria-hidden="true"></i></a>{% endif %}
+  {% if links.get('tiktok') %}<a href="{{ links.tiktok }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></a>{% endif %}
+</div>
+{% endif %}
