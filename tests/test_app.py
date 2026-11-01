@@ -1298,7 +1298,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn('class="theme-toggle"', response_text)
-        self.assertIn("css/theme.css?v=5", response_text)
+        self.assertIn("css/theme.css?v=6", response_text)
         error_text = visible_text(response_text)
         self.assertIn("Perubahan belum tersimpan", error_text)
         self.assertIn("Silakan coba lagi", error_text)
@@ -1447,8 +1447,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=5", rendered)
-        self.assertIn("js/theme.js?v=1", rendered)
+        self.assertIn("css/theme.css?v=6", rendered)
+        self.assertIn("js/theme.js?v=2", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 
         theme_js = self.client.get("/static/js/theme.js")
@@ -1459,6 +1459,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         theme_css_source = theme_css.get_data(as_text=True)
         self.assertIn('localStorage.setItem(storageKey, dark ? "dark" : "light")', theme_js_source)
         self.assertIn('window.addEventListener("storage"', theme_js_source)
+        self.assertIn('window.matchMedia?.("(prefers-reduced-motion: reduce)")', theme_js_source)
+        self.assertIn("new window.IntersectionObserver", theme_js_source)
+        self.assertIn("motion-reveal-pending", theme_js_source)
         self.assertIn("position: fixed", theme_css_source)
         self.assertIn("right: calc(18px + env(safe-area-inset-right))", theme_css_source)
         self.assertIn("bottom: calc(18px + env(safe-area-inset-bottom))", theme_css_source)
@@ -1542,6 +1545,9 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("@keyframes ppru-page-fade-in", theme)
         self.assertIn("@media (hover: hover) and (prefers-reduced-motion: no-preference)", theme)
         self.assertIn("@media (prefers-reduced-motion: reduce)", theme)
+        self.assertIn(":root.motion-reveal-enabled main#main", theme)
+        self.assertIn(".motion-reveal-pending { opacity: 0; transform: translateY(16px); }", theme)
+        self.assertIn(".motion-revealed { opacity: 1; transform: translateY(0); }", theme)
 
         def contrast_ratio(foreground, background):
             def luminance(color):

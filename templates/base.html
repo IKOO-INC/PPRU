@@ -13,9 +13,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/brands.min.css') }}?v=6.7.2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=16">
   {% block extra_head %}{% endblock %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=6">
   <script defer src="{{ url_for('static', filename='js/app.js') }}?v=10"></script>
-  <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=1"></script>
+  <script defer src="{{ url_for('static', filename='js/theme.js') }}?v=2"></script>
   {% block extra_scripts %}{% endblock %}
 </head>
 <body{% if site.placeholder_image %} style="--page-banner-image: url('{{ site.placeholder_image }}')"{% endif %}>

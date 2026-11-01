@@ -873,3 +873,23 @@
     .academic-calendar-event, .vision-card, .mission-card, .article-related-card,
     .admin-repeat-card, .admin-news-row, .admin-gallery-row):focus-within { transform: none !important; }
 }
+
+/* Reveal page sections and content cards as they enter view; content stays visible without JS. */
+@media (prefers-reduced-motion: no-preference) {
+  :root.motion-reveal-enabled main#main { animation: none; }
+  .motion-reveal {
+    transition: opacity .65s cubic-bezier(.22,.61,.36,1), transform .65s cubic-bezier(.22,.61,.36,1),
+      box-shadow .24s ease, border-color .24s ease;
+    transition-delay: var(--motion-reveal-delay, 0ms);
+  }
+  .motion-reveal-pending { opacity: 0; transform: translateY(16px); }
+  .motion-reveal-pending:focus-within { opacity: 1; transform: translateY(0); }
+  .motion-revealed { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal, .motion-reveal-pending, .motion-revealed {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
