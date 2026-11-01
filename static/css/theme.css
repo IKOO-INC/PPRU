@@ -464,3 +464,252 @@
 :root[data-theme="dark"] .site-footer a,
 :root[data-theme="dark"] .site-footer .brand-copy strong,
 :root[data-theme="dark"] .site-footer .brand-copy small { color: #d7e6dc; }
+
+/* Hafalan: pair text with each quiz surface (prompts, options, modes and review cards). */
+:root:not([data-theme="dark"]) {
+  --hafalan-text-strong: #20382b;
+  --hafalan-text-body: #344a3d;
+  --hafalan-text-muted: #53665a;
+  --hafalan-card-surface: #ffffff;
+  --hafalan-soft-surface: #f2faf5;
+  --hafalan-border: #dce9e1;
+  --hafalan-answer-surface: #ffffff;
+  --hafalan-answer-letter: #46594d;
+  --hafalan-answer-letter-surface: #edf3ef;
+  --hafalan-selected-text: #075e43;
+  --hafalan-selected-surface: #e7f5ec;
+  --hafalan-selected-border: #16845b;
+  --hafalan-status: #0b6848;
+  --hafalan-gold-text: #65480f;
+  --hafalan-gold-surface: #fff3d3;
+  --hafalan-choice-link: #075e43;
+  --hafalan-choice-gold: #684c14;
+  --hafalan-orange-text: #2a210f;
+  --hafalan-orange-surface: #f1b23e;
+  --hafalan-orange-hover: #f7c45b;
+  --hafalan-orange-disabled-text: #5f4615;
+  --hafalan-orange-disabled-surface: #f2dfb7;
+}
+
+:root[data-theme="dark"] {
+  --hafalan-text-strong: #edf4ef;
+  --hafalan-text-body: #c4d0c8;
+  --hafalan-text-muted: #b7c5bc;
+  --hafalan-card-surface: #17231c;
+  --hafalan-soft-surface: #1a2b21;
+  --hafalan-border: #344a3b;
+  --hafalan-answer-surface: #101914;
+  --hafalan-answer-letter: #e0ebe3;
+  --hafalan-answer-letter-surface: #2b4033;
+  --hafalan-selected-text: #f0fff5;
+  --hafalan-selected-surface: #1a6547;
+  --hafalan-selected-border: #72d2a0;
+  --hafalan-status: #a5eac2;
+  --hafalan-gold-text: #f5dda1;
+  --hafalan-gold-surface: #3b321e;
+  --hafalan-choice-link: #9be5bd;
+  --hafalan-choice-gold: #f0d58b;
+  --hafalan-orange-text: #202b22;
+  --hafalan-orange-surface: #f4c24f;
+  --hafalan-orange-hover: #ffd16b;
+  --hafalan-orange-disabled-text: #f2dda4;
+  --hafalan-orange-disabled-surface: #46391f;
+}
+
+:root:not([data-theme="dark"]) :is(.hafalan-chooser, .hafalan-card),
+:root[data-theme="dark"] :is(.hafalan-chooser, .hafalan-card) {
+  color: var(--hafalan-text-body);
+  background-color: var(--hafalan-card-surface);
+  border-color: var(--hafalan-border);
+}
+:root:not([data-theme="dark"]) :is(
+  .hafalan-chooser-heading h2, .hafalan-card-heading h2, .hafalan-quiz h2,
+  .hafalan-results h2, .hafalan-review h3, .hafalan-quiz-topline strong,
+  .hafalan-mistake-item h4, .hafalan-choice-title, .quran-mode-option strong
+),
+:root[data-theme="dark"] :is(
+  .hafalan-chooser-heading h2, .hafalan-card-heading h2, .hafalan-quiz h2,
+  .hafalan-results h2, .hafalan-review h3, .hafalan-quiz-topline strong,
+  .hafalan-mistake-item h4, .hafalan-choice-title, .quran-mode-option strong
+) {
+  color: var(--hafalan-text-strong);
+}
+:root:not([data-theme="dark"]) :is(
+  .hafalan-chooser-heading p, .hafalan-card-heading p, .hafalan-prompt-caption,
+  .hafalan-no-feedback, .hafalan-range-hint, .hafalan-choice-copy,
+  .hafalan-chooser-note, .hafalan-back, .quran-mode-option small
+) { color: var(--hafalan-text-muted); }
+:root[data-theme="dark"] :is(
+  .hafalan-chooser-heading p, .hafalan-card-heading p, .hafalan-prompt-caption,
+  .hafalan-no-feedback, .hafalan-range-hint, .hafalan-choice-copy,
+  .hafalan-chooser-note, .hafalan-back, .quran-mode-option small
+) { color: var(--hafalan-text-muted); }
+:root:not([data-theme="dark"]) :is(.hafalan-result-meta, .hafalan-review-line, .hafalan-review-nadzom, .hafalan-score-card span),
+:root[data-theme="dark"] :is(.hafalan-result-meta, .hafalan-review-line, .hafalan-review-nadzom, .hafalan-score-card span) {
+  color: var(--hafalan-text-body);
+}
+:root:not([data-theme="dark"]) .hafalan-review-line strong,
+:root[data-theme="dark"] .hafalan-review-line strong { color: var(--hafalan-text-strong); }
+
+:root:not([data-theme="dark"]) .hafalan-chapter-label {
+  color: var(--hafalan-gold-text);
+  background: var(--hafalan-gold-surface);
+  border: 1px solid #efdcae;
+}
+:root[data-theme="dark"] .hafalan-chapter-label {
+  color: var(--hafalan-gold-text);
+  background: var(--hafalan-gold-surface);
+  border: 1px solid #685629;
+}
+:root:not([data-theme="dark"]) .hafalan-nadzom-prompt {
+  color: var(--hafalan-text-strong);
+  background: var(--hafalan-soft-surface);
+  border-color: var(--hafalan-border);
+}
+:root[data-theme="dark"] .hafalan-nadzom-prompt {
+  color: var(--hafalan-text-strong);
+  background: var(--hafalan-soft-surface);
+  border-color: var(--hafalan-border);
+}
+
+:root:not([data-theme="dark"]) .hafalan-answer,
+:root[data-theme="dark"] .hafalan-answer {
+  color: var(--hafalan-text-strong);
+  background: var(--hafalan-answer-surface);
+  border-color: var(--hafalan-border);
+}
+:root:not([data-theme="dark"]) .hafalan-answer:hover,
+:root[data-theme="dark"] .hafalan-answer:hover {
+  color: var(--hafalan-text-strong);
+  background: var(--hafalan-soft-surface);
+  border-color: var(--hafalan-selected-border);
+}
+:root:not([data-theme="dark"]) .hafalan-answer.is-selected,
+:root[data-theme="dark"] .hafalan-answer.is-selected {
+  color: var(--hafalan-selected-text);
+  background: var(--hafalan-selected-surface);
+  border-color: var(--hafalan-selected-border);
+}
+:root:not([data-theme="dark"]) .hafalan-answer-text,
+:root[data-theme="dark"] .hafalan-answer-text { color: inherit; }
+:root:not([data-theme="dark"]) .hafalan-answer-letter,
+:root[data-theme="dark"] .hafalan-answer-letter {
+  color: var(--hafalan-answer-letter);
+  background: var(--hafalan-answer-letter-surface);
+}
+:root:not([data-theme="dark"]) .hafalan-answer.is-selected .hafalan-answer-letter {
+  color: #ffffff;
+  background: #13835d;
+}
+:root[data-theme="dark"] .hafalan-answer.is-selected .hafalan-answer-letter {
+  color: #10301f;
+  background: #a5eac2;
+}
+:root:not([data-theme="dark"]) .hafalan-answer:focus-visible {
+  outline: 3px solid #08704f;
+  outline-offset: 3px;
+}
+:root[data-theme="dark"] .hafalan-answer:focus-visible {
+  outline: 3px solid #8de0ae;
+  outline-offset: 3px;
+}
+
+:root:not([data-theme="dark"]) .quran-mode-option {
+  color: var(--hafalan-text-body);
+  background: #fbfcfb;
+  border-color: var(--hafalan-border);
+}
+:root:not([data-theme="dark"]) .quran-mode-option:has(input:checked) {
+  background: #eaf7ef;
+  border-color: #438e66;
+}
+:root[data-theme="dark"] .quran-mode-option {
+  color: var(--hafalan-text-strong);
+  background: #121e17;
+  border-color: var(--hafalan-border);
+}
+:root[data-theme="dark"] .quran-mode-option:has(input:checked) {
+  color: var(--hafalan-text-strong);
+  background: #1d3b2a;
+  border-color: #69c492;
+}
+:root[data-theme="dark"] .quran-mode-option input { accent-color: #62d1a0; }
+
+:root:not([data-theme="dark"]) .hafalan-score-card {
+  color: var(--hafalan-text-body);
+  background: var(--hafalan-soft-surface);
+  border-color: var(--hafalan-border);
+}
+:root[data-theme="dark"] .hafalan-score-card {
+  color: var(--hafalan-text-body);
+  background: var(--hafalan-soft-surface);
+  border-color: var(--hafalan-border);
+}
+:root:not([data-theme="dark"]) .hafalan-score-card strong { color: #08704f; }
+:root[data-theme="dark"] .hafalan-score-card strong { color: #9be5bd; }
+:root:not([data-theme="dark"]) .hafalan-mistake-item {
+  color: var(--hafalan-text-body);
+  background: #fbfcfb;
+  border-color: #e1e9e3;
+}
+:root[data-theme="dark"] .hafalan-mistake-item {
+  color: var(--hafalan-text-body);
+  background: #141f18;
+  border-color: var(--hafalan-border);
+}
+:root:not([data-theme="dark"]) .hafalan-review { border-color: #e1e9e3; }
+:root[data-theme="dark"] .hafalan-review { border-color: var(--hafalan-border); }
+:root:not([data-theme="dark"]) :is(.hafalan-motivation, .hafalan-perfect-message) {
+  color: #155d3f;
+  background: #eaf7ef;
+}
+:root[data-theme="dark"] :is(.hafalan-motivation, .hafalan-perfect-message) {
+  color: #a5eac2;
+  background: #1a3527;
+}
+:root:not([data-theme="dark"]) .hafalan-result-mark,
+:root:not([data-theme="dark"]) .hafalan-question-counter {
+  color: #0b704f;
+  background: #eaf7ef;
+}
+:root[data-theme="dark"] .hafalan-result-mark,
+:root[data-theme="dark"] .hafalan-question-counter {
+  color: #a5eac2;
+  background: #1a3527;
+}
+:root:not([data-theme="dark"]) .hafalan-quiz-controls > span { color: var(--hafalan-status); }
+:root[data-theme="dark"] .hafalan-quiz-controls > span { color: var(--hafalan-status); }
+
+:root:not([data-theme="dark"]) :is(.hafalan-choice-tag, .hafalan-choice-link) { color: var(--hafalan-choice-link); }
+:root:not([data-theme="dark"]) :is(.hafalan-choice-card--quran .hafalan-choice-tag, .hafalan-choice-card--quran .hafalan-choice-link) {
+  color: var(--hafalan-choice-gold);
+}
+:root[data-theme="dark"] :is(.hafalan-choice-tag, .hafalan-choice-link) { color: var(--hafalan-choice-link); }
+:root[data-theme="dark"] :is(.hafalan-choice-card--quran .hafalan-choice-tag, .hafalan-choice-card--quran .hafalan-choice-link) {
+  color: var(--hafalan-choice-gold);
+}
+:root:not([data-theme="dark"]) .hafalan-back:hover { color: #075e43; }
+:root[data-theme="dark"] .hafalan-back:hover { color: #b8f2ce; }
+
+/* Orange Hafalan actions use dark text on the light button surface for clear contrast. */
+:root:not([data-theme="dark"]) .hafalan-card .button--orange,
+:root[data-theme="dark"] .hafalan-card .button--orange {
+  color: var(--hafalan-orange-text);
+  background: var(--hafalan-orange-surface);
+}
+:root:not([data-theme="dark"]) .hafalan-card .button--orange:hover,
+:root[data-theme="dark"] .hafalan-card .button--orange:hover {
+  color: var(--hafalan-orange-text);
+  background: var(--hafalan-orange-hover);
+}
+:root:not([data-theme="dark"]) .hafalan-card .button--orange:disabled,
+:root[data-theme="dark"] .hafalan-card .button--orange:disabled {
+  color: var(--hafalan-orange-disabled-text);
+  background: var(--hafalan-orange-disabled-surface);
+  opacity: 1;
+}
+:root:not([data-theme="dark"]) .hafalan-card .button--orange:focus-visible,
+:root[data-theme="dark"] .hafalan-card .button--orange:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}

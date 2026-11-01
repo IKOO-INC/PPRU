@@ -1213,7 +1213,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn('class="theme-toggle"', response_text)
-        self.assertIn("css/theme.css?v=2", response_text)
+        self.assertIn("css/theme.css?v=3", response_text)
         self.assertIn("MongoDB Atlas sedang tidak dapat dihubungi", response_text)
         self.assertIn("mongo eror sementara pakai preferensi.json", response_text)
         self.assertIn("Perubahan belum tersimpan", response_text)
@@ -1361,7 +1361,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=2", rendered)
+        self.assertIn("css/theme.css?v=3", rendered)
         self.assertIn("js/theme.js?v=1", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 
@@ -1385,6 +1385,64 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertIn("max-width: 100%", theme_css_source)
         theme_js.close()
         theme_css.close()
+
+    def test_hafalan_question_surfaces_keep_readable_contrast_in_both_themes(self):
+        response = self.client.get("/static/css/theme.css")
+        self.assertEqual(response.status_code, 200)
+        source = response.get_data(as_text=True)
+        response.close()
+
+        palettes = {
+            "light": ':root:not([data-theme="dark"])',
+            "dark": ':root[data-theme="dark"]',
+        }
+        required_rules = (
+            ".hafalan-chapter-label",
+            ".hafalan-nadzom-prompt",
+            ".hafalan-answer.is-selected",
+            ".quran-mode-option:has(input:checked)",
+            ".hafalan-score-card",
+            ".hafalan-mistake-item",
+        )
+        for theme_selector in palettes.values():
+            for rule in required_rules:
+                self.assertIn(f"{theme_selector} {rule}", source)
+
+        def palette_for(theme_selector):
+            blocks = re.findall(re.escape(theme_selector) + r"\s*\{([^{}]*)\}", source)
+            block = next((item for item in reversed(blocks) if "--hafalan-text-strong:" in item), None)
+            self.assertIsNotNone(block, f"Missing Hafalan palette for {theme_selector}")
+            values = dict(re.findall(r"--hafalan-([a-z-]+):\s*(#[0-9a-fA-F]{6})", block))
+            return values
+
+        def contrast_ratio(foreground, background):
+            def luminance(color):
+                channels = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+                linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
+                return sum(channel * weight for channel, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+            brighter, darker = sorted((luminance(foreground), luminance(background)), reverse=True)
+            return (brighter + 0.05) / (darker + 0.05)
+
+        foreground_background_pairs = (
+            ("text-strong", "card-surface"),
+            ("text-strong", "soft-surface"),
+            ("text-strong", "answer-surface"),
+            ("text-body", "soft-surface"),
+            ("text-muted", "soft-surface"),
+            ("answer-letter", "answer-letter-surface"),
+            ("selected-text", "selected-surface"),
+            ("gold-text", "gold-surface"),
+            ("orange-text", "orange-surface"),
+            ("orange-disabled-text", "orange-disabled-surface"),
+        )
+        for theme_name, theme_selector in palettes.items():
+            colors = palette_for(theme_selector)
+            for foreground, background in foreground_background_pairs:
+                with self.subTest(theme=theme_name, foreground=foreground, background=background):
+                    self.assertIn(foreground, colors)
+                    self.assertIn(background, colors)
+                    self.assertGreaterEqual(contrast_ratio(colors[foreground], colors[background]), 4.5)
 
     def test_unknown_route_renders_not_found_page(self):
         response = self.client.get("/halaman-tidak-ada")
