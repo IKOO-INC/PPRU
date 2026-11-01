@@ -75,7 +75,17 @@
         target.classList.remove("motion-reveal-pending");
         target.classList.add("motion-revealed");
         const delay = Number.parseInt(target.style.getPropertyValue("--motion-reveal-delay"), 10) || 0;
-        window.setTimeout(() => target.style.removeProperty("--motion-reveal-delay"), 850 + delay);
+        const finishReveal = () => {
+          target.classList.remove("motion-reveal");
+          target.style.removeProperty("--motion-reveal-delay");
+          target.removeEventListener("transitionend", onRevealEnd);
+        };
+        const onRevealEnd = (transitionEvent) => {
+          if (transitionEvent.target !== target) return;
+          if (transitionEvent.propertyName === "opacity" || transitionEvent.propertyName === "transform") finishReveal();
+        };
+        target.addEventListener("transitionend", onRevealEnd);
+        window.setTimeout(finishReveal, 1500 + delay);
         activeObserver.unobserve(target);
       });
     }, { threshold: 0.08, rootMargin: "0px 0px -36px 0px" });
@@ -83,7 +93,7 @@
     Array.from(targets).forEach((target, index) => {
       target.dataset.motionReveal = "";
       target.classList.add("motion-reveal", "motion-reveal-pending");
-      target.style.setProperty("--motion-reveal-delay", `${(index % 5) * 45}ms`);
+      target.style.setProperty("--motion-reveal-delay", `${(index % 5) * 80}ms`);
       observer.observe(target);
     });
   };
