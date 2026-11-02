@@ -43,23 +43,23 @@ from news_service import (
 
 BASE_DIR = Path(__file__).resolve().parent
 ADMIN_COMPONENTS = (
-    ("brand", "Identitas & Logo"),
-    ("navigation", "Navigasi"),
-    ("hero", "Hero Beranda"),
-    ("stats", "Statistik"),
-    ("profile", "Profil & Sejarah"),
-    ("news", "Berita"),
-    ("works", "Karya Santri"),
-    ("gallery", "Galeri"),
-    ("events", "Agenda"),
-    ("faq", "FAQ"),
-    ("contact", "Kontak"),
-    ("admission", "PSB"),
-    ("hafalan", "Hafalan"),
-    ("users", "Kelola User Admin"),
+    ("brand", "Identitas & Logo", "landmark"),
+    ("navigation", "Navigasi", "compass"),
+    ("hero", "Hero Beranda", "image"),
+    ("stats", "Statistik", "chart-simple"),
+    ("profile", "Profil & Sejarah", "book-open"),
+    ("news", "Berita", "newspaper"),
+    ("works", "Karya Santri", "pen-to-square"),
+    ("gallery", "Galeri", "images"),
+    ("events", "Agenda", "calendar-days"),
+    ("faq", "FAQ", "circle-question"),
+    ("contact", "Kontak", "address-book"),
+    ("admission", "PSB", "clipboard-list"),
+    ("hafalan", "Hafalan", "book-quran"),
+    ("users", "Kelola User Admin", "users"),
 )
-ADMIN_COMPONENT_IDS = {component_id for component_id, _ in ADMIN_COMPONENTS}
-ADMIN_CONTENT_COMPONENT_IDS = ADMIN_COMPONENT_IDS - {"users"}
+ADMIN_COMPONENT_IDS = {component_id for component_id, _label, _icon in ADMIN_COMPONENTS}
+ADMIN_CONTENT_COMPONENT_IDS = ADMIN_COMPONENT_IDS - {"users", "events"}
 ACADEMIC_PROGRAM_TYPE_LABELS = {
     "formal": "Pendidikan Formal",
     "non_formal": "Pendidikan Non Formal",
@@ -187,6 +187,17 @@ def _safe_image_url(value, current):
             parsed = parsed._replace(path=f"{prefix}{marker}{'/'.join(segments)}")
             candidate = urlunsplit(parsed)
     return candidate
+
+
+def _history_image_slots(history):
+    """Return three editable homepage-history photo slots, retaining legacy imagery."""
+    if not isinstance(history, dict):
+        history = {}
+    images = history.get("images")
+    if not isinstance(images, list) or not images:
+        images = [history.get("image", "")]
+    slots = [str(image or "").strip() for image in images[:3]]
+    return slots + [""] * (3 - len(slots))
 
 
 def _safe_program_logo(value):
@@ -703,10 +714,29 @@ def _apply_admin_form(content, form, component):
         history["intro"] = _form_value(form, "history_intro", history.get("intro", ""))
         history["body"] = _form_value(form, "history_body", history.get("body", ""))
         history["quote"] = _form_value(form, "history_quote", history.get("quote", ""))
-        history["image"] = _safe_image_url(
-            _form_value(form, "history_image", history.get("image", "")),
-            history.get("image", ""),
-        )
+        history_image_fields = [f"history_image_{index}" for index in range(3)]
+        existing_history_images = _history_image_slots(history)
+        if any(field_name in form for field_name in history_image_fields):
+            selected_images = []
+            for index, field_name in enumerate(history_image_fields):
+                current_image = existing_history_images[index]
+                submitted_image = str(form.get(field_name, current_image) or "").strip()
+                selected_images.append(
+                    _safe_image_url(submitted_image, current_image) if submitted_image else ""
+                )
+            history["images"] = selected_images
+            history["image"] = next(
+                (image for image in selected_images if image),
+                site.get("placeholder_image") or "/static/images/pondok-campus.jpg",
+            )
+        elif "history_image" in form:
+            submitted_image = str(form.get("history_image", "") or "").strip()
+            legacy_image = (
+                _safe_image_url(submitted_image, history.get("image", ""))
+                if submitted_image else ""
+            )
+            history["images"] = [legacy_image, "", ""]
+            history["image"] = legacy_image or site.get("placeholder_image") or "/static/images/pondok-campus.jpg"
         mission_items = profile.get("mission", [])
         if not isinstance(mission_items, list):
             mission_items = _split_numbered_lines(mission_items)
@@ -743,11 +773,6 @@ def _apply_admin_form(content, form, component):
                 _form_value(form, f"gallery_image_{index}", item.get("image", "")),
                 item.get("image", ""),
             )
-
-    elif component == "events":
-        for index, item in enumerate(content.get("events", [])):
-            for key in ("day", "month", "title", "category", "description"):
-                item[key] = _form_value(form, f"event_{key}_{index}", item.get(key, ""))
 
     elif component == "faq":
         for index, item in enumerate(content.get("faq", [])):
@@ -1568,6 +1593,13 @@ def create_app(test_config=None):
     @app.get("/")
     def home():
         context = page_context("home")
+        history = context["data"].get("history")
+        if isinstance(history, dict):
+            history_images = [image for image in _history_image_slots(history) if image][:3]
+            if not history_images:
+                fallback_image = str(history.get("image") or context["site"].get("placeholder_image", "")).strip()
+                history_images = [fallback_image] if fallback_image else []
+            history["images"] = history_images
         context["home_programs"] = _selected_admission_programs(context["data"])
         today = now_jakarta().date()
         upcoming_events = []
@@ -1930,6 +1962,16 @@ def create_app(test_config=None):
         history_paragraphs = content.get("profile", {}).get("history_paragraphs", [])
         if not isinstance(history_paragraphs, list):
             history_paragraphs = [str(history_paragraphs)] if history_paragraphs else []
+        history_image_slots = _history_image_slots(content.get("history", {}))
+        agenda_events = sorted(
+            content.get("academic_events", []),
+            key=lambda item: str(item.get("date", "9999-12-31")),
+        )
+        agenda_items = [
+            {**item, "admin_id": _academic_item_id(item, index), "date_label": _academic_date_label(item.get("date"))}
+            for index, item in enumerate(agenda_events)
+            if isinstance(item, dict)
+        ]
         admission_content = content.get("admission")
         if not isinstance(admission_content, dict):
             admission_content = {}
@@ -1943,6 +1985,8 @@ def create_app(test_config=None):
             active_component=component,
             preview_path=ADMIN_PREVIEW_PAGES[component][2],
             history_text="\n\n".join(history_paragraphs),
+            history_image_slots=history_image_slots,
+            agenda_events=agenda_items,
             saved=request.args.get("saved") == "1",
             news_items=news_items,
             gallery_items=content.get("gallery", []),
@@ -2708,18 +2752,29 @@ def create_app(test_config=None):
             store.save(content)
         return redirect(url_for("admin_academic", tab=deleted_type, saved="1"))
 
+    def calendar_return_to(value):
+        return "main" if current_admin_role() == "main" and str(value or "").strip() == "main" else "academic"
+
+    def calendar_return_url(return_to, saved=False):
+        params = {"tab": "events"} if return_to == "main" else {"tab": "calendar"}
+        if saved:
+            params["saved"] = "1"
+        return url_for("admin" if return_to == "main" else "admin_academic", **params)
+
     @app.get("/admin/akademik/kalender/baru")
     def admin_academic_calendar_new():
         access_response = require_academic_admin()
         if access_response is not None:
             return access_response
         content = _without_admin_users(load_content())
+        return_to = calendar_return_to(request.args.get("return_to"))
         return render_template(
             "admin_academic_calendar_form.html",
             site=content.get("site", {}),
             data=content,
             item={"date": "", "title": "", "category": "Akademik", "description": ""},
             item_id="",
+            return_to=return_to,
             error=None,
         )
 
@@ -2737,12 +2792,14 @@ def create_app(test_config=None):
         if found is None:
             abort(404)
         index, item = found
+        return_to = calendar_return_to(request.args.get("return_to"))
         return render_template(
             "admin_academic_calendar_form.html",
             site=content.get("site", {}),
             data=_without_admin_users(content),
             item=item,
             item_id=_academic_item_id(item, index),
+            return_to=return_to,
             error=None,
         )
 
@@ -2752,6 +2809,7 @@ def create_app(test_config=None):
         if access_response is not None:
             return access_response
         validate_csrf()
+        return_to = calendar_return_to(request.form.get("return_to"))
         item_id = request.form.get("item_id", "").strip()
         date_value = request.form.get("date", "").strip()
         title = request.form.get("title", "").strip()
@@ -2775,6 +2833,7 @@ def create_app(test_config=None):
                 data=page_content,
                 item=item,
                 item_id=item_id,
+                return_to=return_to,
                 error=error,
             ), 400
 
@@ -2794,7 +2853,7 @@ def create_app(test_config=None):
             else:
                 events[existing_index] = item
             store.save(content)
-        return redirect(url_for("admin_academic", tab="calendar", saved="1"))
+        return redirect(calendar_return_url(return_to, saved=True))
 
     @app.post("/admin/akademik/kalender/<item_id>/hapus")
     def admin_academic_calendar_delete(item_id):
@@ -2802,6 +2861,7 @@ def create_app(test_config=None):
         if access_response is not None:
             return access_response
         validate_csrf()
+        return_to = calendar_return_to(request.args.get("return_to"))
         with content_lock:
             content = load_content()
             events = content.setdefault("academic_events", [])
@@ -2813,7 +2873,7 @@ def create_app(test_config=None):
                 abort(404)
             events.pop(existing_index)
             store.save(content)
-        return redirect(url_for("admin_academic", tab="calendar", saved="1"))
+        return redirect(calendar_return_url(return_to, saved=True))
 
     @app.get("/admin/akademik/pengumuman/baru")
     def admin_academic_announcement_new():

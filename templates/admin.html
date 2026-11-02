@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/admin_fields.html" import text_field, textarea_field, image_url_field %}
 {% block title %}Kelola Website · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=16">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=17">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=11"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=4"></script>{% endblock %}
 {% block content %}
 <section class="admin-page">
@@ -13,7 +13,7 @@
     <button class="admin-sidebar-backdrop" type="button" aria-label="Tutup menu komponen" data-admin-sidebar-backdrop></button>
     <div class="admin-layout">
       <aside class="admin-sidebar" id="admin-sidebar" data-admin-sidebar><div class="admin-sidebar-heading"><div class="admin-sidebar-title">Komponen website</div><button class="admin-preview-link admin-sidebar-close" type="button" aria-label="Tutup menu komponen" data-admin-sidebar-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div><nav class="admin-menu" aria-label="Komponen yang dapat diedit">
-        {% for component_id, component_label in components %}<button type="button" class="admin-menu-item{% if active_component == component_id %} is-active{% endif %}" data-admin-tab="{{ component_id }}"><span class="admin-menu-number">{{ '%02d'|format(loop.index) }}</span>{{ component_label }}<span class="admin-menu-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span></button>{% endfor %}
+        {% for component_id, component_label, component_icon in components %}<button type="button" class="admin-menu-item{% if active_component == component_id %} is-active{% endif %}" data-admin-tab="{{ component_id }}"><span class="admin-menu-icon" aria-hidden="true"><i class="fa-solid fa-{{ component_icon }}"></i></span><span class="admin-menu-label">{{ component_label }}</span><span class="admin-menu-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span></button>{% endfor %}
       </nav><div class="admin-sidebar-hint"><span><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>Masukkan tautan foto atau unggah gambar melalui tombol di samping.</div></aside>
       <div class="admin-edit-workspace">
         <aside class="admin-live-preview" aria-label="Pratinjau halaman">
@@ -54,7 +54,10 @@
             {{ textarea_field('Sejarah berdiri (pisahkan paragraf dengan baris kosong)', 'history_paragraphs', history_text, 10) }}
             {{ image_url_field('URL foto halaman Profil', 'profile_image', data.profile.image, 'Foto profil pesantren') }}
             <hr class="admin-divider"><div class="admin-fields-grid">{{ text_field('Judul sejarah di Home', 'history_block_title', data.history.title) }}{{ textarea_field('Ringkasan sejarah di Home', 'history_intro', data.history.intro, 3) }}{{ textarea_field('Teks sejarah di Home', 'history_body', data.history.body, 3) }}{{ textarea_field('Kutipan sejarah', 'history_quote', data.history.quote, 2) }}{{ textarea_field('Visi', 'profile_vision', data.profile.vision, 3) }}{{ text_field('Judul visi & misi', 'profile_vision_title', data.profile.vision_title) }}{{ text_field('Judul bagian pendiri/pengasuh', 'profile_leadership_title', data.profile.get('leadership_title', 'Pendiri & Pengasuh')) }}{{ textarea_field('Keterangan pendiri dan pengasuh', 'profile_leadership_note', data.profile.get('leadership_note', ''), 3) }}</div>
-            {{ image_url_field('URL foto section Sejarah di Home', 'history_image', data.history.image, 'Foto sejarah pesantren') }}
+            <h3 class="admin-subheading">Foto slider Sejarah di Home</h3><p class="admin-field-note">Pilih hingga tiga foto. Slide berganti otomatis setiap 5 detik; slot kosong tidak ditampilkan.</p>
+            {{ image_url_field('Foto 1 · Utama', 'history_image_0', history_image_slots[0], 'Foto utama sejarah pesantren') }}
+            {{ image_url_field('Foto 2', 'history_image_1', history_image_slots[1], 'Foto kedua sejarah pesantren') }}
+            {{ image_url_field('Foto 3', 'history_image_2', history_image_slots[2], 'Foto ketiga sejarah pesantren') }}
             <h3 class="admin-subheading">Misi</h3>{{ textarea_field('Daftar misi (satu butir per baris; tampil bernomor)', 'profile_mission_items', data.profile.mission|join('\n'), 6) }}<div class="admin-form-actions"><span>Perubahan akan tampil di halaman Profil dan Home.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div>
           </form>
         </section>
@@ -76,9 +79,8 @@
         </section>
 
         <section class="admin-panel" data-admin-panel="events" data-preview-path="/"{% if active_component != 'events' %} hidden{% endif %}>
-          <form method="post" action="{{ url_for('admin_save') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="component" value="events"><div class="admin-panel-heading"><div><span class="admin-kicker">Agenda</span><h2>Kegiatan mendatang</h2><p>Edit tanggal dan informasi kegiatan yang tampil di beranda.</p></div></div>
-            <div class="admin-repeat-list">{% for item in data.events %}<article class="admin-repeat-card"><span class="admin-repeat-index">Agenda {{ '%02d'|format(loop.index) }}</span><div class="admin-fields-grid">{{ text_field('Tanggal', 'event_day_' ~ loop.index0, item.day) }}{{ text_field('Bulan', 'event_month_' ~ loop.index0, item.month) }}{{ text_field('Kategori', 'event_category_' ~ loop.index0, item.category) }}{{ text_field('Judul kegiatan', 'event_title_' ~ loop.index0, item.title) }}{{ textarea_field('Deskripsi', 'event_description_' ~ loop.index0, item.description, 2) }}</div></article>{% endfor %}</div><div class="admin-form-actions"><span>Susun agenda sesuai urutan yang ingin ditampilkan.</span><button class="admin-save-button" type="submit">Simpan perubahan</button></div>
-          </form>
+          <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Agenda &amp; kalender akademik</span><h2>Kegiatan mendatang</h2><p>Daftar ini sama dengan Kalender Akademik Admin Akademik dan digunakan pada agenda Home.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_calendar_new', return_to='main') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah kegiatan</a></div>
+          {% set calendar_events = agenda_events %}{% set calendar_return_to = 'main' %}{% include "partials/admin_academic_calendar_list.html" %}
         </section>
 
         <section class="admin-panel" data-admin-panel="faq" data-preview-path="/"{% if active_component != 'faq' %} hidden{% endif %}>

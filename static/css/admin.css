@@ -31,9 +31,13 @@
 .admin-sidebar { position: sticky; top: 15px; padding: 14px 10px 12px; background: #fff; border: 1px solid #e9efeb; border-radius: 11px; box-shadow: 0 5px 16px rgba(21,54,37,.035); }
 .admin-sidebar-title { padding: 5px 8px 12px; color: #87948b; font-size: 7px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .admin-menu { display: grid; gap: 3px; }
-.admin-menu-item { display: grid; grid-template-columns: 22px 1fr 12px; align-items: center; gap: 7px; min-height: 35px; padding: 0 8px; color: #56675c; background: transparent; border: 0; border-radius: 6px; text-align: left; font-size: 8px; font-weight: 650; cursor: pointer; transition: color .16s, background .16s; }
+.admin-menu-item { display: grid; grid-template-columns: 18px minmax(0,1fr) 12px; align-items: center; gap: 8px; min-height: 35px; padding: 0 8px; color: #56675c; background: transparent; border: 0; border-radius: 6px; text-align: left; font-size: 8px; font-weight: 650; cursor: pointer; transition: color .16s, background .16s; }
 .admin-menu-item:hover { color: #086249; background: #f2faf5; }
 .admin-menu-item.is-active { color: #086249; background: #e8f7ee; font-weight: 800; }
+.admin-menu-icon { display: grid; width: 18px; height: 18px; place-items: center; color: #82948a; font-size: 11px; transition: color .16s, transform .16s; }
+.admin-menu-item:hover .admin-menu-icon, .admin-menu-item.is-active .admin-menu-icon { color: #08704f; }
+.admin-menu-item:hover .admin-menu-icon { transform: translateY(-1px); }
+.admin-menu-label { min-width: 0; }
 .admin-menu-number { color: #a6b2aa; font-size: 7px; font-weight: 800; }
 .admin-menu-arrow { justify-self: end; color: #94a198; font-size: 15px; }
 .admin-sidebar-hint { margin: 12px 2px 0; padding: 10px 8px 3px; color: #839087; border-top: 1px solid #edf1ee; font-size: 7px; line-height: 1.65; }
@@ -253,6 +257,8 @@
 .academic-admin-nav { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 9px; margin: 0 0 18px; }
 .academic-admin-nav a { display: flex; min-height: 54px; justify-content: space-between; align-items: center; gap: 10px; padding: 0 15px; color: #53665a; background: #fff; border: 1px solid #e5ede7; border-radius: 8px; font-size: 9px; font-weight: 800; text-decoration: none; transition: background .15s, border-color .15s, color .15s; }
 .academic-admin-nav a:hover, .academic-admin-nav a[aria-current="page"] { color: #086249; background: #e9f7ee; border-color: #cfe9d8; }
+.academic-admin-nav a > i { display: grid; width: 16px; height: 16px; flex: 0 0 16px; place-items: center; color: #168259; font-size: 12px; }
+.academic-admin-nav a:hover > i, .academic-admin-nav a[aria-current="page"] > i { color: #075c45; }
 .academic-admin-nav a span { display: grid; min-width: 25px; height: 25px; place-items: center; color: #08704f; background: #f3faf5; border-radius: 99px; font-size: 8px; }
 .academic-admin-panel { padding: 23px; }
 .admin-academic-heading { align-items: center; }

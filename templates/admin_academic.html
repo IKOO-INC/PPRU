@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Admin Pendidikan & Akademik · {{ site.name }}{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=15">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=16">{% endblock %}
 {% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/admin.js') }}?v=11"></script>{% if tab == 'hafalan' %}<script defer src="{{ url_for('static', filename='js/admin-hafalan.js') }}?v=1"></script>{% endif %}{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page">
@@ -14,12 +14,12 @@
     {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><span class="admin-kicker">Perhatian</span><h2 id="storage-notice-title">Penyimpanan mengalami kendala</h2><p>Penyimpanan sementara sedang digunakan. Perubahan yang dibuat mungkin belum tersedia bagi semua pengunjung. Silakan coba lagi setelah beberapa saat.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
 
     <nav class="academic-admin-nav academic-admin-nav--hafalan" aria-label="Menu admin pendidikan">
-      <a href="{{ url_for('admin_academic', tab='formal') }}"{% if tab == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
-      <a href="{{ url_for('admin_academic', tab='non_formal') }}"{% if tab == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal <span>{{ education_type_counts.non_formal }}</span></a>
-      <a href="{{ url_for('admin_academic', tab='psb') }}"{% if tab == 'psb' %} aria-current="page"{% endif %}>Program PSB <span>{{ psb_program_count }}</span></a>
-      <a href="{{ url_for('admin_academic', tab='calendar') }}"{% if tab == 'calendar' %} aria-current="page"{% endif %}>Kalender Akademik <span>{{ academic_events|length }}</span></a>
-      <a href="{{ url_for('admin_academic', tab='announcements') }}"{% if tab == 'announcements' %} aria-current="page"{% endif %}>Pengumuman / Berita <span>{{ announcements|length }}</span></a>
-      <a href="{{ url_for('admin_academic', tab='hafalan') }}"{% if tab == 'hafalan' %} aria-current="page"{% endif %}>Rekap Hafalan <span>{{ hafalan_result_count }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='formal') }}"{% if tab == 'formal' %} aria-current="page"{% endif %}><i class="fa-solid fa-school" aria-hidden="true"></i>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='non_formal') }}"{% if tab == 'non_formal' %} aria-current="page"{% endif %}><i class="fa-solid fa-book-open" aria-hidden="true"></i>Pendidikan Non Formal <span>{{ education_type_counts.non_formal }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='psb') }}"{% if tab == 'psb' %} aria-current="page"{% endif %}><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>Program PSB <span>{{ psb_program_count }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='calendar') }}"{% if tab == 'calendar' %} aria-current="page"{% endif %}><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Kalender Akademik <span>{{ academic_events|length }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='announcements') }}"{% if tab == 'announcements' %} aria-current="page"{% endif %}><i class="fa-solid fa-bullhorn" aria-hidden="true"></i>Pengumuman / Berita <span>{{ announcements|length }}</span></a>
+      <a href="{{ url_for('admin_academic', tab='hafalan') }}"{% if tab == 'hafalan' %} aria-current="page"{% endif %}><i class="fa-solid fa-book-quran" aria-hidden="true"></i>Rekap Hafalan <span>{{ hafalan_result_count }}</span></a>
     </nav>
 
     {% if tab in ['formal', 'non_formal'] %}
@@ -59,12 +59,8 @@
     </section>
     {% elif tab == 'calendar' %}
     <section class="admin-panel academic-admin-panel">
-      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Jadwal pesantren</span><h2>Kalender Akademik</h2><p>Tambah jadwal kegiatan, ujian, libur, dan agenda akademik lainnya.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_calendar_new') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah kegiatan</a></div>
-      <div class="academic-admin-list">
-        {% for item in academic_events %}
-        <article class="academic-admin-item academic-admin-event-item"><time class="academic-admin-date" datetime="{{ item.date }}">{{ item.date_label }}</time><div class="academic-admin-item-main"><span class="program-category">{{ item.category|default('Akademik') }}</span><h3>{{ item.title }}</h3>{% if item.description %}<p>{{ item.description }}</p>{% endif %}</div><div class="academic-admin-actions"><a href="{{ url_for('admin_academic_calendar_edit', item_id=item.admin_id) }}">Edit</a><form method="post" action="{{ url_for('admin_academic_calendar_delete', item_id=item.admin_id) }}" data-confirm-delete><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">Hapus</button></form></div></article>
-        {% else %}<div class="admin-news-empty">Belum ada agenda akademik. Tambahkan kegiatan untuk mulai mengisi kalender.</div>{% endfor %}
-      </div>
+      <div class="admin-panel-heading admin-academic-heading"><div><span class="admin-kicker">Jadwal pesantren</span><h2>Kalender Akademik</h2><p>Tambah jadwal kegiatan, ujian, libur, dan agenda akademik lainnya.</p></div><a class="admin-save-button" href="{{ url_for('admin_academic_calendar_new', return_to='academic') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah kegiatan</a></div>
+      {% set calendar_events = academic_events %}{% set calendar_return_to = 'academic' %}{% include "partials/admin_academic_calendar_list.html" %}
     </section>
     {% elif tab == 'announcements' %}
     <section class="admin-panel academic-admin-panel">

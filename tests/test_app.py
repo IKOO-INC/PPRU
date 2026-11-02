@@ -912,6 +912,75 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertLess(rendered.index("Paling Dekat"), rendered.index("Kedua"))
         self.assertLess(rendered.index("Kedua"), rendered.index("Ketiga"))
 
+    def test_main_admin_agenda_uses_the_academic_calendar_records_and_editor(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "main-agenda-csrf-token"
+
+        main_agenda = self.client.get("/admin?tab=events")
+        self.assertEqual(main_agenda.status_code, 200)
+        main_agenda_html = main_agenda.get_data(as_text=True)
+        self.assertIn("fa-calendar-days", main_agenda_html)
+        self.assertIn("Tambah kegiatan", main_agenda_html)
+        self.assertNotIn("Peringatan Hari Santri Nasional", main_agenda_html)
+
+        event_date = (now_jakarta().date() + timedelta(days=15)).isoformat()
+        create_response = self.client.post(
+            "/admin/akademik/kalender/simpan",
+            data={
+                "csrf_token": "main-agenda-csrf-token",
+                "return_to": "main",
+                "item_id": "",
+                "date": event_date,
+                "title": "Lokakarya Pesantren",
+                "category": "Agenda Utama",
+                "description": "Kegiatan yang dicatat melalui menu Agenda Admin Utama.",
+            },
+        )
+        self.assertEqual(create_response.status_code, 302)
+        self.assertIn("/admin?tab=events&saved=1", create_response.headers["Location"])
+
+        saved_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(len(saved_content["academic_events"]), 1)
+        event = saved_content["academic_events"][0]
+        event_id = event["id"]
+        main_agenda_html = self.client.get("/admin?tab=events").get_data(as_text=True)
+        self.assertIn("Lokakarya Pesantren", main_agenda_html)
+        self.assertIn("return_to=main", main_agenda_html)
+        academic_calendar_html = self.client.get("/admin/akademik?tab=calendar").get_data(as_text=True)
+        self.assertIn("fa-calendar-days", academic_calendar_html)
+        self.assertIn("Lokakarya Pesantren", academic_calendar_html)
+
+        edit_page = self.client.get(f"/admin/akademik/kalender/{event_id}/edit?return_to=main")
+        self.assertEqual(edit_page.status_code, 200)
+        self.assertIn('name="return_to" value="main"', edit_page.get_data(as_text=True))
+        edit_response = self.client.post(
+            "/admin/akademik/kalender/simpan",
+            data={
+                "csrf_token": "main-agenda-csrf-token",
+                "return_to": "main",
+                "item_id": event_id,
+                "date": event_date,
+                "title": "Lokakarya Pesantren Diperbarui",
+                "category": "Agenda Utama",
+                "description": "Agenda diperbarui melalui editor kalender yang sama.",
+            },
+        )
+        self.assertEqual(edit_response.status_code, 302)
+        saved_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(len(saved_content["academic_events"]), 1)
+        self.assertEqual(saved_content["academic_events"][0]["title"], "Lokakarya Pesantren Diperbarui")
+        self.assertIn("Lokakarya Pesantren Diperbarui", self.client.get("/admin/akademik?tab=calendar").get_data(as_text=True))
+
+        delete_response = self.client.post(
+            f"/admin/akademik/kalender/{event_id}/hapus?return_to=main",
+            data={"csrf_token": "main-agenda-csrf-token"},
+        )
+        self.assertEqual(delete_response.status_code, 302)
+        self.assertIn("/admin?tab=events&saved=1", delete_response.headers["Location"])
+        saved_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        self.assertEqual(saved_content["academic_events"], [])
+
     def test_profile_navigation_dropdown_and_siapik_portal_link(self):
         legacy_preferences = json.loads(self.content_file.read_text(encoding="utf-8"))
         legacy_preferences["site"]["login_label"] = "Masuk"
@@ -1256,6 +1325,48 @@ class PortalRoutesTestCase(unittest.TestCase):
             saved_after_invalid_url["profile"]["video_embed_url"],
             "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
         )
+
+    def test_profile_admin_can_select_three_home_history_slider_photos(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["_csrf_token"] = "history-slider-csrf-token"
+
+        admin_html = self.client.get("/admin?tab=profile").get_data(as_text=True)
+        for slot in range(3):
+            self.assertIn(f'name="history_image_{slot}"', admin_html)
+        self.assertIn("hingga tiga foto", admin_html)
+        self.assertIn("setiap 5 detik", admin_html)
+
+        submitted_images = [
+            "https://res.cloudinary.com/demo/image/upload/v123/ppru/site/history-one.jpg",
+            "https://res.cloudinary.com/demo/image/upload/v124/ppru/site/history-two.jpg",
+            "https://res.cloudinary.com/demo/image/upload/v125/ppru/site/history-three.jpg",
+        ]
+        response = self.client.post(
+            "/admin/save",
+            data={
+                "csrf_token": "history-slider-csrf-token",
+                "component": "profile",
+                "history_image_0": submitted_images[0],
+                "history_image_1": submitted_images[1],
+                "history_image_2": submitted_images[2],
+                "history_image_3": "https://res.cloudinary.com/demo/image/upload/v126/ppru/site/ignored.jpg",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        saved_content = json.loads(self.content_file.read_text(encoding="utf-8"))
+        history_images = saved_content["history"]["images"]
+        self.assertEqual(len(history_images), 3)
+        self.assertEqual(saved_content["history"]["image"], history_images[0])
+        for image in history_images:
+            self.assertIn("c_limit,h_1600,q_auto:good,w_1600,f_auto", image)
+        self.assertNotIn("ignored.jpg", json.dumps(history_images))
+
+        home_html = self.client.get("/").get_data(as_text=True)
+        self.assertIn('data-history-slider data-history-interval="5000"', home_html)
+        self.assertIn('data-history-slide-count>03</span>', home_html)
+        self.assertEqual(home_html.count("data-history-slide aria-hidden"), 3)
+        self.assertIn("history-slider.js?v=1", home_html)
 
     def test_profile_vision_and_mission_use_textareas_and_render_numbered_missions(self):
         with self.client.session_transaction() as admin_session:
@@ -1819,8 +1930,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=9", rendered)
-        self.assertIn("css/style.css?v=18", rendered)
+        self.assertIn("css/theme.css?v=10", rendered)
+        self.assertIn("css/style.css?v=19", rendered)
         self.assertIn("js/theme.js?v=3", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 

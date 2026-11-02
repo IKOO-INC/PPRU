@@ -91,6 +91,12 @@
   background-color: #121e17;
   border-color: #30483a;
 }
+:root[data-theme="dark"] .academic-admin-nav a > i,
+:root[data-theme="dark"] .admin-menu-icon { color: #9be0b6; }
+:root[data-theme="dark"] .academic-admin-nav a:hover > i,
+:root[data-theme="dark"] .academic-admin-nav a[aria-current="page"] > i,
+:root[data-theme="dark"] .admin-menu-item:hover .admin-menu-icon,
+:root[data-theme="dark"] .admin-menu-item.is-active .admin-menu-icon { color: #eafff2; }
 :root[data-theme="dark"] .admin-kicker,
 :root[data-theme="dark"] .admin-news-summary strong { color: #75d8a9; }
 :root[data-theme="dark"] .admin-news-actions a,

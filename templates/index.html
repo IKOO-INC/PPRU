@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Home · {{ site.name }}{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/history-slider.js') }}?v=1"></script>{% endblock %}
 {% block content %}
 <section class="home-hero">
   <img class="home-hero-bg" src="{{ data.hero.image }}" alt="" fetchpriority="high">
@@ -45,10 +46,11 @@
 
 <section class="history-section">
   <div class="container history-grid">
-    <div class="history-photo">
-      <img src="{{ data.history.image }}" alt="{{ data.history.image_alt }}" loading="lazy">
+    {% set history_slides = data.history.get('images') or [data.history.image] %}
+    <div class="history-photo" data-history-slider data-history-interval="5000" role="group" aria-roledescription="carousel" aria-label="Foto sejarah pesantren">
+      {% for image in history_slides[:3] %}<img class="history-photo-slide{% if loop.first %} is-active{% endif %}" src="{{ image }}" alt="{{ data.history.image_alt }}" loading="lazy" data-history-slide aria-hidden="{{ 'false' if loop.first else 'true' }}">{% endfor %}
       <span class="history-photo-caption">{{ site.short_name }} · {{ site.address }}</span>
-      <span class="history-photo-number">01 <i>/ 03</i></span>
+      <span class="history-photo-number" aria-hidden="true"><span data-history-slide-current>01</span> <i>/ <span data-history-slide-count>{{ '%02d'|format(history_slides[:3]|length) }}</span></i></span>
     </div>
     <div class="history-copy">
       <span class="light-eyebrow">{{ data.history.eyebrow }}</span>

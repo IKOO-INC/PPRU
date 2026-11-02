@@ -147,7 +147,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .history-section { padding: 40px 0; color: #f4f8f4; background: radial-gradient(ellipse at 82% 27%, rgba(40,144,101,.24), transparent 40%), linear-gradient(112deg, #07583f, #034c3a 65%, #063d36); }
 .history-grid { display: grid; grid-template-columns: .86fr 1.14fr; align-items: center; gap: clamp(38px, 6.5vw, 82px); }
 .history-photo { position: relative; overflow: hidden; min-height: 350px; border: 1px solid rgba(255,255,255,.17); border-radius: 9px; box-shadow: 0 14px 34px rgba(0,0,0,.22); }
-.history-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.history-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.015); transition: opacity .75s ease, transform 1.2s ease; }
+.history-photo img.is-active { opacity: 1; transform: scale(1); }
 .history-photo::after { content: ""; position: absolute; inset: 45% 0 0; background: linear-gradient(transparent, rgba(0,0,0,.7)); }
 .history-photo-caption, .history-photo-number { position: absolute; z-index: 1; bottom: 13px; color: #fff; font-size: 8px; }
 .history-photo-caption { left: 13px; max-width: 76%; }
