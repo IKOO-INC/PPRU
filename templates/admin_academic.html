@@ -13,13 +13,13 @@
     {% if storage_backend == 'read-only' %}<div class="admin-alert admin-alert--error" role="alert">Perubahan belum dapat disimpan saat ini. Silakan coba lagi nanti atau hubungi pengelola.</div>{% elif storage_backend == 'json-fallback' %}<div class="admin-alert admin-alert--error" role="alert">Penyimpanan sementara sedang digunakan. Perubahan mungkin belum tersedia bagi semua pengunjung. Silakan coba lagi setelah beberapa saat.</div>{% endif %}
     {% if storage_fallback %}<div class="storage-notice-overlay" data-storage-notice role="alertdialog" aria-modal="true" aria-labelledby="storage-notice-title"><section class="storage-notice-card"><button class="storage-notice-close" type="button" aria-label="Tutup pemberitahuan" data-storage-notice-close><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><span class="admin-kicker">Perhatian</span><h2 id="storage-notice-title">Penyimpanan mengalami kendala</h2><p>Penyimpanan sementara sedang digunakan. Perubahan yang dibuat mungkin belum tersedia bagi semua pengunjung. Silakan coba lagi setelah beberapa saat.</p><button class="admin-save-button" type="button" data-storage-notice-close>Mengerti</button></section></div>{% endif %}
 
-    <nav class="academic-admin-nav{% if admin_role == 'academic' %} academic-admin-nav--hafalan{% endif %}" aria-label="Menu admin pendidikan">
+    <nav class="academic-admin-nav academic-admin-nav--hafalan" aria-label="Menu admin pendidikan">
       <a href="{{ url_for('admin_academic', tab='formal') }}"{% if tab == 'formal' %} aria-current="page"{% endif %}>Pendidikan Formal <span>{{ education_type_counts.formal }}</span></a>
       <a href="{{ url_for('admin_academic', tab='non_formal') }}"{% if tab == 'non_formal' %} aria-current="page"{% endif %}>Pendidikan Non Formal <span>{{ education_type_counts.non_formal }}</span></a>
       <a href="{{ url_for('admin_academic', tab='psb') }}"{% if tab == 'psb' %} aria-current="page"{% endif %}>Program PSB <span>{{ psb_program_count }}</span></a>
       <a href="{{ url_for('admin_academic', tab='calendar') }}"{% if tab == 'calendar' %} aria-current="page"{% endif %}>Kalender Akademik <span>{{ academic_events|length }}</span></a>
       <a href="{{ url_for('admin_academic', tab='announcements') }}"{% if tab == 'announcements' %} aria-current="page"{% endif %}>Pengumuman / Berita <span>{{ announcements|length }}</span></a>
-      {% if admin_role == 'academic' %}<a href="{{ url_for('admin_academic', tab='hafalan') }}"{% if tab == 'hafalan' %} aria-current="page"{% endif %}>Rekap Hafalan <span>{{ hafalan_result_count }}</span></a>{% endif %}
+      <a href="{{ url_for('admin_academic', tab='hafalan') }}"{% if tab == 'hafalan' %} aria-current="page"{% endif %}>Rekap Hafalan <span>{{ hafalan_result_count }}</span></a>
     </nav>
 
     {% if tab in ['formal', 'non_formal'] %}

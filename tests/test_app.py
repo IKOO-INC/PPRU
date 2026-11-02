@@ -398,7 +398,7 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertNotIn("Siti Zahra", self.client.get("/hafalan").get_data(as_text=True))
         self.assertNotIn("Ahmad Fikri", self.client.get("/").get_data(as_text=True))
 
-    def test_hafalan_recap_is_available_only_to_academic_admin_and_is_ranked(self):
+    def test_hafalan_recap_is_available_only_inside_academic_panel_and_is_ranked(self):
         attempts = [
             {
                 "name": "Amira Yusuf",
@@ -452,10 +452,15 @@ class PortalRoutesTestCase(unittest.TestCase):
             admin_session["admin_authenticated"] = True
             admin_session["admin_role"] = "main"
         main_admin_response = self.client.get("/admin/akademik?tab=hafalan")
-        self.assertEqual(main_admin_response.status_code, 403)
+        self.assertEqual(main_admin_response.status_code, 200)
+        main_admin_recap = main_admin_response.get_data(as_text=True)
+        self.assertIn("amira yusuf", main_admin_recap)
+        self.assertIn("Rekap &amp; Peringkat Hafalan", main_admin_recap)
         main_admin_panel = self.client.get("/admin/akademik")
         self.assertEqual(main_admin_panel.status_code, 200)
-        self.assertNotIn("Rekap Hafalan", main_admin_panel.get_data(as_text=True))
+        main_admin_panel_html = main_admin_panel.get_data(as_text=True)
+        self.assertIn("Rekap Hafalan", main_admin_panel_html)
+        self.assertNotIn("amira yusuf", main_admin_panel_html)
 
         with self.client.session_transaction() as admin_session:
             admin_session["admin_authenticated"] = True

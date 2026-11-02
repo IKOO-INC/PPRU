@@ -2309,8 +2309,6 @@ def create_app(test_config=None):
             tab = "formal"
         if tab not in {"formal", "non_formal", "calendar", "announcements", "psb", "hafalan"}:
             tab = "formal"
-        if tab == "hafalan" and current_admin_role() != "academic":
-            abort(403)
         hafalan_recap_available = True
         hafalan_recap = {"rankings": [], "participant_count": 0, "result_count": 0, "average_score": 0}
         if tab == "hafalan":
