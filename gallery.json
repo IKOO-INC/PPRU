@@ -1,0 +1,72 @@
+[
+  {
+    "id": "wywaGy-ir1rItRk7",
+    "title": "sdd",
+    "caption": "dcc",
+    "category": "Santri",
+    "image": "https://res.cloudinary.com/mcdrphte/image/upload/c_limit,f_auto,h_1600,q_auto:good,w_1600/v1792133504/ppru/gallery/i0663ly3jtik1tzpygpn",
+    "image_alt": "dddd",
+    "shape": "wide",
+    "position": "left"
+  },
+  {
+    "title": "Kebersamaan di pesantren",
+    "caption": "Belajar bersama dalam suasana yang hangat.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Lingkungan pesantren",
+    "shape": "large",
+    "position": "center",
+    "id": "_jbEpc9DAZBqRys0"
+  },
+  {
+    "title": "Ruang belajar",
+    "caption": "Menjaga semangat belajar setiap hari.",
+    "category": "Santri",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Suasana belajar di pesantren",
+    "shape": "small",
+    "position": "center",
+    "id": "QkHeoMs13NkOoUgh"
+  },
+  {
+    "title": "Kehidupan santri",
+    "caption": "Tumbuh dan berproses bersama.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Kegiatan di lingkungan pesantren",
+    "shape": "small",
+    "position": "center",
+    "id": "wa7Rtdq1toHj4-Z2"
+  },
+  {
+    "title": "Lingkungan pesantren",
+    "caption": "Tempat menimba ilmu dan membiasakan kebaikan.",
+    "category": "Pesantren",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Bangunan dan pepohonan di pesantren",
+    "shape": "wide",
+    "position": "center",
+    "id": "zueoqGuoor_R-2YJ"
+  },
+  {
+    "title": "Berbagi pengalaman",
+    "caption": "Bersama saling menguatkan dan menginspirasi.",
+    "category": "Kegiatan",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Suasana kebersamaan",
+    "shape": "small",
+    "position": "center",
+    "id": "4TOpPn2XXJ5lpnq9"
+  },
+  {
+    "title": "Alam yang menenangkan",
+    "caption": "Lingkungan yang mendukung proses belajar.",
+    "category": "Pesantren",
+    "image": "/static/images/pondok-campus.jpg",
+    "image_alt": "Area hijau di lingkungan pesantren",
+    "shape": "small",
+    "position": "center",
+    "id": "uEStqGJwIiqhA9Ia"
+  }
+]

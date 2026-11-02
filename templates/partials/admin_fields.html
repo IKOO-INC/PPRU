@@ -1,0 +1,23 @@
+{% macro text_field(label, name, value, placeholder='') -%}
+<label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}"></label>
+{%- endmacro %}
+
+{% macro textarea_field(label, name, value, rows=3) -%}
+<label class="admin-field admin-field--wide"><span>{{ label }}</span><textarea name="{{ name }}" rows="{{ rows }}">{{ value }}</textarea></label>
+{%- endmacro %}
+
+{% macro image_url_field(label, name, value, alt='Pratinjau gambar', folder='site', upload_label='Unggah foto') -%}
+<div class="admin-asset-field" data-cloudinary-field data-cloudinary-folder="{{ folder }}">
+  <div class="admin-asset-control">
+    <label class="admin-field"><span>{{ label }}</span><input type="text" name="{{ name }}" value="{{ value }}" placeholder="https://..." data-image-input autocomplete="off"></label>
+    <div class="admin-asset-actions">
+      <input type="hidden" data-cloudinary-csrf value="{{ csrf_token() }}">
+      <input class="admin-asset-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-cloudinary-file>
+      <button class="admin-upload-button" type="button" data-cloudinary-upload-button>{{ upload_label }}</button>
+    </div>
+  </div>
+  <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview{% if not value %} hidden{% endif %}>
+  <small>Unggah foto JPG, PNG, GIF, atau WebP hingga 10 MB. Foto akan disesuaikan untuk tampilan situs.</small>
+  <span class="admin-upload-status" data-cloudinary-status role="status" aria-live="polite"></span>
+</div>
+{%- endmacro %}

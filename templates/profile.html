@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Sejarah & Profil · {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-banner page-banner--profile">
+  <div class="container page-banner-content"><span class="light-eyebrow">{{ data.profile.get('eyebrow', 'Profil Pesantren') }}</span><h1>{{ data.profile.title }}</h1><p>{{ data.profile.subtitle }}</p></div>
+</section>
+<section class="profile-content-section">
+  <div class="container profile-content-wrap">
+    <div class="profile-video" aria-label="Video profil Pondok Pesantren Roudlotul Ulum">
+      {% if data.profile.get('video_embed_url') %}
+        <iframe src="{{ data.profile.video_embed_url }}" title="{{ data.profile.video_label|default('Video profil Pondok Pesantren Roudlotul Ulum') }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      {% else %}
+        <div class="profile-video-placeholder">
+          <img src="{{ data.profile.image }}" alt="" aria-hidden="true" loading="lazy">
+          <div class="profile-video-placeholder-copy"><span>{{ site.short_name }}</span><p>Video profil belum tersedia.</p></div>
+        </div>
+      {% endif %}
+    </div>
+    <article class="history-article" id="sejarah">
+      <span class="section-eyebrow">Tentang PPRU</span><h2>{{ data.profile.history_title }}</h2><span class="heading-underline"></span>
+      {% for paragraph in data.profile.history_paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+      <p class="article-signoff"><em>Semoga ikhtiar pendidikan ini terus menjadi jalan tumbuhnya generasi Qur’ani yang berilmu dan berakhlak mulia. Aamiin.</em></p>
+      <div class="article-credits"><span>Profil Pondok Pesantren Roudlotul Ulum</span><span>Karangtanjung, Alian, Kebumen</span></div>
+    </article>
+  </div>
+</section>
+<section class="vision-mission-section" id="visi-misi">
+  <div class="container">
+    <div class="section-title section-title--center"><span class="section-eyebrow">Cita-cita luhur</span><h2>{{ data.profile.vision_title }}</h2></div>
+    <div class="vision-mission-grid">
+      <article class="vision-card"><span class="vm-icon vm-icon--green" aria-hidden="true"><i class="fa-solid fa-eye" aria-hidden="true"></i></span><h3>Visi</h3><p>“{{ data.profile.vision }}”</p></article>
+      <article class="mission-card"><span class="vm-icon vm-icon--orange" aria-hidden="true"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span><h3>Misi</h3><ol>{% for mission in data.profile.mission %}<li>{{ mission }}</li>{% endfor %}</ol></article>
+    </div>
+  </div>
+</section>
+<section class="masyayikh-section" id="masyayikh">
+  <div class="container">
+    <div class="section-title section-title--center"><span class="section-eyebrow">Warisan keilmuan</span><h2 id="masyayikh-title">{{ data.profile.get('leadership_title', 'Pendiri & Pengasuh') }}</h2><p>{{ data.profile.get('leadership_note', '') }}</p></div>
+    {% set leadership_people = [
+      {'name': 'Kyai Zaenal Mustofa', 'image': 'images/kyai-zaenal-mustofa.webp'},
+      {'name': 'Kyai Bahaudin Al Yasir', 'image': 'images/kyai-bahaudin-al-yasir.webp'},
+      {'name': 'Kyai Umamul Faridlo', 'image': 'images/kyai-umamul-faridlo.webp'},
+      {'name': 'Kyai Saefudin Zuhri', 'image': 'images/kyai-saefudin-zuhri.webp'},
+      {'name': 'Kyai M Imdadul Iqbal', 'image': 'images/kyai-m-imdadul-iqbal.webp'},
+      {'name': 'Kyai M Husni Alfian', 'image': 'images/kyai-m-husni-alfian.webp'}
+    ] %}
+    <ul class="masyayikh-grid" aria-labelledby="masyayikh-title">
+      {% for person in leadership_people %}
+        <li class="masyayikh-card"><img src="{{ url_for('static', filename=person.image) }}" alt="Potret {{ person.name }}" width="1755" height="2194" loading="lazy" decoding="async"></li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}
