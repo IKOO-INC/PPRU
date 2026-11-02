@@ -847,22 +847,42 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
 .hafalan-perfect-message { margin: 0; padding: 12px; color: #176344; background: #eaf7ef; border-radius: 8px; font-size: 9px; }
 .hafalan-certificate { display: none; }
 .hafalan-certificate.is-printing { display: block; }
-.hafalan-certificate-frame { display: grid; min-height: 720px; place-items: center; padding: 28px; color: #26382d; background: #fcfdfb; border: 9px double #b78b2e; }
-.hafalan-certificate-inner { display: flex; width: 100%; min-height: 630px; align-items: center; flex-direction: column; justify-content: center; padding: 30px; border: 1px solid #d7bf83; text-align: center; }
-.certificate-kicker { color: #8a6b23; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.certificate-ornament { margin: 17px 0 4px; color: #8a6b23; font-size: 24px; }
-.hafalan-certificate h1 { margin: 0; color: #17553c; font-family: var(--serif); font-size: 39px; }
-.certificate-subtitle { margin: 7px 0 26px; color: #66756a; font-size: 12px; }
-.certificate-awarded { margin: 0; color: #77837a; font-size: 11px; }
-.hafalan-certificate h2 { margin: 7px 0 13px; color: #203e2e; font-family: var(--serif); font-size: 31px; }
-.certificate-description { margin: 0 0 8px; color: #66756a; font-size: 11px; }
-.certificate-book { color: #17553c; font-family: var(--serif); font-size: 19px; }
-.certificate-range { margin: 6px 0 15px; color: #738077; font-size: 10px; }
-.certificate-score { display: flex; align-items: baseline; gap: 8px; padding: 7px 16px; color: #8a6b23; background: #f8f2df; border-radius: 6px; }
-.certificate-score span { font-size: 10px; font-weight: 700; }
-.certificate-score strong { font-size: 20px; }
-.certificate-encouragement { max-width: 540px; margin: 16px 0 25px; color: #65736a; font-size: 10px; line-height: 1.7; }
-.certificate-footer { display: flex; width: 100%; justify-content: space-between; gap: 20px; margin-top: 18px; padding-top: 11px; color: #77837a; border-top: 1px solid #d7bf83; font-size: 8px; }
+.hafalan-certificate-frame { box-sizing: border-box; display: grid; width: 1123px; height: 794px; min-height: 794px; place-items: center; padding: 16px; color: #263a31; background: #fbfaf5; border: 5px solid #194d3e; aspect-ratio: 1123 / 794; }
+.hafalan-certificate-inner { position: relative; box-sizing: border-box; display: flex; width: 100%; height: 100%; min-height: 0; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 24px 50px 20px; border: 1px solid #c4a866; text-align: center; }
+.hafalan-certificate-inner::before { position: absolute; top: 50%; left: 50%; width: 410px; height: 410px; border: 1px solid rgba(177, 148, 83, .16); border-radius: 50%; background: radial-gradient(circle, rgba(196, 168, 102, .09), rgba(196, 168, 102, 0) 68%); content: ""; pointer-events: none; transform: translate(-50%, -50%); }
+.hafalan-certificate-inner::after { position: absolute; inset: 7px; border: 1px solid rgba(196, 168, 102, .26); content: ""; pointer-events: none; }
+.hafalan-certificate-inner > * { position: relative; z-index: 1; }
+.certificate-brand { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 12px; color: #194d3e; text-align: left; }
+.certificate-logo { display: block; width: 54px; height: 54px; object-fit: contain; }
+.certificate-brand-copy { display: grid; gap: 2px; }
+.certificate-brand-overline { color: #8a6c32; font-size: 7px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+.certificate-brand strong { color: #194d3e; font-size: 12px; font-weight: 800; }
+.certificate-brand small { color: #58685f; font-size: 8px; }
+.certificate-content { display: flex; min-height: 0; flex: 1; align-items: center; flex-direction: column; justify-content: center; padding: 8px 0; }
+.certificate-ornament { display: flex; align-items: center; gap: 10px; margin: 0 0 5px; color: #99773a; font-size: 17px; }
+.certificate-ornament span { display: block; width: 56px; height: 1px; background: linear-gradient(90deg, transparent, #c3a361); }
+.certificate-ornament span:last-child { background: linear-gradient(90deg, #c3a361, transparent); }
+.certificate-kicker { color: #8a6c32; font-size: 8px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+.hafalan-certificate h1 { margin: 2px 0 0; color: #194d3e; font-family: var(--serif); font-size: 32px; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
+.certificate-subtitle { margin: 3px 0 11px; color: #56665d; font-size: 9px; letter-spacing: .06em; }
+.certificate-awarded { margin: 0; color: #56665d; font-size: 9px; }
+.hafalan-certificate h2 { max-width: 90%; margin: 3px 0 5px; color: #263a31; font-family: var(--serif); font-size: 31px; font-weight: 500; line-height: 1.18; overflow-wrap: anywhere; }
+.certificate-name-rule { width: 190px; height: 2px; flex: 0 0 auto; background: linear-gradient(90deg, transparent, #b59658 24%, #b59658 76%, transparent); }
+.certificate-description { max-width: 760px; margin: 9px 0 2px; color: #53635a; font-size: 9px; line-height: 1.55; }
+.certificate-book { max-width: 760px; color: #194d3e; font-family: var(--serif); font-size: 15px; font-weight: 700; }
+.certificate-details { display: grid; width: min(760px, 100%); grid-template-columns: 1.55fr 1fr; gap: 10px; margin-top: 11px; }
+.certificate-detail, .certificate-score { display: flex; min-width: 0; min-height: 50px; align-items: center; flex-direction: column; justify-content: center; padding: 7px 14px; border: 1px solid rgba(177, 148, 83, .42); border-radius: 3px; }
+.certificate-detail { background: rgba(255, 255, 255, .72); }
+.certificate-detail-label { color: #66756c; font-size: 7px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.certificate-range { margin: 2px 0 0; color: #31453a; font-size: 9px; line-height: 1.4; }
+.certificate-score { gap: 1px; color: #765a22; background: #f5f0e3; }
+.certificate-score strong { color: #4a401f; font-size: 14px; line-height: 1.3; }
+.certificate-encouragement { max-width: 760px; margin: 8px 0 0; color: #58685f; font-size: 8px; font-style: italic; line-height: 1.5; }
+.certificate-footer { display: flex; width: 100%; flex: 0 0 auto; align-items: flex-end; justify-content: space-between; gap: 20px; margin: 0; padding-top: 10px; color: #53635a; border-top: 1px solid rgba(177, 148, 83, .52); font-size: 8px; }
+.certificate-issued { display: grid; gap: 3px; text-align: left; }
+.certificate-issued strong { color: #31453a; font-size: 9px; }
+.certificate-seal { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 5px 9px; color: #795e29; border: 1px solid #b59658; border-radius: 3px; font-size: 6px; font-weight: 800; letter-spacing: .1em; line-height: 1.4; text-align: center; }
+.certificate-seal i { font-size: 15px; }
 @media (max-width: 760px) {
   .hafalan-layout { grid-template-columns: 1fr; }
   .hafalan-guide { position: static; }
@@ -878,7 +898,6 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
   .hafalan-quiz-controls .button { width: 100%; }
   .hafalan-result-actions { flex-direction: column; }
   .hafalan-result-actions .button { width: 100%; }
-  .certificate-footer { flex-direction: column; align-items: center; }
 }
 @page { size: A4 landscape; margin: 10mm; }
 @media print {
@@ -932,27 +951,6 @@ textarea.field-input { min-height: 88px; padding-top: 10px; resize: vertical; }
 .certificate-action-status { min-height: 16px; margin: 9px 0 0; color: #687a6e; font-size: 8px; line-height: 1.5; }
 .hafalan-certificate.is-exporting { position: fixed; z-index: 10000; inset: 0; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 18px; background: rgba(11,22,16,.74); }
 .hafalan-certificate.is-exporting .hafalan-certificate-frame { flex: 0 0 auto; }
-.hafalan-certificate-frame { box-sizing: border-box; width: 1123px; height: 794px; min-height: 794px; place-items: center; padding: 24px; color: #26382d; background: #fcfdfb; border: 9px double #b78b2e; aspect-ratio: 1123 / 794; }
-.hafalan-certificate-inner { box-sizing: border-box; display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; flex-direction: column; justify-content: center; padding: 26px 42px; border: 1px solid #d7bf83; text-align: center; }
-.certificate-brand { display: flex; align-items: center; gap: 13px; color: #17553c; text-align: left; }
-.certificate-logo { display: block; width: 62px; height: 62px; object-fit: contain; }
-.certificate-brand span { display: grid; gap: 3px; }
-.certificate-brand strong { font-size: 12px; font-weight: 850; }
-.certificate-brand small { color: #7a887f; font-size: 8px; }
-.certificate-ornament { margin: 9px 0 3px; font-size: 19px; }
-.certificate-kicker { color: #8a6b23; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.hafalan-certificate h1 { font-size: 35px; }
-.certificate-subtitle { margin: 4px 0 14px; font-size: 10px; }
-.certificate-awarded { font-size: 9px; }
-.hafalan-certificate h2 { margin: 4px 0 8px; font-size: 27px; }
-.certificate-description { margin: 0 0 5px; font-size: 9px; }
-.certificate-book { font-size: 16px; }
-.certificate-range { margin: 4px 0 9px; font-size: 8px; }
-.certificate-score { gap: 7px; padding: 5px 13px; }
-.certificate-score span { font-size: 9px; }
-.certificate-score strong { font-size: 17px; }
-.certificate-encouragement { max-width: 790px; margin: 10px 0 12px; font-size: 8px; line-height: 1.55; }
-.certificate-footer { margin-top: 7px; padding-top: 7px; font-size: 7px; }
 .hafalan-chooser-heading p, .hafalan-card-heading p { font-size: 12px; }
 .hafalan-choice-tag { font-size: 9px; }
 .hafalan-choice-copy { font-size: 12px; }

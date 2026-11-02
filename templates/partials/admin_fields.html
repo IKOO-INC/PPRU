@@ -17,7 +17,7 @@
     </div>
   </div>
   <img class="admin-image-preview" src="{{ value }}" alt="{{ alt }}" data-image-preview{% if not value %} hidden{% endif %}>
-  <small>Unggah foto JPG, PNG, GIF, atau WebP hingga 10 MB. Foto akan disesuaikan untuk tampilan situs.</small>
+  <small>Unggah foto JPG, PNG, GIF, atau WebP. Foto di atas 10 MB dikompresi otomatis sebelum diunggah dan disesuaikan untuk tampilan situs.</small>
   <span class="admin-upload-status" data-cloudinary-status role="status" aria-live="polite"></span>
 </div>
 {%- endmacro %}

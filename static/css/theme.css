@@ -821,25 +821,42 @@
   background-color: #147b58;
   border-color: #147b58;
 }
-:root[data-theme="dark"] .hafalan-certificate { color: #26382d; }
+:root[data-theme="dark"] .hafalan-certificate { color: #263a31; }
 :root[data-theme="dark"] .hafalan-certificate-frame {
-  color: #26382d;
-  background: #fcfdfb;
-  border-color: #b78b2e;
+  color: #263a31;
+  background: #fbfaf5;
+  border-color: #194d3e;
 }
-:root[data-theme="dark"] .hafalan-certificate :is(h1, h2, h3, h4, h5, h6, strong, b) { color: #20382b; }
-:root[data-theme="dark"] .hafalan-certificate :is(p, small, span) { color: #536258; }
+:root[data-theme="dark"] .hafalan-certificate-inner { border-color: #c4a866; }
+:root[data-theme="dark"] .hafalan-certificate h1 { color: #194d3e; }
+:root[data-theme="dark"] .hafalan-certificate h2 { color: #263a31; }
 :root[data-theme="dark"] .hafalan-certificate .certificate-brand,
-:root[data-theme="dark"] .hafalan-certificate .certificate-book { color: #17553c; }
-:root[data-theme="dark"] .hafalan-certificate .certificate-brand strong { color: #17553c; }
-:root[data-theme="dark"] .hafalan-certificate .certificate-brand small { color: #536258; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand strong,
+:root[data-theme="dark"] .hafalan-certificate .certificate-book { color: #194d3e; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand small,
+:root[data-theme="dark"] .hafalan-certificate .certificate-subtitle,
+:root[data-theme="dark"] .hafalan-certificate .certificate-awarded,
+:root[data-theme="dark"] .hafalan-certificate .certificate-description,
+:root[data-theme="dark"] .hafalan-certificate .certificate-range,
+:root[data-theme="dark"] .hafalan-certificate .certificate-encouragement,
+:root[data-theme="dark"] .hafalan-certificate .certificate-footer,
+:root[data-theme="dark"] .hafalan-certificate .certificate-detail-label { color: #53635a; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-brand .certificate-brand-overline,
 :root[data-theme="dark"] .hafalan-certificate .certificate-kicker,
-:root[data-theme="dark"] .hafalan-certificate .certificate-ornament { color: #8a6b23; }
-:root[data-theme="dark"] .hafalan-certificate .certificate-score {
-  color: #775c18;
-  background: #f8f2df;
+:root[data-theme="dark"] .hafalan-certificate .certificate-ornament,
+:root[data-theme="dark"] .hafalan-certificate .certificate-seal { color: #795e29; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-detail {
+  color: #31453a;
+  background: rgba(255, 255, 255, .72);
+  border-color: rgba(177, 148, 83, .42);
 }
-:root[data-theme="dark"] .hafalan-certificate .certificate-score strong { color: #604b14; }
+:root[data-theme="dark"] .hafalan-certificate .certificate-score {
+  color: #765a22;
+  background: #f5f0e3;
+  border-color: rgba(177, 148, 83, .42);
+}
+:root[data-theme="dark"] .hafalan-certificate .certificate-score strong,
+:root[data-theme="dark"] .hafalan-certificate .certificate-issued strong { color: #4a401f; }
 
 @keyframes ppru-page-fade-in {
   from { opacity: 0; }

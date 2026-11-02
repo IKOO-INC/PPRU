@@ -311,6 +311,10 @@ class PortalRoutesTestCase(unittest.TestCase):
         self.assertNotIn("Unduh JPG", rendered)
         self.assertIn("Bagikan", rendered)
         self.assertIn("Sertifikat Partisipasi", rendered)
+        self.assertIn('class="certificate-content"', rendered)
+        self.assertIn('class="certificate-details"', rendered)
+        self.assertIn('class="certificate-seal"', rendered)
+        self.assertIn("fa-solid fa-award", rendered)
         self.assertIn('alt="Logo Pondok Pesantren Roudlotul Ulum"', rendered)
         self.assertIn('class="nav-link is-active" href="/hafalan"', rendered)
 
@@ -1781,7 +1785,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         response_text = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)
         self.assertIn('class="theme-toggle"', response_text)
-        self.assertIn("css/theme.css?v=9", response_text)
+        self.assertIn("css/style.css?v=20", response_text)
+        self.assertIn("css/theme.css?v=11", response_text)
         error_text = visible_text(response_text)
         self.assertIn("Perubahan belum tersimpan", error_text)
         self.assertIn("Silakan coba lagi", error_text)
@@ -1930,8 +1935,8 @@ class PortalRoutesTestCase(unittest.TestCase):
         rendered = response.get_data(as_text=True)
         self.assertIn('class="theme-toggle"', rendered)
         self.assertIn('aria-label="Aktifkan mode gelap"', rendered)
-        self.assertIn("css/theme.css?v=10", rendered)
-        self.assertIn("css/style.css?v=19", rendered)
+        self.assertIn("css/theme.css?v=11", rendered)
+        self.assertIn("css/style.css?v=20", rendered)
         self.assertIn("js/theme.js?v=3", rendered)
         self.assertIn('localStorage.getItem("ppru-theme") === "dark"', rendered)
 
@@ -2462,6 +2467,38 @@ class PortalRoutesTestCase(unittest.TestCase):
         saved_item = next(item for item in saved_programs if item["title"] == "Kajian Kitab Dasar")
         self.assertEqual(saved_item["education_type"], "non_formal")
         self.assertIn(b"Kajian Kitab Dasar", self.client.get("/akademik/non-formal").data)
+
+    def test_photo_upload_forms_load_client_side_compression_before_upload(self):
+        with self.client.session_transaction() as admin_session:
+            admin_session["admin_authenticated"] = True
+            admin_session["admin_role"] = "main"
+            admin_session["_csrf_token"] = "large-photo-csrf-token"
+
+        for route in (
+            "/admin?tab=brand",
+            "/admin/akademik/program/baru?education_type=formal",
+            "/admin/galeri/baru",
+            "/admin/berita/baru",
+        ):
+            with self.subTest(route=route):
+                response = self.client.get(route)
+                self.assertEqual(response.status_code, 200)
+                rendered = response.get_data(as_text=True)
+                self.assertIn("js/image_compress.js?v=1", rendered)
+                self.assertIn("js/cloudinary_upload.js?v=5", rendered)
+                if route == "/admin/berita/baru":
+                    self.assertIn("js/news_editor.js?v=9", rendered)
+
+        compressor = (ROOT / "static" / "js" / "image_compress.js").read_text(encoding="utf-8")
+        cloudinary_upload = (ROOT / "static" / "js" / "cloudinary_upload.js").read_text(encoding="utf-8")
+        news_editor = (ROOT / "static" / "js" / "news_editor.js").read_text(encoding="utf-8")
+        self.assertIn("window.compressPhotoForUpload", compressor)
+        self.assertIn("10 * 1024 * 1024", compressor)
+        for upload_script in (cloudinary_upload, news_editor):
+            self.assertIn("await window.compressPhotoForUpload(file)", upload_script)
+            self.assertIn("uploadFile.size >", upload_script)
+        self.assertNotIn("Ukuran file maksimal 10 MB.", cloudinary_upload)
+        self.assertNotIn("Ukuran file maksimal 10 MB.", news_editor)
 
     def test_academic_program_logo_upload_and_fontawesome_fallback(self):
         with self.client.session_transaction() as admin_session:

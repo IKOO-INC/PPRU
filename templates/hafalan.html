@@ -249,22 +249,36 @@
 <section class="hafalan-certificate" id="hafalan-certificate" aria-hidden="true">
   <div class="hafalan-certificate-frame" id="hafalan-certificate-frame">
     <div class="hafalan-certificate-inner">
-      <div class="certificate-brand">
+      <header class="certificate-brand">
         <img class="certificate-logo" src="{{ site.logo_path or url_for('static', filename='images/mark.svg') }}" alt="Logo {{ site.name }}" width="72" height="72" crossorigin="anonymous">
-        <span><strong>{{ site.name }}</strong><small>Sertifikat tantangan hafalan</small></span>
+        <span class="certificate-brand-copy"><small class="certificate-brand-overline">Lembaga Pendidikan Pesantren</small><strong>{{ site.name }}</strong><small>Sertifikat tantangan hafalan</small></span>
+      </header>
+      <div class="certificate-content">
+        <div class="certificate-ornament" aria-hidden="true"><span></span><i class="fa-solid fa-award" aria-hidden="true"></i><span></span></div>
+        <span class="certificate-kicker" id="certificate-kicker">Apresiasi atas ikhtiar dan ketekunan</span>
+        <h1 id="certificate-title">Sertifikat Partisipasi</h1>
+        <p class="certificate-subtitle" id="certificate-subtitle">Tantangan hafalan</p>
+        <p class="certificate-awarded">Diberikan dengan apresiasi kepada</p>
+        <h2 id="certificate-name"></h2>
+        <span class="certificate-name-rule" aria-hidden="true"></span>
+        <p class="certificate-description" id="certificate-description"></p>
+        <strong class="certificate-book" id="certificate-book"></strong>
+        <div class="certificate-details">
+          <div class="certificate-detail">
+            <span class="certificate-detail-label">Ruang lingkup hafalan</span>
+            <p class="certificate-range" id="certificate-range"></p>
+          </div>
+          <div class="certificate-score">
+            <span class="certificate-detail-label">Hasil tantangan</span>
+            <strong id="certificate-score"></strong>
+          </div>
+        </div>
+        <p class="certificate-encouragement" id="certificate-encouragement"></p>
       </div>
-      <div class="certificate-ornament" aria-hidden="true"><i class="fa-solid fa-star" aria-hidden="true"></i></div>
-      <span class="certificate-kicker" id="certificate-kicker">Apresiasi atas ikhtiar dan ketekunan</span>
-      <h1 id="certificate-title">Sertifikat Partisipasi</h1>
-      <p class="certificate-subtitle" id="certificate-subtitle">Tantangan hafalan</p>
-      <p class="certificate-awarded">Diberikan kepada</p>
-      <h2 id="certificate-name"></h2>
-      <p class="certificate-description" id="certificate-description"></p>
-      <strong class="certificate-book" id="certificate-book"></strong>
-      <p class="certificate-range" id="certificate-range"></p>
-      <div class="certificate-score"><span>Nilai</span><strong id="certificate-score"></strong></div>
-      <p class="certificate-encouragement" id="certificate-encouragement"></p>
-      <div class="certificate-footer"><span>{{ site.short_name }} · Karangtanjung, Kebumen</span><span id="certificate-date"></span></div>
+      <footer class="certificate-footer">
+        <div class="certificate-issued"><span>{{ site.short_name }} · Karangtanjung, Kebumen</span><strong id="certificate-date"></strong></div>
+        <div class="certificate-seal" aria-hidden="true"><i class="fa-solid fa-award" aria-hidden="true"></i><span>APRESIASI<br>HAFALAN</span></div>
+      </footer>
     </div>
   </div>
 </section>

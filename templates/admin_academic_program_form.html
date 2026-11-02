@@ -2,7 +2,7 @@
 {% from "partials/admin_fields.html" import image_url_field %}
 {% block title %}{{ 'Edit program pendidikan' if item_id else 'Tambah program pendidikan' }} · Admin Akademik{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=14">{% endblock %}
-{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=4"></script>{% endblock %}
+{% block extra_scripts %}<script defer src="{{ url_for('static', filename='js/image_compress.js') }}?v=1"></script><script defer src="{{ url_for('static', filename='js/cloudinary_upload.js') }}?v=5"></script>{% endblock %}
 {% block content %}
 <section class="admin-page academic-admin-page"><div class="container admin-container"><div class="admin-academic-form-wrap">
   <header class="admin-news-form-header"><div><span class="admin-kicker">Admin Akademik · {{ 'Pendidikan Formal' if item.get('education_type') == 'formal' else 'Pendidikan Non Formal' }}</span><h1>{% if item_id and item.get('title') == 'Madrasah Diniyah' %}Edit program Madrasah Diniyah{% else %}{{ 'Edit program' if item_id else 'Tambah program' }} {{ 'formal' if item.get('education_type') == 'formal' else 'non formal' }}{% endif %}</h1><p>Isi data program dan tambahkan logo opsional. Tanpa logo, kartu program memakai ikon Font Awesome pilihan.</p></div><a class="admin-cancel-button" href="{{ url_for('admin_academic', tab=item.get('education_type', 'formal')) }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke menu pendidikan</a></header>

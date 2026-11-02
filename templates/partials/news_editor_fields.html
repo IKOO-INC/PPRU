@@ -40,7 +40,7 @@
 <span class="admin-editor-upload-status" data-editor-image-status role="status" aria-live="polite"></span>
 <div class="admin-rich-editor" id="article-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Mulai menulis isi berita di sini...">{{ editor_html }}</div>
 <textarea name="body_html" id="article-body-html" hidden></textarea>
-<small class="admin-editor-hint">Gunakan tombol pemformatan untuk mengatur tampilan teks. Gambar dalam berita tampil di tengah dan menyesuaikan ukuran layar.</small>
+<small class="admin-editor-hint">Gunakan tombol pemformatan untuk mengatur tampilan teks. Gambar dalam berita tampil di tengah dan menyesuaikan ukuran layar. Foto di atas 10 MB dikompresi otomatis sebelum diunggah.</small>
 <div class="admin-news-form-actions">
   <span class="admin-news-views">{% if is_edit %}<i class="fa-solid fa-eye" aria-hidden="true"></i> {{ post.views|default(0) }} kali dilihat{% else %}Berita baru belum memiliki kunjungan.{% endif %}</span>
   <div><a class="admin-cancel-button" href="{{ cancel_url }}">Batal</a><button class="admin-save-button" type="submit">{{ 'Simpan perubahan' if is_edit else 'Simpan pengumuman' if academic else 'Simpan berita' }}</button></div>

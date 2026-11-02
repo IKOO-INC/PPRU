@@ -8,7 +8,7 @@ Website publik responsif berbasis **Python, Flask, dan Jinja2**. Pola halaman me
 - Sidebar **Admin Utama** berisi pengelolaan situs umum dan menu **Kelola User Admin**. Program pendidikan dikelola melalui panel Pendidikan/Akademik yang terpisah.
 - Pada desktop, editor preferensi memiliki **live preview** di sisi kiri form. Pratinjau merender perubahan yang belum disimpan; tombol simpan tetap terpisah.
 - Setiap komponen punya tombol simpan sendiri. Semua field gambar memakai **URL foto** dengan tombol **Upload** di sampingnya; unggahan dikirim ke Cloudinary dan URL hasilnya mengisi field secara otomatis.
-- Gambar situs disajikan melalui URL Cloudinary yang mengaktifkan format otomatis dan kompresi kualitas otomatis. Upload raster menerima JPG, PNG, GIF, dan WebP sampai 10 MB, lalu membatasi dimensi sumber hingga 2400 × 2400 piksel. Delivery gambar dibatasi hingga 1600 × 1600 piksel.
+- Gambar situs disajikan melalui URL Cloudinary yang mengaktifkan format otomatis dan kompresi kualitas otomatis. Form unggah menerima JPG, PNG, GIF, dan WebP; foto di atas 10 MB dikompresi otomatis di browser sebelum dikirim. Gambar yang diunggah dibatasi hingga 2400 × 2400 piksel, sedangkan delivery dibatasi hingga 1600 × 1600 piksel.
 - Dengan `MONGODB_URI`, MongoDB Atlas adalah sumber data utama untuk preferensi, berita, dan galeri. Pada lingkungan lokal yang bisa ditulis, perubahan Atlas juga memperbarui mirror `preferensi.json`, `berita.json`, dan `gallery.json`; tanpa Atlas, lokal tetap memakai file JSON. Filesystem deployment Vercel bukan penyimpanan persisten, sehingga JSON di Vercel tidak dianggap mirror durable.
 
 ### Konfigurasi Cloudinary
@@ -71,7 +71,7 @@ Skrip tidak menimpa dokumen Atlas yang sudah ada secara default. Jika target dok
 ### Galeri
 
 - Tab **Galeri** menampilkan thumbnail foto yang sudah ada beserta judul dan tombol **Edit/Hapus**. Tombol **Upload galeri baru** membuka form terpisah.
-- Form galeri menerima URL Cloudinary atau unggahan JPG, PNG, GIF, dan WebP sampai 10 MB. Metadata dan URL foto disimpan di MongoDB Atlas (dengan mirror `gallery.json` lokal bila tersedia); penghapusan item galeri tidak menghapus aset di Cloudinary.
+- Form galeri menerima URL Cloudinary atau unggahan JPG, PNG, GIF, dan WebP; foto di atas 10 MB dikompresi otomatis sebelum diunggah. Metadata dan URL foto disimpan di MongoDB Atlas (dengan mirror lokal bila tersedia); penghapusan item galeri tidak menghapus aset foto.
 - Foto galeri dapat dibuka dalam popup; pengunjung bisa mengunduh foto atau membagikan tautannya.
 
 ### Profil

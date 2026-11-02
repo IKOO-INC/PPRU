@@ -195,25 +195,33 @@
   imageInput?.addEventListener("change", async () => {
     const file = imageInput.files?.[0];
     if (!file) return;
-    if (file.size > maxImageSize) {
-      if (imageStatus) imageStatus.textContent = "Ukuran file maksimal 10 MB.";
-      imageInput.value = "";
-      return;
-    }
     if (!csrfToken) {
       if (imageStatus) imageStatus.textContent = "Sesi formulir tidak valid. Muat ulang halaman lalu coba lagi.";
       imageInput.value = "";
       return;
     }
 
-    const payload = new FormData();
-    payload.append("csrf_token", csrfToken);
-    payload.append("folder", "news");
-    payload.append("image_file", file);
     imageButton.disabled = true;
-    if (imageStatus) imageStatus.textContent = "Mengunggah dan menyiapkan gambar…";
-
     try {
+      let uploadFile = file;
+      if (file.size > maxImageSize) {
+        if (imageStatus) imageStatus.textContent = "Mengompres foto besar agar dapat diunggah…";
+        if (typeof window.compressPhotoForUpload !== "function") {
+          throw new Error("Kompresi foto belum siap. Muat ulang halaman lalu coba kembali.");
+        }
+        uploadFile = await window.compressPhotoForUpload(file);
+        if (uploadFile.size > maxImageSize) {
+          throw new Error("Foto masih terlalu besar setelah dikompres. Coba pilih foto lain atau simpan ulang dengan ukuran lebih kecil.");
+        }
+      }
+
+      const payload = new FormData();
+      payload.append("csrf_token", csrfToken);
+      payload.append("folder", "news");
+      payload.append("image_file", uploadFile);
+      if (imageStatus) imageStatus.textContent = file.size > maxImageSize
+        ? "Foto sudah siap. Sedang mengunggah…"
+        : "Mengunggah dan menyiapkan gambar…";
       const response = await fetch("/admin/upload-image", {
         method: "POST",
         body: payload,
